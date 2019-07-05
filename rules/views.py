@@ -60,6 +60,16 @@ def index(request):
         context['probes'] = map(lambda x: '"' +  x + '"', Probe.models.get_probe_hostnames())
     except:
         pass
+
+    # Show current sorting used at the table column 'hits' (descending).
+    if request.GET.has_key('sort'):
+        context['sort_order'] = request.GET.get('sort')
+        context['sort_param'] = context['sort_order']
+    else:
+        # This only works at index.html for now
+        context['sort_order'] = '-hits'
+        context['sort_param'] = '-hits'
+
     return scirius_render(request, 'rules/index.html', context)
 
 def about(request):
