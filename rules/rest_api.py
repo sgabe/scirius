@@ -1723,9 +1723,9 @@ class SourceViewSet(BaseSourceViewSet):
     serializer_class = SourceSerializer
     parser_classes = (MultiPartParser, JSONParser)
     ordering = ('name',)
-    ordering_fields = ('name', 'created_date', 'updated_date', 'cats_count', 'rules_count',)
-    filter_fields = ('name', 'method')
-    search_fields = ('name', 'method')
+    ordering_fields = ('name', 'created_date', 'updated_date', 'cats_count', 'rules_count', 'datatype')
+    filter_fields = ('name', 'method', 'datatype')
+    search_fields = ('name', 'method', 'datatype')
 
     @action(detail=True, methods=['post'])
     def upload(self, request, pk):
