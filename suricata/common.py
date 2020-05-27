@@ -234,3 +234,7 @@ def extract_custom_source(f, source_path):
 def get_sources():
     from rules.models import Source
     return Source.objects.all()
+
+
+def extra_info():
+    return {}

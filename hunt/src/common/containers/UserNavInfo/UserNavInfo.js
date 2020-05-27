@@ -183,7 +183,7 @@ export default class UserNavInfo extends Component {
                                 </a>
                             </li>
 
-                            {process.env.REACT_APP_HAS_TAG === '1' && <li className="applauncher-pf-item" role="presentation">
+                            {process.env.REACT_APP_HAS_TAG === '1' && this.props.systemSettings && this.props.systemSettings.license && this.props.systemSettings.license.nta && <li className="applauncher-pf-item" role="presentation">
                                 <a className="applauncher-pf-link" href="/appliances/str" role="menuitem" data-toggle="tooltip" title={'Threat Radar'} style={{ cursor: 'pointer' }}>
 
                                     <i style={{ fontSize: '2em' }} className="pficon-process-automation" aria-hidden="true"></i>

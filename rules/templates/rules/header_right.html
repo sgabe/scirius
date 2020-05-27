@@ -84,7 +84,7 @@ $( 'document' ).ready(
         </a>
       </li>
 
-      {% if generator and generator == 'appliances' %}
+      {% if generator and generator == 'appliances' and license and license.nta %}
       <li class="applauncher-pf-item" role="presentation">
         <a class="applauncher-pf-link" style="color: inherit" href="/appliances/str" role="menuitem">
           <i style="font-size: 2em;" class="pficon-process-automation" aria-hidden="true"></i>
