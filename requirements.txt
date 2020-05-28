@@ -20,7 +20,7 @@ django-ipware
 gunicorn
 djangorestframework<3.9.2
 markdown<3.0
-django-filter<2.0
+django-filter<3.0
 idstools
 enum34
 django-webpack-loader
