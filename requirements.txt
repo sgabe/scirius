@@ -2,7 +2,7 @@ daemon
 Django>=1.11.10,<2
 django-bootstrap3==11.0.0
 django-revproxy
-django-tables2<1.17
+django-tables2<2.4
 django-dbbackup<3.0
 gitdb
 GitPython
