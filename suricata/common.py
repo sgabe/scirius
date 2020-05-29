@@ -19,42 +19,31 @@ along with Scirius.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import unicode_literals
+import json
 import psutil
+import subprocess
 from rest_framework import serializers
 
 from django.conf import settings
 
-
-if settings.SURICATA_UNIX_SOCKET:
-    try:
-        import suricatasc
-    except:
-        settings.SURICATA_UNIX_SOCKET = None
-
 class Info():
     def status(self):
-        suri_running = 'danger'
-        if settings.SURICATA_UNIX_SOCKET:
-            sc = suricatasc.SuricataSC(settings.SURICATA_UNIX_SOCKET)
-            try:
-                sc.connect()
-            except:
-                return 'danger'
-            res = sc.send_command('uptime', None)
+        try:
+            sc = subprocess.check_output(['suricatasc', '-c', 'uptime', settings.SURICATA_UNIX_SOCKET])
+            res = json.loads(sc)
             if res['return'] == 'OK':
-                suri_running = 'success'
-            sc.close()
-        else:
-            for proc in psutil.process_iter():
-                try:
-                    pinfo = proc.as_dict(attrs=['name'])
-                except psutil.NoSuchProcess:
-                    pass
-                else:
-                    if pinfo['name'] == 'Suricata-Main':
-                        suri_running = 'success'
-                        break
-        return suri_running
+                return 'success'
+        except:
+            pass
+        for proc in psutil.process_iter():
+            try:
+                pinfo = proc.as_dict(attrs=['name'])
+            except psutil.NoSuchProcess:
+                pass
+            else:
+                if pinfo['name'] == 'Suricata-Main':
+                    return 'success'
+        return 'danger'
     def disk(self):
         return psutil.disk_usage('/')
     def memory(self):
