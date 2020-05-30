@@ -1,48 +1,53 @@
-image: stamus/stamus-docker-qa:iceweasel
-
-npm:
-  image: node:8.9.4
+nodejs:
+  image: node:12.17.0-stretch
   stage: build
   artifacts:
     expire_in: 1 day
     paths:
-    - rules/static/dist
-    - rules/static/bundles
-    - rules/static/webpack-stats.prod.json
+      - rules/static/dist
+      - rules/static/bundles
+      - rules/static/webpack-stats.prod.json
   before_script:
-  - echo "skip"
+    - npm install -g npm 
+    - npm install -g webpack@3.11
+    - npm install node-sass
+    - npm install node-gyp
   script:
-  - npm install
-  - npm install -g webpack@3.11
-  - webpack
-  - cd hunt
-  - npm install
-  - npm run build
-  - node node_modules/eslint/bin/eslint.js -c .eslintrc .
+    - npm install
+    - webpack
+    - cd hunt
+    - npm install
+    - npm run build
+    - node node_modules/eslint/bin/eslint.js -c .eslintrc .
 
-test-static:
+eslint:
+  image: node:12.17.0-stretch
   stage: test
-  script:
-  - /home/admin/venv/bin/pylint --load-plugins pylint_django -E -d unexpected-keyword-arg,no-member,access-member-before-definition,no-name-in-module,import-error */*.py
-  - for f in $(find .  -type f -name "*.py" ! -name "__init__.py" ! -name "manage.py" ! -name "setup.py" ! -name "yaml.py" ! -name "lineinfile.py" -not -path "./doc/*" -not -path "./rules/south_migrations/*" -not -path "./suricata/south_migrations/*" -not -path "./accounts/south_migrations/*" -not -path "./node_modules/*" -not -path "./tests/*" -not -path "./hunt/*"); do if ! grep -q 'from __future__ import unicode_literals' $f ; then echo "$f does not contain unicode_literals import"; exit 1;  fi; done
-  - PYTHONIOENCODING="UTF-8" ./tests/check_non_ascii_chars.py
-
-eslint_check:
-  image: node:8.9.4
-  stage: custom
-  when: manual
   before_script:
-  - echo "skip"
+    - cd hunt
+    - npm install
+    - cd ..
   script:
-  - cd hunt
-  - npm install
-  - cd ..
-  - python tests/eslint_check.py $(find hunt -name \*.js |grep -v /node_modules/)
+    - python tests/eslint_check.py $(find hunt -name \*.js |grep -v /node_modules/)
 
-test-dlint:
-    image: python
-    before_script:
-        - python -m pip install dlint
-    script:
-        - python -m flake8 --select=DUO rules
-        - python -m flake8 --select=DUO suricata
+python:
+  image: python:2.7.18-stretch
+  stage: build
+  before_script:
+    - python -m pip install --upgrade pip wheel setuptools
+    - python -m pip install --upgrade six
+    - python -m pip install python-daemon
+    - python -m pip install suricatactl
+    - python -m pip install django-bootstrap3==11.1.0
+    - python -m pip install elasticsearch-curator==5.6
+  script:
+    - python -m pip install -r requirements.txt
+
+dlint:
+  image: python:2.7.18-stretch
+  stage: test
+  before_script:
+    - python -m pip install dlint
+  script:
+    - python -m flake8 --select=DUO rules
+    - python -m flake8 --select=DUO suricata
