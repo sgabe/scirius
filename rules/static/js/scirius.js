@@ -119,7 +119,7 @@ function draw_timeline(from_date, hosts, filter, ylegend=undefined) {
                             $("#timeline p").addClass("svgcenter");
                             return null;
                         }
-
+			            $("#timeline p").hide();
  			            // FIX: Remove timeline before updating.
  			            d3.select("#timeline svg > *").remove();
                             nv.addGraph(function() {
