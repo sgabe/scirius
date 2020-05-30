@@ -1,6 +1,5 @@
 stages:
   - build
   - test
-  - custom
 
 include: .gitlab-ci-rules.yml
