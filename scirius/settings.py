@@ -228,8 +228,8 @@ DEFAULT_SOURCE_INDEX_URL = "https://www.openinfosecfoundation.org/rules/index.ya
 # Elastic search
 
 USE_ELASTICSEARCH = True
-#ELASTICSEARCH_ADDRESS = "127.0.0.1:9200"
-ELASTICSEARCH_ADDRESS = "localhost:9200"
+#ELASTICSEARCH_URL = "http://127.0.0.1:9200"
+ELASTICSEARCH_URL = "http://localhost:9200"
 # You can use a star to avoid timestamping expansion for example 'logstash-*'
 ELASTICSEARCH_LOGSTASH_INDEX = "logstash-"
 # You can change following value if you have different indexes for stats and alerts

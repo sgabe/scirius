@@ -684,12 +684,14 @@ def get_es_address():
     gsettings = get_system_settings()
     if gsettings.custom_elasticsearch:
         addr = gsettings.elasticsearch_url
-        if not addr.endswith('/'):
-            addr += '/'
-
-        ES_ADDRESS = addr
     else:
-        ES_ADDRESS = 'http://%s/' % settings.ELASTICSEARCH_ADDRESS
+        addr = settings.ELASTICSEARCH_URL
+
+    if not addr.endswith('/'):
+        addr += '/'
+
+    ES_ADDRESS = addr
+
     return ES_ADDRESS
 
 

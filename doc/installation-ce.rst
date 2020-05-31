@@ -132,13 +132,13 @@ To setup Elasticsearch connection, you can edit ``settings.py`` or create a
 ``local_settings.py`` file under ``scirius`` directory to setup the feature.
 Elasticsearch is activated if a variable names ``USE_ELASTICSEARCH`` is set
 to True in ``settings.py``. The address of the Elasticsearch is stored in the
-``ELASTICSEARCH_ADDRESS`` variable and uses the format ``IP:port``.
+``ELASTICSEARCH_URL`` variable and uses the format ``proto://IP:port``.
 
 For example, if your Elasticsearch is running locally, you can add
 to ``local_settings.py`` ::
 
  USE_ELASTICSEARCH = True
- ELASTICSEARCH_ADDRESS = "127.0.0.1:9200"
+ ELASTICSEARCH_URL = "http://127.0.0.1:9200"
 
 Please note, that the name of the Suricata (set during edition of the object) must
 be equal to the ``host`` key present in Elasticsearch events. It can also be edited here: scirius -> suricata -> edit.
