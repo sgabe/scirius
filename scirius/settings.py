@@ -258,7 +258,7 @@ KIBANA_DASHBOARDS_PATH = '/opt/kibana-dashboards/'
 KIBANA6_DASHBOARDS_PATH = '/opt/kibana6-dashboards/'
 
 USE_EVEBOX = False
-EVEBOX_ADDRESS = "evebox:5636"
+EVEBOX_URL = "http://localhost:5636"
 
 # Suricata is configured to write stats to EVE
 USE_SURICATA_STATS = False

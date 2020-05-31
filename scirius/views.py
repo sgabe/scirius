@@ -42,7 +42,7 @@ class KibanaProxyView(ProxyView):
     add_remote_user = False
 
 class EveboxProxyView(ProxyView):
-    upstream = "http://" + settings.EVEBOX_ADDRESS
+    upstream = settings.EVEBOX_URL
     add_remote_user = True
 
 class MolochProxyView(ProxyView):
