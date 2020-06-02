@@ -192,7 +192,7 @@ export default class UserNavInfo extends Component {
                             </li>}
 
                             {this.props.systemSettings && this.props.systemSettings.kibana && <li className="applauncher-pf-item" role="presentation">
-                                <a className="applauncher-pf-link" href={this.props.systemSettings.kibana_url} role="menuitem" data-toggle="tooltip" title={'Kibana dashboards for ES'} style={{ cursor: 'pointer' }} target="_blank">
+                                <a className="applauncher-pf-link" href={this.props.systemSettings.kibana_url} role="menuitem" data-toggle="tooltip" title={'Kibana dashboards for ES'} style={{ color: 'inherit' }} target="_blank">
 
                                     <i style={{ fontSize: '2em' }} className="glyphicon glyphicon-stats" aria-hidden="true"></i>
                                     <span className="applauncher-pf-link-title">{'Dashboards'}</span>
@@ -200,7 +200,7 @@ export default class UserNavInfo extends Component {
                             </li>}
 
                             {this.props.systemSettings && this.props.systemSettings.evebox && <li className="applauncher-pf-item" role="presentation">
-                                <a className="applauncher-pf-link" href={this.props.systemSettings.evebox_url} role="menuitem" data-toggle="tooltip" title={'Evebox alert and event management tool'} style={{ cursor: 'pointer' }} target="_blank">
+                                <a className="applauncher-pf-link" href={this.props.systemSettings.evebox_url} role="menuitem" data-toggle="tooltip" title={'Evebox alert and event management tool'} style={{ color: 'inherit' }} target="_blank">
 
                                     <i style={{ fontSize: '2em' }} className="glyphicon glyphicon-th-list" aria-hidden="true"></i>
                                     <span className="applauncher-pf-link-title">{'Events viewer'}</span>
