@@ -39,6 +39,6 @@
   },
   "dependencies": {
     "axios": "0.18.1",
-    "patternfly": "^3.35.1"
+    "patternfly": "^3.59.3"
   }
 }
