@@ -48,9 +48,9 @@ def loginview(request, target):
             if user.is_active:
                 login(request, user)
                 try:
-                    sciriususer = SciriusUser.objects.get(user=user)
+                    SciriusUser.objects.get(user=user)
                 except SciriusUser.DoesNotExist:
-                    sciriususer = SciriusUser.objects.create(user=user, timezone = 'UTC')
+                    SciriusUser.objects.create(user=user, timezone = 'UTC')
                     
                 if not form.cleaned_data['persistent']:
                     request.session.set_expiry(0)
