@@ -2199,10 +2199,6 @@ class ESIppairAlerts(ESQuery):
                 links.append({'source': ip_list.index(src_ip['key']), 'target': ip_list.index(dest_ip['key']), 'value': (math.log(dest_ip['doc_count']) + 1) * 2, 'alerts': dest_ip['alerts']['buckets']})
         #nodes = set(nodes)
         return {'nodes': nodes, 'links': links}
-        try:
-            return data['hits']['hits'][0]['_source']
-        except:
-            return None
 
 
 class ESIppairNetworkAlerts(ESQuery):
@@ -2238,10 +2234,6 @@ class ESIppairNetworkAlerts(ESQuery):
                 links.append({'source': ip_list.index(src_ip['key']), 'target': ip_list.index(dest_ip['key']), 'value': (math.log(dest_ip['doc_count']) + 1) * 2, 'alerts': dest_ip['net_dest']['buckets'][0]['alerts']['buckets']})
         #nodes = set(nodes)
         return {'nodes': nodes, 'links': links}
-        try:
-            return data['hits']['hits'][0]['_source']
-        except:
-            return None
 
 
 class ESAlertsTail(ESQuery):
