@@ -1896,7 +1896,8 @@ class ESData(object):
             if get_es_major_version() >= 6:
                 self._kibana_request('/api/kibana/settings/defaultIndex', {'value': 'logstash-*'})
             else:
-                print("Warning: unknown ES version, not setting Kibana's defaultIndex", file=sys.stderr)
+                # FIXME: The file=sys.stderr argument is only supported in Python 3.x.
+                print("Warning: unknown ES version, not setting Kibana's defaultIndex")
 
     def _get_dashboard_dir(self):
         if get_es_major_version() < 6 or not hasattr(settings, 'KIBANA6_DASHBOARDS_PATH'):
