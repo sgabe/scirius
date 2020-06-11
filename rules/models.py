@@ -831,7 +831,6 @@ class Source(models.Model):
                     shutil.rmtree(os.path.join(source_git_dir, "rules"))
                 except OSError:
                     print("Can not delete directory")
-                    pass
             repo = git.Repo(source_git_dir)
         return repo
 
