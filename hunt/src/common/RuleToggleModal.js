@@ -81,7 +81,7 @@ export default class RuleToggleModal extends React.Component {
                 let notfound = true;
                 for (let i = 0; i < this.props.filters.length; i += 1) {
                     if (res.data.fields.indexOf(this.props.filters[i].id) !== -1) {
-                        const filter = JSON.parse(JSON.stringify(this.props.filters[i]))
+                        const filter = JSON.parse(JSON.stringify(this.props.filters[i]));
 
                         if (this.props.filters[i].negated === false) {
                             filter.operator = 'equal';

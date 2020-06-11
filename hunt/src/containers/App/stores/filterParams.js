@@ -79,7 +79,7 @@ export const reducer = (state = initialState, action) => {
         default:
             return state;
     }
-}
+};
 
 export const selectFilterParamsStore = (state) => state.get('filterParams', initialState);
 export const makeSelectFilterParam = (paramName) => createSelector(selectFilterParamsStore, (globalState) => globalState.getIn([paramName]));

@@ -58,4 +58,4 @@ export const periodShortener = (fromDate, toDate, duration) => {
     }
 
     return resultFinal;
-}
+};

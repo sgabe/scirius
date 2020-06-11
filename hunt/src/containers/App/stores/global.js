@@ -166,7 +166,7 @@ export const reducer = (state = initialState, action) => {
         default:
             return state;
     }
-}
+};
 
 // SELECTORS
 export const selectGlobal = (state) => state.get('global');

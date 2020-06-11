@@ -349,7 +349,7 @@ function build_path(d) {
 window.build_path = build_path;
 
 function draw_sunburst(from_date, hosts, filter, callback, sort_order) {
-        var esurl = "/rest/rules/es/rules_per_category/?from_date=" + from_date + "&hosts=" + hosts.join()
+        var esurl = "/rest/rules/es/rules_per_category/?from_date=" + from_date + "&hosts=" + hosts.join();
         if (filter) {
             esurl = esurl + "&qfilter=" + filter;
         }
