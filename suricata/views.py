@@ -137,7 +137,7 @@ def update(request):
     if not request.user.is_staff:
         return redirect('/')
 
-    if suri == None:
+    if suri is None:
         form = SuricataForm()
         context = { 'creation': True , 'form': form}
         return scirius_render(request, 'suricata/edit.html', context)

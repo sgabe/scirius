@@ -141,7 +141,7 @@ def scirius_listing(request, objectname, name, template = 'rules/object_list.htm
     assocfn = { 'Categories': CategoryTable, 'Users': UserTable }
     olist = objectname.objects.all()
     if olist:
-        if table == None:
+        if table is None:
             data = assocfn[name](olist)
         else:
             data = table(olist)

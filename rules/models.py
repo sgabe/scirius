@@ -901,7 +901,7 @@ class Source(models.Model):
                 f = tfile.extractfile(member.name)
                 self._check_category_ids(f, member.name, 1)
                 dir_list.append(member)
-        if rules_dir == None:
+        if rules_dir is None:
             raise SuspiciousOperation("Tar file does not contain a 'rules' directory")
 
         source_git_dir = os.path.join(settings.GIT_SOURCES_BASE_DIRECTORY, unicode(self.pk))
@@ -1906,7 +1906,7 @@ class Category(models.Model, Transformable, Cache):
         rules_update = {"added": [], "deleted": [], "updated": []}
         rules_unchanged = []
 
-        if existing_rules_hash == None:
+        if existing_rules_hash is None:
             existing_rules_hash = {}
             for rule in Rule.objects.all().prefetch_related('category'):
                 existing_rules_hash[rule.sid] = rule
@@ -1973,9 +1973,9 @@ class Category(models.Model, Transformable, Cache):
                             if len(duplicate_sids) == 20:
                                 break
                             continue
-                        if rev == None or rule.rev < rev or rule.group is True:
+                        if rev is None or rule.rev < rev or rule.group is True:
                             rule.content = line
-                            if rev == None:
+                            if rev is None:
                                 rule.rev = 0
                             else:
                                 rule.rev = rev
@@ -1990,7 +1990,7 @@ class Category(models.Model, Transformable, Cache):
                         else:
                             rules_unchanged.append(rule)
                     else:
-                        if rev == None:
+                        if rev is None:
                             rev = 0
                         rule = Rule(category = self, sid = sid,
                                             rev = rev, content = line, msg = msg,

@@ -204,7 +204,7 @@ def elasticsearch(request):
             query = request.GET.get('query')
             if query == 'rules':
                 rules = ESRulesStats(request).get()
-                if rules == None:
+                if rules is None:
                     return HttpResponse(json.dumps(rules), content_type="application/json")
                 context['table'] = rules
                 return scirius_render(request, 'rules/table.html', context)

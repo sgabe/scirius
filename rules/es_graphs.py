@@ -1987,7 +1987,7 @@ class ESIndices(ESQuery):
         size = self._urlopen(get_es_path(INDICES_STATS_SIZE_URL))
         indices = merge_dict_deeply(docs, size)
         indexes_array = []
-        if indices == None:
+        if indices is None:
             return indexes_array
         for index in indices['indices']:
             try:
