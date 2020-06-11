@@ -21,7 +21,6 @@ along with Scirius.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import unicode_literals
 from importlib import import_module
 from time import time
-import math
 
 from django.shortcuts import render
 from django.conf import settings

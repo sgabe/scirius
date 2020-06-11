@@ -26,7 +26,7 @@ from django.core.exceptions import FieldError, SuspiciousOperation, ValidationEr
 from django.core.validators import validate_ipv4_address
 from django.db import transaction
 from django.utils import timezone
-from django.utils.html import mark_safe, format_html, format_html_join
+from django.utils.html import format_html, format_html_join
 from django.db.models import Q
 from idstools import rule as rule_idstools
 from enum import Enum, unique
@@ -36,7 +36,6 @@ import requests
 import tempfile
 import tarfile
 import re
-import sys
 import os
 import git
 import shutil

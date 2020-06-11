@@ -42,7 +42,6 @@ import yaml
 import re
 import os
 
-from time import time
 import django_tables2 as tables
 from tables import *
 from forms import *

@@ -19,7 +19,7 @@ along with Scirius.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import unicode_literals
-from django.conf.urls import url, include
+from django.conf.urls import url
 
 from suricata import views
 from rest_api import router

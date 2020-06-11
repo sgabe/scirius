@@ -25,7 +25,6 @@ import os
 import sys
 import tarfile
 import tempfile
-from cStringIO import StringIO
 from shutil import rmtree
 from time import strftime, sleep
 

@@ -1,8 +1,5 @@
 from __future__ import unicode_literals
 from suripyg import SuriHTMLFormat
-from time import time
-import urllib2
-import socket
 
 from django.conf import settings
 from django.utils import timezone

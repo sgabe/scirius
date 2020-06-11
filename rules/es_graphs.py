@@ -23,14 +23,13 @@ from django.conf import settings
 from django.template.defaultfilters import filesizeformat
 from datetime import datetime
 
-import socket
 import requests
 import json
-from time import time, mktime
+from time import mktime
 import math
 
 from rules.es_query import ESQuery
-from rules.models import get_es_address, get_es_path
+from rules.models import get_es_path
 from scirius.utils import merge_dict_deeply
 
 

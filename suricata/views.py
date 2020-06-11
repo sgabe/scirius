@@ -19,7 +19,6 @@ along with Scirius.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import unicode_literals
-from time import time
 import socket
 
 from django.shortcuts import render, redirect

@@ -19,11 +19,6 @@ along with Scirius.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from __future__ import unicode_literals
-import os
-import tarfile
-import tempfile
-from shutil import rmtree
-from time import strftime
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
