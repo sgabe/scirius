@@ -34,9 +34,9 @@ def es_check(filename, content):
 def show_error(f, line_no, check=None):
     line_no += 1
     if check:
-        print '%s:%i Useless check %s' % (f, line_no, check)
+        print('%s:%i Useless check %s' % (f, line_no, check))
     else:
-        print '%s:%i Useless global check' % (f, line_no)
+        print('%s:%i Useless global check' % (f, line_no))
 
 
 def check_file(filename):

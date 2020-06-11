@@ -1786,7 +1786,7 @@ class ESRulesStats(ESQuery):
                         sid=elt['term']
                     rule = Rule.objects.get(sid=sid)
                 except:
-                    print "Can not find rule with sid %s" % sid
+                    print("Can not find rule with sid %s" % sid)
                     continue
                 if get_es_major_version() >= 2:
                     rule.hits = elt['doc_count']

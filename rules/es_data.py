@@ -1875,7 +1875,7 @@ class ESData(object):
         try:
             self.client.create(index='.kibana', doc_type=doc_type, id=name, body=content, refresh=True)
         except Exception as e:
-            print 'While processing %s:\n' % _file
+            print('While processing %s:\n' % _file)
             raise
 
     def _kibana_set_default_index(self, idx):
@@ -1897,7 +1897,7 @@ class ESData(object):
             if get_es_major_version() >= 6:
                 self._kibana_request('/api/kibana/settings/defaultIndex', {'value': 'logstash-*'})
             else:
-                print >> sys.stderr, "Warning: unknown ES version, not setting Kibana's defaultIndex"
+                print("Warning: unknown ES version, not setting Kibana's defaultIndex", file=sys.stderr)
 
     def _get_dashboard_dir(self):
         if get_es_major_version() < 6 or not hasattr(settings, 'KIBANA6_DASHBOARDS_PATH'):

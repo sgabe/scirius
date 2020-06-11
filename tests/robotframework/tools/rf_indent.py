@@ -4,7 +4,7 @@ from shutil import copy
 from tempfile import NamedTemporaryFile
 
 if len(sys.argv) < 2:
-    print >>sys.stderr, 'Usage: %s file [file..]'
+    print('Usage: %s file [file..]', file=sys.stderr)
     exit(1)
 
 def add_table(fout, table, col_sizes):
