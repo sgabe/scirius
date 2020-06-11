@@ -943,7 +943,6 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
-        data = self._add_hits(request, serializer.data)
         return self.get_paginated_response(serializer.data)
 
 

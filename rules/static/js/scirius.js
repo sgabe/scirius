@@ -169,7 +169,6 @@ function draw_timeline(from_date, hosts, filter, ylegend=undefined) {
                                 for (var hi = 0; hi < hosts.length; hi++) {
                                         var gdata = []
                                         var starti = 0;
-                                        var iter = 0;
                                         if (!data[hosts[hi]]) {
                                             continue;
                                         }
@@ -274,7 +273,6 @@ function draw_stats_timeline_with_range(from_date, value, tdiv, speed, hosts, au
                                 var sdata = []
                                 var gdata = []
                                 var starti = 0;
-                                var iter = 0;
                                 for (var hi = 0; hi < hosts.length; hi++) {
                                     if (!data[hosts[hi]]) {
                                         continue;
@@ -412,7 +410,6 @@ var arc = d3.svg.arc()
       $( "#circles").append("<div id='circles_tooltip'>" + tooltip + "</div>");
   });
   $('path').mouseout(function(){
-      var d = this.__data__;
       $( "#circles_tooltip").remove();
   });
 
@@ -562,7 +559,7 @@ function draw_circle(from_date, hosts, filter, callback) {
                zoomTo([root.x, root.y, root.r * 2 + margin]);
              
                function zoom(d) {
-                 var focus0 = focus; focus = d;
+                 focus = d;
              
                  if (d.children == undefined) {
                      window.open("/rules/rule/pk/" + d.key,"_self");
@@ -579,7 +576,7 @@ function draw_circle(from_date, hosts, filter, callback) {
                      draw_timeline(from_date, hosts, 'alert.category.raw:"'+d.key+'"');
                      load_rules(from_date, hosts, 'alert.category.raw:"'+d.key+'"');
                  }
-                 var transition = d3.transition()
+                 d3.transition()
                      .duration(d3.event.altKey ? 7500 : 750)
                      .tween("zoom", function(d) {
                        var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);

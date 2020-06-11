@@ -242,7 +242,7 @@ def validate_hostname(val):
 
 def validate_port(val):
     try:
-        val = int(val)
+        int(val)
     except ValueError:
         raise ValidationError('Invalid port')
 
@@ -842,7 +842,7 @@ class Source(models.Model):
             sversions[0].updated_date = self.updated_date
             sversions[0].save()
         else:
-            sversion = SourceAtVersion.objects.create(source = self, version = version,
+            SourceAtVersion.objects.create(source = self, version = version,
                                                     updated_date = self.updated_date, git_version = version)
 
     def _check_category_ids(self, f, filename, field_no):
@@ -2088,17 +2088,13 @@ class Category(models.Model, Transformable, Cache):
         ruleset.needs_test()
 
     def get_transformation(self, ruleset, key=Transformation.ACTION, override=False):
-        NONE = None
         TYPE = None
 
         if key == Transformation.ACTION:
-            NONE = Transformation.A_NONE
             TYPE = Transformation.ActionTransfoType
         elif key == Transformation.LATERAL:
-            NONE = Transformation.L_NO
             TYPE = Transformation.LateralTransfoType
         elif key == Transformation.TARGET:
-            NONE = Transformation.T_NONE
             TYPE = Transformation.TargetTransfoType
         else:
             raise Exception("Key '%s' is unknown" % key)
@@ -2394,7 +2390,7 @@ class Rule(models.Model, Transformable, Cache):
     def can_lateral(self, value):
         content = self.content.encode('utf8')
         try:
-            rule_ids = rule_idstools.parse(self.content)
+            rule_ids = rule_idstools.parse(content)
         except:
             return False
         # Workaround: ref #674
@@ -2423,17 +2419,13 @@ class Rule(models.Model, Transformable, Cache):
         return (self.pk in Rule.TRANSFORMATIONS[key][rule_str][value])
 
     def get_transformation(self, ruleset, key=Transformation.ACTION, override=False):
-        NONE = None
         TYPE = None
 
         if key == Transformation.ACTION:
-            NONE = Transformation.A_NONE
             TYPE = Transformation.ActionTransfoType
         elif key == Transformation.LATERAL:
-            NONE = Transformation.L_NO
             TYPE = Transformation.LateralTransfoType
         elif key == Transformation.TARGET:
-            NONE = Transformation.T_NONE
             TYPE = Transformation.TargetTransfoType
         else:
             raise Exception("Key '%s' is unknown" % key)
@@ -2720,9 +2712,6 @@ class Ruleset(models.Model, Transformable):
             allowed_choices.remove((CAT_DEFAULT.value, CAT_DEFAULT.name.replace('_', ' ').title()))
             allowed_choices.remove((RULESET_DEFAULT.value, RULESET_DEFAULT.name.replace('_', ' ').title()))
 
-            L_YES = Transformation.L_YES
-            L_AUTO = Transformation.L_AUTO
-
         return tuple(allowed_choices)
 
     @staticmethod
@@ -2828,7 +2817,6 @@ class Ruleset(models.Model, Transformable):
         return None
 
     def is_transformed(self, key=Transformation.ACTION, value=Transformation.A_DROP):
-        ruleset_str = Ruleset.__name__.lower()
         rulesets_t = Ruleset.objects.filter(
                 rulesettransformation__key=key.value,
                 rulesettransformation__value=value.value)
@@ -3268,7 +3256,6 @@ def export_iprep_files(target_dir, cats_content, iprep_content):
             rfile.write(cats_content)
     with open(target_dir + "/" + "scirius-iprep.list", 'w') as rfile:
         for cate in cat_map:
-            iprep_group = cat_map[cate].sid
             for IP in cat_map[cate].group_ips_list.split(','):
                 rfile.write('%s,%d,100\n' % (IP, cate))
         if iprep_content:

@@ -195,7 +195,6 @@ class Reference:
         self.url = None
 
 def elasticsearch(request):
-    data = None
     RULE_FIELDS_MAPPING = {'rule_src': 'src_ip', 'rule_dest': 'dest_ip', 'rule_source': 'alert.source.ip', 'rule_target': 'alert.target.ip', 'rule_probe': settings.ELASTICSEARCH_HOSTNAME, 'field_stats': None}
     context = {'es2x': get_es_major_version() >= 2}
 
