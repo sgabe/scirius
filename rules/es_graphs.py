@@ -2033,7 +2033,7 @@ def es_delete_alerts_by_sid_v2(sid):
     delete_url = get_es_path(DELETE_ALERTS_URL) % int(sid)
     try:
         r = requests.delete(delete_url)
-    except Exception, err:
+    except Exception as err:
         return {'msg': 'Elasticsearch error: %s' % err, 'status': 500 }
     if r.status_code == 200:
         data = json.loads(r.text)
@@ -2050,7 +2050,7 @@ def es_delete_alerts_by_sid_v5(sid):
     try:
         headers = {'content-type': 'application/json'}
         r = requests.post(delete_url, data = json.dumps(data), headers=headers)
-    except Exception, err:
+    except Exception as err:
         return {'msg': 'Elasticsearch error: %s' % err, 'status': 500 }
     if r.status_code == 200:
         data = json.loads(r.text)

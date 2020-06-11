@@ -926,7 +926,7 @@ def update_source(request, source_id):
         if hasattr(Probe.common, 'update_source'):
             return Probe.common.update_source(request, src)
         src.update()
-    except Exception, errors:
+    except Exception as errors:
         if request.is_ajax():
             data = {}
             data['status'] = False
@@ -1036,13 +1036,13 @@ def add_source(request):
                             form.add_error('file', 'This field is required.')
                             raise Exception('A source file is required')
                         src.handle_uploaded_file(request.FILES['file'])
-                    except Exception, error:
+                    except Exception as error:
                         if isinstance(error, ValidationError):
                             error = error.message
                         src.delete()
                         return scirius_render(request, 'rules/add_source.html', { 'form': form, 'error': error })
 
-            except IntegrityError, error:
+            except IntegrityError as error:
                 return scirius_render(request, 'rules/add_source.html', { 'form': form, 'error': error })
             try:
                 ruleset_list = form.cleaned_data['rulesets']
@@ -1084,7 +1084,7 @@ def fetch_public_sources():
         else:
             resp = requests.get(settings.DEFAULT_SOURCE_INDEX_URL, headers = hdrs)
         resp.raise_for_status()
-    except requests.exceptions.ConnectionError, e:
+    except requests.exceptions.ConnectionError as e:
         if "Name or service not known" in unicode(e):
             raise IOError("Connection error 'Name or service not known'")
         elif "Connection timed out" in unicode(e):
@@ -1186,7 +1186,7 @@ def add_public_source(request):
                         public_source = source_id,
                         use_iprep=form.cleaned_data['use_iprep']
                         )
-            except IntegrityError, error:
+            except IntegrityError as error:
                 return scirius_render(request, 'rules/add_public_source.html', { 'form': form, 'error': error })
             try:
                 ruleset_list = form.cleaned_data['rulesets']
@@ -1404,7 +1404,7 @@ def add_ruleset(request):
                 else:
                     ruleset.remove_transformation(Transformation.TARGET)
 
-            except IntegrityError, error:
+            except IntegrityError as error:
                 return scirius_render(request, 'rules/add_ruleset.html', {'form': form, 'error': error})
 
             msg = """All changes are saved. Don't forget to update the ruleset to apply the changes.
@@ -1443,7 +1443,7 @@ def update_ruleset(request, ruleset_id):
         return Probe.common.update_ruleset(request, rset)
     try:
         rset.update()
-    except IOError, errors:
+    except IOError as errors:
         error="Can not fetch data: %s" % (errors)
         if request.is_ajax():
             return HttpResponse(json.dumps({'status': False, 'errors': error}), content_type="application/json")
@@ -1744,7 +1744,7 @@ def system_settings(request):
                     try:
                         count = es_data.kibana_import_fileobj(request.FILES['file'])
                         context['success'] = 'Successfully imported %i objects' % count
-                    except Exception, e:
+                    except Exception as e:
                         context['error'] = 'Import failed: %s' % e
                 else:
                     context['error'] = 'Please provide a dashboard archive'
@@ -1752,13 +1752,13 @@ def system_settings(request):
                 try:
                     es_data.kibana_clear()
                     context['success'] = 'Done'
-                except Exception, e:
+                except Exception as e:
                     context['error'] = 'Clearing failed: %s' % e
             elif 'reset' in request.POST:
                 try:
                     es_data.kibana_reset()
                     context['success'] = 'Done'
-                except Exception, e:
+                except Exception as e:
                     context['error'] = 'Reset failed: %s' % e
             else:
                 context['error'] = 'Invalid operation'

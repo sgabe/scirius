@@ -110,7 +110,7 @@ def edit(request):
                         ruleset = form.cleaned_data['ruleset'],
                         yaml_file = form.cleaned_data['yaml_file'],
                         )
-            except IntegrityError, error:
+            except IntegrityError as error:
                 return scirius_render(request, 'suricata/edit.html', { 'form': form, 'error': error })
             UserAction.create(
                     action_type='create_suricata',
@@ -149,7 +149,7 @@ def update(request):
         if form.cleaned_data['reload']:
             try:
                 suri.ruleset.update()
-            except IOError, errors:
+            except IOError as errors:
                 return index(request, error="Can not fetch data: %s" % (errors))
             message.append("Rule downloaded at %s." % unicode(suri.ruleset.updated_date))
         if form.cleaned_data['build']:

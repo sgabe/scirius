@@ -1177,7 +1177,7 @@ class Source(models.Model):
 
                 return True
 
-        except requests.exceptions.ConnectionError, e:
+        except requests.exceptions.ConnectionError as e:
             if "Name or service not known" in unicode(e):
                 raise IOError("Failure to resolve hostname, please check DNS configuration")
             elif "Connection timed out" in unicode(e):
