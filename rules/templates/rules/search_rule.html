@@ -17,7 +17,7 @@
 {% block content %}
 <script language="JavaScript">
 function tables2_toggle(source, name) {
-    checkboxes = document.getElementsByName(name);
+    var checkboxes = document.getElementsByName(name);
     for(var i in checkboxes)
         checkboxes[i].checked = source.checked;
 }

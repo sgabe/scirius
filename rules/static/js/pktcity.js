@@ -84,8 +84,8 @@ function PktCityCreateAlert(SceneIPs, item, etime, material, matsource, mattarge
     var nbframes = fps * 10;
     var animation = new BABYLON.Animation("attackAnimation", "position", fps, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
     var keys = [];
-    startframe = (etime-starttime)/(time-starttime)*nbframes;
-    endframe = startframe + 50;
+    var startframe = (etime-starttime)/(time-starttime)*nbframes;
+    var endframe = startframe + 50;
     keys.push({frame: startframe, value:   new BABYLON.Vector3(source.x, y, source.z)});
     keys.push({frame: endframe, value:   new BABYLON.Vector3(target.x, y, target.z)});
     keys.push({frame: endframe + 1, value:   new BABYLON.Vector3(source.x, y, source.z)});
@@ -113,7 +113,7 @@ function PktCityCreateScene(data) {
         var starttime = undefined;
         var time = undefined;
         data.forEach(function(es_item, index, array) {
-            item  = es_item['_source'];
+            var item  = es_item['_source'];
             if (!(item['alert']['source']['ip'] in SceneIPs)) {
                 var evip = new PktCityIP(item['alert']['source']['ip'], item['timestamp']);
                 SceneIPs[item['alert']['source']['ip']] = evip;
@@ -122,7 +122,7 @@ function PktCityCreateScene(data) {
                 var evip = new PktCityIP(item['alert']['target']['ip'], item['timestamp']);
                 SceneIPs[item['alert']['target']['ip']] = evip;
             }
-            etime = Date.parse(item['timestamp']);
+            var etime = Date.parse(item['timestamp']);
             if ((starttime == undefined) || (etime < starttime)) {
                 starttime = etime;
             }
@@ -164,6 +164,7 @@ function PktCityCreateScene(data) {
                         return ip.split('.').reduce(function(ipInt, octet) { return (ipInt<<8) + parseInt(octet, 10)}, 0) >>> 0;
                 }
                 sorted.sort(function(a, b){ return ip2int(a) - ip2int(b)});
+                var i;
                 for (i = 0; i < sorted.length; i++) {
                     var x = Math.floor(i / mod);
                     var z = i % mod;
@@ -247,7 +248,7 @@ function PktCityCreateScene(data) {
                 HUDvalue.addControl(HUDtarget);
 
                 data.forEach(function(es_item, index, array) {
-                    item  = es_item['_source'];
+                    var item = es_item['_source'];
                     PktCityCreateAlert(SceneIPs, item,
                         Date.parse(item['timestamp']),
                         matTube,

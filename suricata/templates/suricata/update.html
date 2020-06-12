@@ -8,14 +8,14 @@
 <script language="JavaScript">
 
 function tables_checking(source) {
-    checkboxes = document.getElementsByClassName('action_selection');
+    var checkboxes = document.getElementsByClassName('action_selection');
     for (var i in checkboxes) {
         checkboxes[i].checked = source.checked;
     }
 }
 
 function table_all_toggle(source) {
-    checkboxes = document.getElementsByName('check_all')[0];
+    var checkboxes = document.getElementsByName('check_all')[0];
     if (source.checked == 0)
         checkboxes.checked = 0;
 }
