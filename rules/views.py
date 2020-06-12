@@ -368,7 +368,6 @@ def edit_rule(request, rule_id):
                 form_target_trans = Transformation.TargetTransfoType(form.cleaned_data["target"])
 
                 for form_trans in (form_action_trans, form_lateral_trans, form_target_trans):
-                    (TYPE, NONE, CAT_DEFAULT) = (None, None, None)
 
                     if form_trans == form_action_trans:
                         TYPE = Transformation.ACTION
