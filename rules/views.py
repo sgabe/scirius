@@ -41,6 +41,9 @@ import json
 import yaml
 import re
 import os
+import logging
+
+es_logger = logging.getLogger('elasticsearch')
 
 import django_tables2 as tables
 from tables import *
@@ -241,7 +244,8 @@ def elasticsearch(request):
             else:
                 raise Exception('Query parameter not supported: %s' % query)
         except ESError as e:
-            return HttpResponseServerError(e.message)
+            es_logger.exception(e)
+            return HttpResponseServerError()
     else:
         template = Probe.common.get_es_template()
         return scirius_render(request, template, context)
