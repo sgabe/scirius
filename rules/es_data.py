@@ -1991,7 +1991,7 @@ class ESData(object):
 
     def get_indexes(self):
         res = self.client.indices.stats()
-        indexes = res['indices'].keys()
+        indexes = list(res['indices'].keys())
         idxs = list(indexes)
 
         for idx in idxs:

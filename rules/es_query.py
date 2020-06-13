@@ -261,7 +261,7 @@ class ESQuery(object):
             raise Exception('Missing aggregation')
         if len(_query['aggregations']) != 1:
             raise Exception('Unexpected aggregation count')
-        if 'composite' not in _query['aggregations'].values()[0]:
+        if 'composite' not in list(_query['aggregations'].values())[0]:
             raise Exception('Unexpected aggregation type')
 
         after = None
@@ -269,9 +269,9 @@ class ESQuery(object):
         # https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-composite-aggregation.html#_after
         while True:
             if after:
-                _query['aggregations'].values()[0]['composite']['after'] = after
+                list(_query['aggregations'].values())[0]['composite']['after'] = after
 
-            _query['aggregations'].values()[0]['composite']['size'] = 10000
+            list(_query['aggregations'].values())[0]['composite']['size'] = 10000
             query = bytearray(json.dumps(_query), encoding='utf-8')
 
             data = self._urlopen(es_url, query)
@@ -282,7 +282,7 @@ class ESQuery(object):
                 # No data matches the query
                 break
 
-            after = data['aggregations'].values()[0].get('after_key')
+            after = list(data['aggregations'].values())[0].get('after_key')
 
             if after is None:
                 break

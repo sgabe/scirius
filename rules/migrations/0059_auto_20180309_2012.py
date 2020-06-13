@@ -16,7 +16,7 @@ def parse_flowbits(self, source, flowbits, Flowbit):
         if match:
             for flowinst in match:
                 # create Flowbit if needed
-                if not flowinst[1] in flowbits[ftype].keys():
+                if not flowinst[1] in list(flowbits[ftype].keys()):
                     elt = Flowbit(type = ftype, name = flowinst[1],
                                   source = source)
                     flowbits[ftype][flowinst[1]] = elt

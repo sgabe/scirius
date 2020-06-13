@@ -102,7 +102,7 @@ class AccountSerializer(serializers.ModelSerializer):
         user_data = validated_data.pop('user')
         user = instance.user
 
-        for key, value in user_data.iteritems():
+        for key, value in user_data.items():
             if key == 'password':
                 raise serializers.ValidationError({'password': 'You do not have permission to perform this action'})
 

@@ -532,9 +532,9 @@ class RuleHitsOrderingFilter(OrderingFilter):
                     pass
 
             if order == 'desc':
-                queryset += rules.values()
+                queryset += list(rules.values())
             else:
-                queryset = rules.values() + queryset
+                queryset = list(rules.values()) + queryset
 
         else:
             if ordering:
@@ -710,13 +710,13 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
 
         # Check wrongs filters types (other than type/value)
         if len(copy_params) > 0:
-            params_str = ', '.join(copy_params.keys())
+            params_str = ', '.join(list(copy_params.keys()))
             raise serializers.ValidationError({'filters': ['Wrong filters: "%s"' % params_str]})
 
         # Check key/value filters
         # Key
         if key_str:
-            if key_str not in Transformation.AVAILABLE_MODEL_TRANSFO.keys():
+            if key_str not in list(Transformation.AVAILABLE_MODEL_TRANSFO.keys()):
                 raise serializers.ValidationError({'filters': ['Wrong filter type "%s".' % key_str]})
 
             # Value
@@ -985,7 +985,7 @@ class BaseTransformationViewSet(viewsets.ModelViewSet):
         comment_serializer.is_valid(raise_exception=True)
 
         fields = kwargs['fields']
-        for key, value in dict(fields).iteritems():
+        for key, value in dict(fields).items():
             fields[key] = serializer.validated_data[value]
 
         fields['comment'] = comment
@@ -1007,7 +1007,7 @@ class BaseTransformationViewSet(viewsets.ModelViewSet):
         comment_serializer.is_valid(raise_exception=True)
 
         fields = kwargs['fields']
-        for key, value in dict(fields).iteritems():
+        for key, value in dict(fields).items():
             fields[key] = getattr(instance, value)
 
         fields['comment'] = comment
@@ -1052,7 +1052,7 @@ class BaseTransformationViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         fields = params['fields']
-        for key, value in dict(fields).iteritems():
+        for key, value in dict(fields).items():
             if value in serializer.validated_data:
                 fields[key] = serializer.validated_data[value]
             else:
@@ -1841,7 +1841,7 @@ class UserActionViewSet(SciriusReadOnlyModelViewSet):
         actions_dict = get_middleware_module('common').get_user_actions_dict()
 
         res = OrderedDict()
-        for key, value in actions_dict.iteritems():
+        for key, value in actions_dict.items():
             res.update({key: value['title']})
 
         return Response({'action_type_list': res})
@@ -2072,7 +2072,7 @@ class ESFilterIPViewSet(ESBaseViewSet):
             errors['field'] = ['This field is required.']
             raise serializers.ValidationError(errors)
 
-        if field not in self.RULE_FIELDS_MAPPING.keys():
+        if field not in list(self.RULE_FIELDS_MAPPING.keys()):
             raise exceptions.NotFound(detail='"%s" is not a valid field' % field)
 
         filter_ip = self.RULE_FIELDS_MAPPING[field]

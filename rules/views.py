@@ -214,7 +214,7 @@ def elasticsearch(request):
                 hosts = ESSidByHosts(request).get(sid)
                 context['table'] = hosts
                 return scirius_render(request, 'rules/table.html', context)
-            elif query in RULE_FIELDS_MAPPING.keys():
+            elif query in list(RULE_FIELDS_MAPPING.keys()):
                 ajax = request.GET.get('json', None)
                 if ajax:
                     raise ESError('Use REST API instead.')
@@ -477,8 +477,8 @@ def edit_rule(request, rule_id):
                         initial[key.value] = current_trans[key].value
 
         # Case 3: differents transformations are applied on n rulesets
-        for key, dict_val in rulesets_res.iteritems():
-            for val in dict_val.iterkeys():
+        for key, dict_val in rulesets_res.items():
+            for val in dict_val.keys():
 
                 if len(rulesets) == rulesets_res[key][val] or \
                         (None in rulesets_res[key] and
@@ -639,8 +639,8 @@ def transform_category(request, cat_id):
                         initial[key.value] = current_trans[key].value
 
         # Case 3: differents transformations are applied on n rulesets
-        for key, dict_val in rulesets_res.iteritems():
-            for val in dict_val.iterkeys():
+        for key, dict_val in rulesets_res.items():
+            for val in dict_val.keys():
 
                 if len(rulesets) == rulesets_res[key][val] or \
                         (None in rulesets_res[key] and

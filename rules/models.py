@@ -525,7 +525,7 @@ class UserAction(models.Model):
         ua.save(force_insert)
 
         # UserActionObject
-        for action_key, action_value in kwargs.iteritems():
+        for action_key, action_value in kwargs.items():
 
             ua_obj_params = {
                 'action_key': action_key,
@@ -554,7 +554,7 @@ class UserAction(models.Model):
 
         from scirius.utils import get_middleware_module
         actions_dict = get_middleware_module('common').get_user_actions_dict()
-        if self.action_type not in actions_dict.keys():
+        if self.action_type not in list(actions_dict.keys()):
             raise Exception('Unknown action type "%s"' % self.action_type)
 
         format_ = {'user': format_html('<strong>{}</strong>', self.username), 'datetime': self.date}
@@ -583,7 +583,7 @@ class UserAction(models.Model):
 
         from scirius.utils import get_middleware_module
         actions_dict = get_middleware_module('common').get_user_actions_dict()
-        if self.action_type not in actions_dict.keys():
+        if self.action_type not in list(actions_dict.keys()):
             raise Exception('Unknown action type "%s"' % self.action_type)
 
         return actions_dict[self.action_type]['title']
@@ -2117,12 +2117,12 @@ class Category(models.Model, Transformable, Cache):
             category_str = Category.__name__.lower()
             ruleset_str = Ruleset.__name__.lower()
 
-            for trans, tsets in Category.TRANSFORMATIONS[key][category_str].iteritems():
+            for trans, tsets in Category.TRANSFORMATIONS[key][category_str].items():
                 if self.pk in tsets:  # DROP / REJECT / FILESTORE / NONE
                     return trans
 
             if override:
-                for trans, tsets in Rule.TRANSFORMATIONS[key][ruleset_str].iteritems():
+                for trans, tsets in Rule.TRANSFORMATIONS[key][ruleset_str].items():
                     if self.category.pk in tsets:
                         return trans
 
@@ -2231,7 +2231,7 @@ class Rule(models.Model, Transformable, Cache):
                     else:
                         continue
                     # create Flowbit if needed
-                    if not flowinst[1] in flowbits[ftype].keys():
+                    if not flowinst[1] in list(flowbits[ftype].keys()):
                         elt = Flowbit(type = ftype, name = flowinst[1],
                                       source = source)
                         flowbits['last_pk'] += 1
@@ -2456,16 +2456,16 @@ class Rule(models.Model, Transformable, Cache):
             category_str = Category.__name__.lower()
             ruleset_str = Ruleset.__name__.lower()
 
-            for trans, tsets in Rule.TRANSFORMATIONS[key][rule_str].iteritems():
+            for trans, tsets in Rule.TRANSFORMATIONS[key][rule_str].items():
                 if self.pk in tsets:
                     return trans
 
             if override:
-                for trans, tsets in Rule.TRANSFORMATIONS[key][category_str].iteritems():
+                for trans, tsets in Rule.TRANSFORMATIONS[key][category_str].items():
                     if self.category.pk in tsets:
                         return trans
 
-                for trans, tsets in Rule.TRANSFORMATIONS[key][ruleset_str].iteritems():
+                for trans, tsets in Rule.TRANSFORMATIONS[key][ruleset_str].items():
                     if ruleset.pk in tsets:
                         return trans
 
@@ -3179,7 +3179,7 @@ class RuleProcessingFilter(models.Model):
                     sid_track_ip[unicode(sid)] = ('by_dst', dest_ip.value)
 
             res = []
-            for sid, val in sid_track_ip.iteritems():
+            for sid, val in sid_track_ip.items():
                 if len(val):
                     res.append('suppress gen_id 1, sid_id %s, track %s, ip %s\n' % (sid, val[0], val[1]))
             return res
@@ -3188,7 +3188,7 @@ class RuleProcessingFilter(models.Model):
             options = self.get_options()
 
             res = []
-            for sid in sid_track_ip.iterkeys():
+            for sid in sid_track_ip.keys():
                 res.append('threshold gen_id 1, sig_id %s, type %s, track %s, count %s, seconds %s\n' % (sid, options['type'], options['track'], options['count'], options['seconds']))
             return res
 

@@ -191,7 +191,7 @@ class SciriusTable(tables.Table):
 
 # https://stackoverflow.com/questions/20656135/python-deep-merge-dictionary-data
 def merge_dict_deeply(src, dest):
-    for key, value in src.items():
+    for key, value in list(src.items()):
         if isinstance(value, dict):
             node = dest.setdefault(key, {})
             merge_dict_deeply(value, node)
