@@ -2532,9 +2532,6 @@ class Rule(models.Model, Transformable, Cache):
                 c = content.encode('utf8')
             content = self.apply_transformation(c, key=Transformation.TARGET, value=trans)
 
-        if isinstance(content, str):
-            content = content.decode('utf8')
-
         return content
 
     def get_transformation_choices(self, key=Transformation.ACTION):
