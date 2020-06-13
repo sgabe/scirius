@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 from django.conf.urls import url, include
 from django.conf import settings
 
-from views import homepage, KibanaProxyView, EveboxProxyView, MolochProxyView
-from rest_api import router
+from scirius.views import homepage, KibanaProxyView, EveboxProxyView, MolochProxyView
+from scirius.rest_api import router
 
 urlpatterns = [
     url(r'^rules/', include('rules.urls')),

@@ -4,10 +4,10 @@ from django.conf import settings
 from rest_framework import serializers, viewsets
 from rest_framework.routers import DefaultRouter, Route
 
-from utils import get_middleware_module
+from scirius.utils import get_middleware_module
 from accounts.rest_api import router as accounts_router
 
-from rest_utils import SciriusModelViewSet
+from scirius.rest_utils import SciriusModelViewSet
 from rules.rest_api import router as rules_router, get_custom_urls
 from suricata.rest_api import get_custom_urls as suricata_custom_urls
 

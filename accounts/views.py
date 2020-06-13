@@ -28,8 +28,8 @@ from rest_framework.authtoken.models import Token
 from rules.models import UserAction
 
 from scirius.utils import scirius_render, scirius_listing
-from forms import LoginForm, UserSettingsForm, NormalUserSettingsForm, PasswordForm, DeleteForm, TokenForm, PasswordChangeForm, UserCreationForm
-from models import SciriusUser
+from accounts.forms import LoginForm, UserSettingsForm, NormalUserSettingsForm, PasswordForm, DeleteForm, TokenForm, PasswordChangeForm, UserCreationForm
+from accounts.models import SciriusUser
 
 from ipware.ip import get_real_ip
 import logging

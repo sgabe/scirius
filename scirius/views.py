@@ -25,8 +25,7 @@ from django.shortcuts import redirect
 from django.conf import settings
 
 from revproxy.views import ProxyView
-from scirius.utils import scirius_render
-from utils import get_middleware_module
+from scirius.utils import scirius_render, get_middleware_module
 
 # Avoid logging every request
 revproxy_logger = logging.getLogger('revproxy')

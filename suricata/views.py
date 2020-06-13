@@ -35,7 +35,7 @@ from suricata.models import Suricata
 from rules.models import dependencies_check
 from rules.models import UserAction, Transformation, Rule
 
-from forms import *
+from suricata.forms import *
 from rules.forms import CommentForm
 
 from django.conf import settings

@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 from django.conf.urls import url
 
 from suricata import views
-from rest_api import router
+from suricata.rest_api import router
 
 urlpatterns = [
     url(r'^$', views.index, name='suricata_index'),

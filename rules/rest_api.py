@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from suripyg import SuriHTMLFormat
+from rules.suripyg import SuriHTMLFormat
 
 from django.conf import settings
 from django.utils import timezone

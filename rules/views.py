@@ -46,9 +46,9 @@ import logging
 es_logger = logging.getLogger('elasticsearch')
 
 import django_tables2 as tables
-from tables import *
-from forms import *
-from suripyg import SuriHTMLFormat
+from rules.tables import *
+from rules.forms import *
+from rules.suripyg import SuriHTMLFormat
 
 Probe = __import__(settings.RULESET_MIDDLEWARE)
 
