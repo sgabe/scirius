@@ -200,6 +200,12 @@ class ESQuery(object):
         from rules.es_graphs import ESError
         headers = {'content-type': contenttype}
 
+        if method is None:
+            if data:
+                method = 'POST'
+            else:
+                method = 'GET'
+
         try:
             out = requests.request(method, url, data=data, headers=headers, timeout=self.TIMEOUT)
         except (requests.HTTPError, socket.timeout) as e:
@@ -214,11 +220,6 @@ class ESQuery(object):
             raise ESError(msg, e)
         else:
             if settings.DEBUG:
-                if method is None:
-                    if data:
-                        method = 'POST'
-                    else:
-                        method = 'GET'
                 if data:
                     data = '-- ' + data.decode('utf-8').replace('\n', '\n-- ')
                 else:
