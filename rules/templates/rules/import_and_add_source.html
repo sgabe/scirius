@@ -92,7 +92,7 @@ function test_source(src_pk, rulesets, ruleset_list)
 		var error_content = "";
                 if (data['errors'][0] != undefined) {
                     for (i = 0; i < data['errors'].length; i++) {
-                            error_content += '<li><span class="text-danger"><strong>' + data['errors'][i]['error'] + '</strong></span>: <span>' + data['errors'][i]['message'] + '</span></li>';
+                            error_content += '<li><span class="text-danger">' + data['errors'][i]['message'] + '</span></li>';
                     }
                 } else {
                     if (data['errors']['message'] != undefined) {
