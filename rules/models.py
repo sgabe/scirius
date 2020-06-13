@@ -1140,7 +1140,7 @@ class Source(models.Model):
         return cats_content, iprep_content
 
     def get_absolute_url(self):
-        from django.core.urlresolvers import reverse
+        from django.urls import reverse
         return reverse('source', args=[unicode(self.id)])
 
     def update_ruleset_http(self, f):
@@ -1323,7 +1323,7 @@ class SourceUpdate(models.Model):
         return diff
 
     def get_absolute_url(self):
-        from django.core.urlresolvers import reverse
+        from django.urls import reverse
         return reverse('sourceupdate', args=[unicode(self.id)])
 
 
@@ -2029,7 +2029,7 @@ class Category(models.Model, Transformable, Cache):
             source.aggregate_update(rules_update)
 
     def get_absolute_url(self):
-        from django.core.urlresolvers import reverse
+        from django.urls import reverse
         return reverse('category', args=[unicode(self.id)])
 
     def enable(self, ruleset, user = None, comment = None):
@@ -2216,7 +2216,7 @@ class Rule(models.Model, Transformable, Cache):
         return 'pficon-security'
 
     def get_absolute_url(self):
-        from django.core.urlresolvers import reverse
+        from django.urls import reverse
         return reverse('rule', args=[unicode(self.sid)])
 
     def parse_flowbits(self, source, flowbits, addition = False):
@@ -2823,7 +2823,7 @@ class Ruleset(models.Model, Transformable):
         return (self.pk in rulesets_t.values_list('pk', flat=True))
 
     def get_absolute_url(self):
-        from django.core.urlresolvers import reverse
+        from django.urls import reverse
         return reverse('ruleset', args=[unicode(self.id)])
 
     def update(self):
@@ -3071,7 +3071,7 @@ class Threshold(models.Model):
         return rep
 
     def get_absolute_url(self):
-        from django.core.urlresolvers import reverse
+        from django.urls import reverse
         return reverse('threshold', args=[unicode(self.id)])
 
     def contain(self, elt):

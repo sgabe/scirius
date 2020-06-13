@@ -83,7 +83,7 @@ class Suricata(models.Model):
         return True
 
     def get_absolute_url(self):
-        from django.core.urlresolvers import reverse
+        from django.urls import reverse
         return reverse('suricata_index')
 
 def get_probe_hostnames(limit = 10):
