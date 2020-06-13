@@ -1230,14 +1230,14 @@ class UserActionObject(models.Model):
     action_key = models.CharField(max_length=20)
     action_value = models.CharField(max_length=100)
 
-    user_action = models.ForeignKey(UserAction, related_name='user_action_objects')
+    user_action = models.ForeignKey(UserAction, on_delete=models.CASCADE, related_name='user_action_objects')
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True)
     object_id = models.PositiveIntegerField(null=True)
     content = GenericForeignKey('content_type', 'object_id')
 
 
 class SourceAtVersion(models.Model):
-    source = models.ForeignKey(Source)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
     # Sha1 or HEAD or tag
     version = models.CharField(max_length=42)
     git_version = models.CharField(max_length=42, default = 'HEAD')
@@ -1308,7 +1308,7 @@ class SourceAtVersion(models.Model):
         return self.test_rule_buffer(rule_buffer)
 
 class SourceUpdate(models.Model):
-    source = models.ForeignKey(Source)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
     created_date = models.DateTimeField('date of update', blank = True, default = timezone.now)
     # Store update info as a JSON document
     data = models.TextField()
@@ -1780,7 +1780,7 @@ class Category(models.Model, Transformable, Cache):
     filename = models.CharField(max_length=200)
     descr = models.CharField(max_length=400, blank = True)
     created_date = models.DateTimeField('date created', default = timezone.now)
-    source = models.ForeignKey(Source)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name_plural = "categories"
@@ -2179,7 +2179,7 @@ class Category(models.Model, Transformable, Cache):
 class Rule(models.Model, Transformable, Cache):
     GROUP_BY_CHOICES= (('by_src', 'by_src'),('by_dst', 'by_dst'))
     sid = models.IntegerField(primary_key=True)
-    category = models.ForeignKey(Category)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     msg = models.CharField(max_length=1000)
     state = models.BooleanField(default=True)
     state_in_source = models.BooleanField(default=True)
@@ -2617,7 +2617,7 @@ class Flowbit(models.Model):
     set = models.ManyToManyField(Rule, related_name='setter')
     isset = models.ManyToManyField(Rule, related_name='checker')
     enable = models.BooleanField(default=True)
-    source = models.ForeignKey(Source)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
 
 
 # we should use django reversion to keep track of this one
@@ -3021,16 +3021,16 @@ class Ruleset(models.Model, Transformable):
 
 
 class RuleTransformation(Transformation):
-    ruleset = models.ForeignKey(Ruleset)
-    rule_transformation = models.ForeignKey(Rule)
+    ruleset = models.ForeignKey(Ruleset, on_delete=models.CASCADE)
+    rule_transformation = models.ForeignKey(Rule, on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('ruleset', 'rule_transformation', 'key')
 
 
 class CategoryTransformation(Transformation):
-    ruleset = models.ForeignKey(Ruleset)
-    category_transformation = models.ForeignKey(Category)
+    ruleset = models.ForeignKey(Ruleset, on_delete=models.CASCADE)
+    category_transformation = models.ForeignKey(Category, on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('ruleset', 'category_transformation', 'key')
@@ -3051,8 +3051,8 @@ class Threshold(models.Model):
     threshold_type = models.CharField(max_length=20, choices=THRESHOLD_TYPES, default='suppress')
     type = models.CharField(max_length=20, choices=THRESHOLD_TYPE_TYPES, default='limit')
     gid = models.IntegerField(default=1)
-    rule = models.ForeignKey(Rule, default = None)
-    ruleset = models.ForeignKey(Ruleset, default = None)
+    rule = models.ForeignKey(Rule, default = None, on_delete=models.CASCADE)
+    ruleset = models.ForeignKey(Ruleset, default = None, on_delete=models.CASCADE)
     track_by = models.CharField(max_length= 10, choices = TRACK_BY_CHOICES, default='by_src')
     net = models.CharField(max_length=100, blank = True, validators=[validate_addresses_or_networks])
     count = models.IntegerField(default=1)
@@ -3215,7 +3215,7 @@ class RuleProcessingFilterDef(models.Model):
     key = models.CharField(max_length=512)
     value = models.CharField(max_length=512)
     operator = models.CharField(max_length=10, choices=OPERATOR)
-    proc_filter = models.ForeignKey(RuleProcessingFilter, related_name='filter_defs')
+    proc_filter = models.ForeignKey(RuleProcessingFilter, related_name='filter_defs', on_delete=models.CASCADE)
     full_string = models.BooleanField(default=True)
 
     class Meta:
