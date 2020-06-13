@@ -156,7 +156,7 @@ LOGGING = {
         'elasticsearch': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/scirius/elasticsearch.log',
+            'filename': '/var/log/elasticsearch.log',
             'formatter': 'raw',
         },
     },
