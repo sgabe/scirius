@@ -186,7 +186,7 @@ class RestAPIAccountTestCase(RestAPITestBase, APITestCase):
         # compare with generated token with db token 
         token = response['token']
         token_db = Token.objects.filter(user_id=self.sciriususer_staff.user.pk)
-        self.assertEqual(token, unicode(token_db[0]))
+        self.assertEqual(token, str(token_db[0]))
 
     def test_031_get_user_staff_token_own(self):
         # Need to create token before getting it
@@ -197,7 +197,7 @@ class RestAPIAccountTestCase(RestAPITestBase, APITestCase):
 
         token = response['token']
         token_db = Token.objects.filter(user_id=self.sciriususer_staff.user.pk)
-        self.assertEqual(token, unicode(token_db[0]))
+        self.assertEqual(token, str(token_db[0]))
 
     def test_032_fail_get_user_staff_token_with_user_active(self):
         self.client.force_login(self.sciriususer_active.user)

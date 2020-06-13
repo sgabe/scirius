@@ -217,7 +217,7 @@ class RestAPITestBase(object):
 
         # behavior/status could be different on remote and local build
         try:
-            data_msg = unicode(getattr(response, 'data', None))
+            data_msg = str(getattr(response, 'data', None))
         except UnicodeDecodeError:
             data_msg = repr(getattr(response, 'data', None))
         msg = 'Request failed: \n%s %s\n%s %s\n%s' % (method.upper(), url, response.status_code, response.reason_phrase, data_msg)
@@ -398,7 +398,7 @@ class RestAPISourceTestCase(RestAPITestBase, APITestCase):
         self._create_custom_source('http', 'sigs', uri='http://localhost:1234/')
 
         response = self.http_post(reverse('source-update-source', args=(self.source.pk,)), status=status.HTTP_400_BAD_REQUEST)
-        msg = unicode(response.get('update', [''])[0])
+        msg = str(response.get('update', [''])[0])
         self.assertRegexpMatches(msg, 'Can not fetch data: .* Connection refused')
 
     def test_006_custom_source_delete(self):

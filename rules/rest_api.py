@@ -421,7 +421,7 @@ class ListFilter(filters.CharFilter):
         return value
 
     def filter(self, qs, value):
-        multiple_vals = value.split(u",")
+        multiple_vals = value.split(",")
         multiple_vals = self.sanitize(multiple_vals)
         multiple_vals = map(self.customize, multiple_vals)
         for val in multiple_vals:
@@ -912,7 +912,7 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
         }
 
     def _add_hits(self, request, data):
-        sids = ','.join([unicode(rule['sid']) for rule in data])
+        sids = ','.join([str(rule['sid']) for rule in data])
 
         try:
             result = ESSigsListHits(request).get(sids)
@@ -1448,7 +1448,7 @@ class BaseSourceViewSet(viewsets.ModelViewSet):
         try:
             source.handle_uploaded_file(request.FILES['file'])
         except Exception as error:
-            raise serializers.ValidationError({'upload': [unicode(error)]})
+            raise serializers.ValidationError({'upload': [str(error)]})
 
         UserAction.create(
                 action_type='upload_source',
@@ -1506,7 +1506,7 @@ class BaseSourceViewSet(viewsets.ModelViewSet):
         try:
             public_sources = get_public_sources(False)
         except Exception as e:
-            raise serializers.ValidationError({'list': [unicode(e)]})
+            raise serializers.ValidationError({'list': [str(e)]})
         return Response(public_sources['sources'])
 
     @list_route(methods=['get'])
@@ -1514,7 +1514,7 @@ class BaseSourceViewSet(viewsets.ModelViewSet):
         try:
             fetch_public_sources()
         except Exception as e:
-            raise serializers.ValidationError({'fetch': [unicode(e)]})
+            raise serializers.ValidationError({'fetch': [str(e)]})
         return Response({'fetch': 'ok'})
 
     @detail_route(methods=['post'])
@@ -1555,7 +1555,7 @@ class PublicSourceSerializer(BaseSourceSerializer):
         try:
             public_sources = get_public_sources(False)
         except Exception as e:
-            raise serializers.ValidationError({'list': [unicode(e)]})
+            raise serializers.ValidationError({'list': [str(e)]})
 
         if source_name not in public_sources['sources']:
             raise exceptions.NotFound(detail='Unknown public source "%s"' % source_name)
@@ -1904,7 +1904,7 @@ class ESBaseViewSet(APIView):
         try:
             return self._get(request, format)
         except ESError as e:
-            return Response({'error: ES request failed, %s' % unicode(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error: ES request failed, %s' % str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _get(self, request, format):
         raise NotImplementedError('This is an abstract class. ES sub classes must override this method')

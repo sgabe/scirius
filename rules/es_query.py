@@ -191,7 +191,7 @@ class ESQuery(object):
             'to_date': mark_safe(self._to_date(dictionary, es_format=True)), # mark quotes around "now" as safe
             'query_filter': query_filter,
             'bool_clauses': bool_clauses,
-            'interval': unicode(self._interval(dictionary)) + 'ms'
+            'interval': str(self._interval(dictionary)) + 'ms'
         })
 
         return bytearray(templ.render(context), encoding="utf-8")

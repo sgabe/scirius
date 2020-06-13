@@ -1849,7 +1849,7 @@ class ESData(object):
         if not self.client.indices.exists('.kibana'):
             self.client.indices.create(index='.kibana',body={ "mappings": get_kibana_mappings() })
             self.client.indices.refresh(index='.kibana')
-        elif not "visualization" in unicode(self.client.indices.get_mapping(index='.kibana')):
+        elif not "visualization" in str(self.client.indices.get_mapping(index='.kibana')):
             self.client.indices.delete(index='.kibana')
             self.client.indices.create(index='.kibana',body={ "mappings": get_kibana_mappings() })
             self.client.indices.refresh(index='.kibana')

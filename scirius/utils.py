@@ -70,9 +70,9 @@ def complete_context(request, context):
             duration = int(request.session.get('duration', '24'))
         from_date = int((time() - (duration * 3600)) * 1000)
         if duration <= 24:
-            date = '%sh' % unicode(duration)
+            date = '%sh' % str(duration)
         else:
-            date = '%sd' % unicode(duration / 24)
+            date = '%sd' % str(duration / 24)
         if request.GET.__contains__('graph'):
             graph = request.GET.get('graph', 'sunburst')
             if not graph in ['sunburst', 'circles']:
