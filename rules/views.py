@@ -1106,7 +1106,7 @@ def fetch_public_sources():
         os.makedirs(settings.GIT_SOURCES_BASE_DIRECTORY)
     sources_yaml = os.path.join(settings.GIT_SOURCES_BASE_DIRECTORY, 'sources.yaml') 
     with open(sources_yaml, 'w') as sfile:
-        sfile.write(resp.content)
+        sfile.write(resp.text)
 
 
 def update_public_sources(request):
