@@ -9,7 +9,7 @@ import socket
 from django.conf import settings
 from django.template import Context, Template
 from django.utils.safestring import mark_safe
-import urllib2
+import requests
 
 from rules.models import get_es_address
 from scirius.utils import get_middleware_module
@@ -199,17 +199,14 @@ class ESQuery(object):
     def _urlopen(self, url, data=None, method=None, contenttype='application/json'):
         from rules.es_graphs import ESError
         headers = {'content-type': contenttype}
-        req = urllib2.Request(url, data, headers)
-        if method is not None:
-            req.get_method = lambda: method
 
         try:
-            out = urllib2.urlopen(req, timeout=self.TIMEOUT)
-        except (urllib2.URLError, urllib2.HTTPError, socket.timeout) as e:
+            out = requests.request(method, url, data=data, headers=headers, timeout=self.TIMEOUT)
+        except (requests.HTTPError, socket.timeout) as e:
             msg = url + '\n'
             if isinstance(e, socket.timeout):
                 msg += 'Request timeout'
-            elif isinstance(e, urllib2.HTTPError):
+            elif isinstance(e, requests.HTTPError):
                 msg += '%s %s\n%s\n\n%s\n%s' % (e.code, e.reason, e, data, e.read())
             else:
                 msg += repr(e)
@@ -228,7 +225,7 @@ class ESQuery(object):
                     data = '-- No data'
                 es_logger.info('%s %s\n%s' % (method, url, data))
 
-        out = out.read()
+        out = out.content
         out = json.loads(out)
         return out
 

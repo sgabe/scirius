@@ -28,7 +28,7 @@ import tempfile
 from shutil import rmtree
 from time import strftime, sleep
 
-import urllib2
+import requests
 
 from django.conf import settings
 from elasticsearch import Elasticsearch, ConnectionError, NotFoundError
@@ -1734,16 +1734,14 @@ class ESData(object):
         }
         data = json.dumps(data)
         kibana_url = settings.KIBANA_URL + url
-        req = urllib2.Request(kibana_url, data, headers=headers)
-        urllib2.urlopen(req)
+        req = requests.get(kibana_url, data=data, headers=headers)
         return req
 
-    def _es_request(self, url, data, method='POST'):
+    def _es_request(self, url, data):
         headers = {'content-type': 'application/json'}
         data = json.dumps(data)
         es_url = get_es_address() + url
-        req = urllib2.Request(es_url, data, headers=headers)
-        urllib2.urlopen(req)
+        req = requests.post(es_url, data=data, headers=headers)
         return req
 
     def _kibana_remove(self, _type, body):
