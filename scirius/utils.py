@@ -175,7 +175,7 @@ def help_links(djlink):
         "edit_rule": {"name": "Transform Rule", "base_url": "doc/ruleset.html", "anchor": "#rule-transformations" },
         "accounts_manage": {"name": "Accounts Management", "base_url": "doc/local-user-management.html", "anchor": "#manage-accounts" },
     }
-    if HELP_LINKS_TABLE.has_key(djlink):
+    if djlink in HELP_LINKS_TABLE:
         return HELP_LINKS_TABLE[djlink]
     Probe = __import__(settings.RULESET_MIDDLEWARE)
     return Probe.common.help_links(djlink)

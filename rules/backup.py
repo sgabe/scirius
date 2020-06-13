@@ -73,7 +73,7 @@ class SCOperation(object):
         for key in llevel:
             # removing application is unlikely so if miglebel don't have a key
             # then it is are older
-            if not miglevel.has_key(key):
+            if key not in miglevel:
                 return True
             if llevel[key] < miglevel[key]:
                 return False

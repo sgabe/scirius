@@ -64,7 +64,7 @@ def index(request):
         pass
 
     # Show current sorting used at the table column 'hits' (descending).
-    if request.GET.has_key('sort'):
+    if 'sort' in request.GET:
         context['sort_order'] = request.GET.get('sort')
         context['sort_param'] = context['sort_order']
     else:
@@ -91,12 +91,12 @@ def search(request):
     rules_width = 4
     search = None
     if request.method == 'POST':
-        if request.POST.has_key('search'):
+        if 'search' in request.POST:
             search = request.POST['search']
             request.GET = request.GET.copy()
             request.GET.update({'search': search})
     elif request.method == 'GET':
-        if request.GET.has_key('search'):
+        if 'search' in request.GET:
             search = request.GET['search']
     if search:
         rules = Rule.objects.filter(content__icontains=search)
@@ -727,7 +727,7 @@ def delete_alerts(request, rule_id):
                 Probe.common.es_delete_alerts_by_sid(rule_id, request=request)
             else:
                 result = ESDeleteAlertsBySid(request).get(rule_id)
-                if result.has_key('status') and result['status'] != 200:
+                if 'status' in result and result['status'] != 200:
                     context = { 'object': rule_object, 'error': result['msg'] }
                     try:
                         context['probes'] = map(lambda x: '"' +  x + '"', Probe.models.get_probe_hostnames())
@@ -798,7 +798,7 @@ def threshold_rule(request, rule_id):
     if request.method == 'POST': # If the form has been submitted...
         action_type = 'create_threshold'
 
-        if request.POST.has_key('threshold_type'):
+        if 'threshold_type' in request.POST:
             if request.POST['threshold_type'] == 'threshold':
                 form = AddRuleThresholdForm(request.POST)
             else:
@@ -851,10 +851,10 @@ def threshold_rule(request, rule_id):
             direction = 'by_dst'
         data['track_by'] = direction
 
-    if data.has_key('track_by'):
+    if 'track_by' in data:
         containers = []
         pth = Threshold(rule = rule_object, track_by = data['track_by'], threshold_type = data['threshold_type'])
-        if data.has_key('net'):
+        if 'net' in data:
             pth.net = data['net']
         thresholds = Threshold.objects.filter(rule = rule_object)
         for threshold in thresholds:
@@ -1034,7 +1034,7 @@ def add_source(request):
                         )
                 if src.method == 'local':
                     try:
-                        if not request.FILES.has_key('file'):
+                        if 'file' not in request.FILES:
                             form.add_error('file', 'This field is required.')
                             raise Exception('A source file is required')
                         src.handle_uploaded_file(request.FILES['file'])
@@ -1139,9 +1139,9 @@ def get_public_sources(force_fetch=True):
     added_sources = map(lambda x: x.public_source, defined_pub_source)
 
     for source in public_sources['sources']:
-        if public_sources['sources'][source].has_key('support_url'):
+        if 'support_url' in public_sources['sources'][source]:
             public_sources['sources'][source]['support_url_cleaned'] = public_sources['sources'][source]['support_url'].split(' ')[0]
-        if public_sources['sources'][source].has_key('subscribe_url'):
+        if 'subscribe_url' in public_sources['sources'][source]:
             public_sources['sources'][source]['subscribe_url_cleaned'] = public_sources['sources'][source]['subscribe_url'].split(' ')[0]
         if public_sources['sources'][source]['url'].endswith('.rules'):
             public_sources['sources'][source]['datatype'] = 'sig'
@@ -1175,7 +1175,7 @@ def add_public_source(request):
             source = public_sources['sources'][source_id]
             source_uri = source['url']
             params = {"__version__": "4.0"}
-            if form.cleaned_data.has_key('secret_code'):
+            if 'secret_code' in form.cleaned_data:
                 params.update({'secret-code': form.cleaned_data['secret_code']})
             source_uri = source_uri % params
             try:
@@ -1232,7 +1232,7 @@ def edit_source(request, source_id):
     if request.method == 'POST': # If the form has been submitted...
         form = SourceForm(request.POST, request.FILES, instance=source)
         try:
-            if source.method == 'local' and request.FILES.has_key('file'):
+            if source.method == 'local' and 'file' in request.FILES:
                 categories = Category.objects.filter(source = source)
                 firstimport = False
                 if not categories:
@@ -1485,7 +1485,7 @@ def edit_ruleset(request, ruleset_id):
         if not form.is_valid():
             return redirect(ruleset)
 
-        if request.POST.has_key('category'):
+        if 'category' in request.POST:
             category_selection = [ int(x) for x in request.POST.getlist('category_selection') ]
             # clean ruleset
             for cat in ruleset.categories.all():
@@ -1496,12 +1496,12 @@ def edit_ruleset(request, ruleset_id):
                 category = get_object_or_404(Category, pk=cat)
                 if category not in ruleset.categories.all():
                     category.enable(ruleset, user = request.user, comment=form.cleaned_data['comment'])
-        elif request.POST.has_key('rules'):
+        elif 'rules' in request.POST:
             for rule in request.POST.getlist('rule_selection'):
                 rule_object = get_object_or_404(Rule, pk=rule)
                 if rule_object in ruleset.get_transformed_rules(key=SUPPRESSED, value=S_SUPPRESSED):
                     rule_object.enable(ruleset, user = request.user, comment=form.cleaned_data['comment'])
-        elif request.POST.has_key('sources'):
+        elif 'sources' in request.POST:
             source_selection = [ int(x) for x in request.POST.getlist('source_selection')]
             # clean ruleset
             for source in ruleset.sources.all():
@@ -1569,7 +1569,7 @@ def edit_ruleset(request, ruleset_id):
         tables.RequestConfig(request, paginate = False).configure(rules)
 
         context = {'ruleset': ruleset,  'categories_list': categories_list, 'sources': sources, 'rules': rules, 'cats_selection': ", ".join(cats_selection) }
-        if request.GET.has_key('mode'):
+        if 'mode' in request.GET:
             context['mode'] = request.GET['mode']
             context['form'] = CommentForm()
             if context['mode'] == 'sources':
@@ -1622,13 +1622,13 @@ def ruleset_add_supprule(request, ruleset_id):
         return scirius_render(request, 'rules/search_rule.html', context)
 
     if request.method == 'POST': # If the form has been submitted...
-        if request.POST.has_key('search'):
+        if 'search' in request.POST:
             #FIXME Protection on SQL injection ?
             rules = EditRuleTable(Rule.objects.filter(content__icontains=request.POST['search']))
             tables.RequestConfig(request).configure(rules)
             context = { 'ruleset': ruleset, 'rules': rules, 'form': CommentForm() }
             return scirius_render(request, 'rules/search_rule.html', context)
-        elif request.POST.has_key('rule_selection'):
+        elif 'rule_selection' in request.POST:
             form = CommentForm(request.POST)
             if not form.is_valid():
                 return redirect(ruleset)

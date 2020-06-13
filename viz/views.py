@@ -31,7 +31,7 @@ Probe = __import__(settings.RULESET_MIDDLEWARE)
 def dashboard(request):
     context = {}
     context['probes'] = map(lambda x: '"' +  x + '"', Probe.models.get_probe_hostnames())
-    if request.method == 'POST' and request.POST.has_key('filter'):
+    if request.method == 'POST' and 'filter' in request.POST:
         context['filter'] = request.POST['filter']
         request.session['filter'] =  request.POST['filter']
     else:
@@ -47,7 +47,7 @@ def dashboard(request):
 def dashboard_target(request):
     context = {}
     context['probes'] = map(lambda x: '"' +  x + '"', Probe.models.get_probe_hostnames())
-    if request.method == 'POST' and request.POST.has_key('filter'):
+    if request.method == 'POST' and 'filter' in request.POST:
         context['filter'] = request.POST['filter']
         request.session['filter'] =  request.POST['filter']
     else:
@@ -62,7 +62,7 @@ def dashboard_target(request):
 
 def pktcity(request):
     context = {}
-    if request.method == 'POST' and request.POST.has_key('filter'):
+    if request.method == 'POST' and 'filter' in request.POST:
         context['filter'] = request.POST['filter']
         request.session['filter'] =  request.POST['filter']
     else:

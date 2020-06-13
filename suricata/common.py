@@ -64,7 +64,7 @@ def help_links(djlink):
         "suricata_edit": {"name": "Suricata setup", "base_url": "doc/suricata-ce.html", "anchor": "#setup" },
         "suricata_update": {"name": "Updating Suricata ruleset", "base_url": "doc/suricata-ce.html", "anchor": "#updating-ruleset" },
         }
-    if HELP_LINKS_TABLE.has_key(djlink):
+    if djlink in HELP_LINKS_TABLE:
         return HELP_LINKS_TABLE[djlink]
     return None
 

@@ -1838,7 +1838,7 @@ class Category(models.Model, Transformable, Cache):
                 # Is there an existing rule to clean ? this is needed at
                 # conversion of source to use iprep but we will have a different
                 # message in this case (with group)
-                if existing_rules_hash.has_key(rule.sid):
+                if rule.sid in existing_rules_hash:
                     # the sig is already present and it is a group sid so let's declare it
                     # updated to avoid its deletion later in process. No else clause because
                     # the signature will be deleted as it is not referenced in a changed or
@@ -1868,7 +1868,7 @@ class Category(models.Model, Transformable, Cache):
             # if we already have a signature with the SID we are probably parsing
             # a source that has just been switched to iprep. So we get the old
             # rule and we update the content to avoid loosing information.
-            if existing_rules_hash.has_key(rule.sid):
+            if rule.sid in existing_rules_hash:
                 group_rule = existing_rules_hash[rule.sid]
                 group_rule.group = True
                 group_rule.msg = rule_base_msg
@@ -1961,7 +1961,7 @@ class Category(models.Model, Transformable, Cache):
                 if source.use_iprep and Rule.GROUPSNAMEREGEXP.match(msg):
                     self.add_group_signature(rules_groups, line, existing_rules_hash, source, flowbits, rules_update, rules_unchanged)
                 else:
-                    if existing_rules_hash.has_key(int(sid)):
+                    if int(sid) in existing_rules_hash:
                         # FIXME update references if needed
                         rule = existing_rules_hash[int(sid)]
                         if rule.category.source != source:
@@ -2979,7 +2979,7 @@ class Ruleset(models.Model, Transformable):
         result = self.test_rule_buffer(rule_buffer)
         result['rules_count'] = self.rules_count
         self.validity = result['status']
-        if result.has_key('errors'):
+        if 'errors' in result:
             self.errors = json.dumps(result['errors'])
         else:
             self.errors = json.dumps([])

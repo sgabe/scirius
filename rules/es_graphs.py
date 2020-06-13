@@ -1897,7 +1897,7 @@ class ESTimeline(ESQuery):
                 for elt in data:
                     date = elt['key']
                     for host in elt["host"]['buckets']:
-                        if not rdata.has_key(host["key"]):
+                        if host["key"] not in rdata:
                             rdata[host["key"]] = { 'entries': [ { "time": date, "count": host["doc_count"] } ] }
                         else:
                             rdata[host["key"]]['entries'].append({ "time": date, "count": host["doc_count"] })
@@ -1933,7 +1933,7 @@ class ESMetricsTimeline(ESQuery):
                 rdata = {}
                 for elt in data:
                     date = elt['key']
-                    if not rdata.has_key(hosts[0]):
+                    if hosts[0] not in rdata:
                         rdata[hosts[0]] = { 'entries': [ { "time": date, "mean": elt["stat"]["value"] } ] }
                     else:
                         rdata[hosts[0]]['entries'].append({ "time": date, "mean": elt["stat"]["value"] })

@@ -1442,7 +1442,7 @@ class BaseSourceViewSet(viewsets.ModelViewSet):
             msg = 'No upload is allowed. method is currently "%s"' % source.method
             raise serializers.ValidationError({'upload': [msg]})
 
-        if not request.FILES.has_key('file'):
+        if 'file' not in request.FILES:
             raise serializers.ValidationError({'file': ['This field is required.']})
 
         try:
