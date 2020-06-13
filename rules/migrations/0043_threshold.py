@@ -23,8 +23,8 @@ class Migration(migrations.Migration):
                 ('net', models.CharField(max_length=100, blank=True)),
                 ('count', models.IntegerField(default=1)),
                 ('seconds', models.IntegerField(default=60)),
-                ('rule', models.ForeignKey(default=None, to='rules.Rule')),
-                ('ruleset', models.ForeignKey(default=None, to='rules.Ruleset')),
+                ('rule', models.ForeignKey(default=None, to='rules.Rule', on_delete=models.CASCADE)),
+                ('ruleset', models.ForeignKey(default=None, to='rules.Ruleset', on_delete=models.CASCADE)),
             ],
         ),
     ]

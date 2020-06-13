@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('set', models.BooleanField(default=False)),
                 ('isset', models.BooleanField(default=False)),
                 ('enable', models.BooleanField(default=True)),
-                ('source', models.ForeignKey(to='rules.Source')),
+                ('source', models.ForeignKey(to='rules.Source', on_delete=models.CASCADE)),
             ],
             options={
             },
