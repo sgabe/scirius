@@ -160,7 +160,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         }
         variable_list = []
         files_list = []
-        error_stream = StringIO.StringIO(error)
+        error_stream = StringIO(error)
         for line in error_stream:
             try:
                 s_err = json.loads(line)
