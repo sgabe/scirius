@@ -1,5 +1,5 @@
 nodejs:
-  image: node:12.17.0-stretch
+  image: node:12.17.0-buster
   stage: build
   artifacts:
     expire_in: 1 day
@@ -21,7 +21,7 @@ nodejs:
     - node node_modules/eslint/bin/eslint.js -c .eslintrc .
 
 eslint:
-  image: node:12.17.0-stretch
+  image: node:12.17.0-buster
   stage: test
   before_script:
     - cd hunt
@@ -31,7 +31,7 @@ eslint:
     - python tests/eslint_check.py $(find hunt -name \*.js |grep -v /node_modules/)
 
 python:
-  image: python:2.7.18-stretch
+  image: python:3.8.3-buster
   stage: build
   before_script:
     - python -m pip install --upgrade pip wheel setuptools
@@ -44,7 +44,7 @@ python:
     - python -m pip install -r requirements.txt
 
 dlint:
-  image: python:2.7.18-stretch
+  image: python:3.8.3-buster
   stage: test
   before_script:
     - python -m pip install dlint
