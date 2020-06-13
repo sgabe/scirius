@@ -1934,7 +1934,6 @@ class Category(models.Model, Transformable, Cache):
             duplicate_sids = set()
 
             for line in rfile.readlines():
-                line = line.decode('utf-8')
                 state = True
                 if line.startswith('#'):
                     # check if it is a commented signature
