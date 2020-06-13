@@ -35,7 +35,7 @@ from rest_api import router
 from copy import deepcopy
 import tempfile
 from shutil import rmtree
-from StringIO import StringIO
+from io import StringIO
 import itertools
 from importlib import import_module
 

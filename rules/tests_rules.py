@@ -24,9 +24,9 @@ import tempfile
 import shutil
 import os
 import json
-import StringIO
 import re
 
+from io import StringIO
 from django.utils.html import escape
 from django.conf import settings
 
