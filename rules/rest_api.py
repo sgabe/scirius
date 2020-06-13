@@ -431,14 +431,14 @@ class ListFilter(filters.CharFilter):
 
 
 class RuleFilter(filters.FilterSet):
-    min_created = filters.DateFilter(name="created", lookup_expr='gte')
-    max_created = filters.DateFilter(name="created", lookup_expr='lte')
-    min_updated = filters.DateFilter(name="updated", lookup_expr='gte')
-    max_updated = filters.DateFilter(name="updated", lookup_expr='lte')
-    msg = ListFilter(name="msg", lookup_expr='icontains')
-    not_in_msg = ListFilter(name="msg", lookup_expr='icontains', exclude=True)
-    content = ListFilter(name="content", lookup_expr='icontains')
-    not_in_content = ListFilter(name="content", lookup_expr='icontains', exclude=True)
+    min_created = filters.DateFilter(field_name="created", lookup_expr='gte')
+    max_created = filters.DateFilter(field_name="created", lookup_expr='lte')
+    min_updated = filters.DateFilter(field_name="updated", lookup_expr='gte')
+    max_updated = filters.DateFilter(field_name="updated", lookup_expr='lte')
+    msg = ListFilter(field_name="msg", lookup_expr='icontains')
+    not_in_msg = ListFilter(field_name="msg", lookup_expr='icontains', exclude=True)
+    content = ListFilter(field_name="content", lookup_expr='icontains')
+    not_in_content = ListFilter(field_name="content", lookup_expr='icontains', exclude=True)
 
     class Meta:
         model = Rule
@@ -450,9 +450,9 @@ class RuleFilter(filters.FilterSet):
 
 
 class UserActionFilter(filters.FilterSet):
-    min_date = filters.DateFilter(name='date', lookup_expr='gte')
-    max_date = filters.DateFilter(name='date', lookup_expr='lte')
-    comment = ListFilter(name='comment', lookup_expr='icontains')
+    min_date = filters.DateFilter(field_name='date', lookup_expr='gte')
+    max_date = filters.DateFilter(field_name='date', lookup_expr='lte')
+    comment = ListFilter(field_name='comment', lookup_expr='icontains')
 
     class Meta:
         model = UserAction
