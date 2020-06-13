@@ -265,14 +265,19 @@ config classification: command-and-control,Malware Command and Control Activity 
         from rules.models import export_iprep_files
         export_iprep_files(tmpdir, cats_content, iprep_content)
 
-        suri_cmd = [settings.SURICATA_BINARY, '-T', '-l', tmpdir, '-S', rule_file, '-c', config_file]
-        # start suricata in test mode
-        suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (outdata, errdata) = suriprocess.communicate()
-        shutil.rmtree(tmpdir)
-        # if success ok
-        if suriprocess.returncode == 0:
-            return {'status': True, 'errors': ''}
+        try:
+            # start suricata in test mode
+            suri_cmd = [settings.SURICATA_BINARY, '-T', '-l', tmpdir, '-S', rule_file, '-c', config_file]
+            suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            (outdata, errdata) = suriprocess.communicate()
+            # if success ok
+            if suriprocess.returncode == 0:
+                return {'status': True, 'errors': ''}
+        except FileNotFoundError as e:
+            errdata = 'Suricata is unavailable'
+        finally:
+            shutil.rmtree(tmpdir)
+
         # if not return error
         return {'status': False, 'errors': errdata}
 
