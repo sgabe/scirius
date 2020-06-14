@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 from django.core.management.base import BaseCommand, CommandError
 from rules.models import Ruleset
 from suricata.models import Suricata

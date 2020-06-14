@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 from rules.suripyg import SuriHTMLFormat
 
 from django.conf import settings
