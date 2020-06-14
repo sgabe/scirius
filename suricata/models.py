@@ -47,7 +47,7 @@ class Suricata(models.Model):
 
     editable = True
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def generate(self):
