@@ -18,16 +18,15 @@ You should have received a copy of the GNU General Public License
 along with Scirius.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
-from django.conf.urls import url
+from django.urls import re_path
 
 from accounts import views
 
 urlpatterns = [
-    url(r'^logout/$', views.logoutview, name='accounts_logout'),
-    url(r'^login/(?P<target>.*)$', views.loginview, name='accounts_login'),
-    url(r'^edit/(?P<action>.*)$', views.editview, name='accounts_edit'),
-    url(r'^manage/user/(?P<user_id>.*)/$', views.manageuser, name='user'),
-    url(r'^manage/user/(?P<user_id>.*)/(?P<action>.*)$', views.manageuseraction, name='accounts_useraction'),
-    url(r'^manage/(?P<action>.*)$', views.manageview, name='accounts_manage'),
+    re_path(r'^logout/$', views.logoutview, name='accounts_logout'),
+    re_path(r'^login/(?P<target>.*)$', views.loginview, name='accounts_login'),
+    re_path(r'^edit/(?P<action>.*)$', views.editview, name='accounts_edit'),
+    re_path(r'^manage/user/(?P<user_id>.*)/$', views.manageuser, name='user'),
+    re_path(r'^manage/user/(?P<user_id>.*)/(?P<action>.*)$', views.manageuseraction, name='accounts_useraction'),
+    re_path(r'^manage/(?P<action>.*)$', views.manageview, name='accounts_manage'),
 ]

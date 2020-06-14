@@ -19,12 +19,12 @@ along with Scirius.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-from django.conf.urls import url
+from django.urls import re_path
 
 from viz import views
 
 urlpatterns = [
-    url(r'^dashboard$', views.dashboard, name='viz_dashboard'),
-    url(r'^dashboard_target$', views.dashboard_target, name='viz_target_dashboard'),
-    url(r'^pktcity$', views.pktcity, name='viz_pktcity'),
+    re_path(r'^dashboard$', views.dashboard, name='viz_dashboard'),
+    re_path(r'^dashboard_target$', views.dashboard_target, name='viz_target_dashboard'),
+    re_path(r'^pktcity$', views.pktcity, name='viz_pktcity'),
     ]
