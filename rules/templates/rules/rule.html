@@ -578,7 +578,7 @@ function rule_validity_check() {
                             error_content = "";
                             if (data['errors'][0] != undefined) {
                                 for (i = 0; i < data['errors'].length; i++) {
-                                    error_content += '<li><span class="text-danger"><strong>' + data['errors'][i]['error'] + '</strong></span>: <span>' + data['errors'][i]['message'] + '</span></li>';
+                                    error_content += '<li><span class="text-danger"><span>' + data['errors'][i]['message'] + '</span></li>';
                                 }
                             } else {
                                 if (data['errors']['message'] != undefined) {
