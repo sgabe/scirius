@@ -1243,7 +1243,7 @@ class SourceAtVersion(models.Model):
     git_version = models.CharField(max_length=42, default = 'HEAD')
     updated_date = models.DateTimeField('date updated', blank = True, default = timezone.now)
 
-    def __name__(self):
+    def __str__(self):
         return str(self.source) + "@" + self.version
 
     def _get_name(self):
@@ -1785,7 +1785,7 @@ class Category(models.Model, Transformable, Cache):
     class Meta:
         verbose_name_plural = "categories"
 
-    def __name__(self):
+    def __str__(self):
         return self.name
 
     def __init__(self, *args, **kwargs):
@@ -2203,7 +2203,7 @@ class Rule(models.Model, Transformable, Cache):
 
     GROUPSNAMEREGEXP = re.compile('^(.*) +group +\d+$')
 
-    def __name__(self):
+    def __str__(self):
         return str(self.sid) + ":" + self.msg
 
     def __init__(self, *args, **kwargs):
@@ -3054,7 +3054,7 @@ class Threshold(models.Model):
     count = models.IntegerField(default=1)
     seconds = models.IntegerField(default=60)
 
-    def __name__(self):
+    def __str__(self):
         rep = ""
         if self.threshold_type == "suppress":
             net = self.net
