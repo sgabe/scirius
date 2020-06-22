@@ -344,7 +344,7 @@ class CategoryViewSet(SciriusReadOnlyModelViewSet):
     serializer_class = CategorySerializer
     ordering = ('name',)
     ordering_fields = ('pk', 'name', 'created_date', 'source')
-    filter_fields = ('name', 'source', 'created_date')
+    filterset_fields = ('name', 'source')
 
     @action(detail=True, methods=['post'])
     def enable(self, request, pk):
@@ -425,8 +425,7 @@ class ListFilter(filters.CharFilter):
         multiple_vals = self.sanitize(multiple_vals)
         multiple_vals = map(self.customize, multiple_vals)
         for val in multiple_vals:
-            fval = filters_fields.Lookup(val, 'icontains')
-            qs =  super(ListFilter, self).filter(qs, fval)
+            qs = super().filter(qs, val)
         return qs
 
 
@@ -657,8 +656,8 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
     serializer_class = RuleSerializer
     ordering = ('sid',)
     ordering_fields = ('sid', 'category', 'msg', 'imported_date', 'updated_date', 'created', 'updated', 'hits')
-    filter_class = RuleFilter
     filter_backends = (DjangoFilterBackend, SearchFilter, RuleHitsOrderingFilter)
+    filterset_class = RuleFilter
     search_fields = ('sid', 'msg', 'content')
 
     @action(detail=True, methods=['get'])
