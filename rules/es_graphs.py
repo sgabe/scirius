@@ -2193,7 +2193,7 @@ class ESEventsCount(ESQuery):
           "aggs": {
             "nb_events": {
               "sum": {
-                "field": "stats.json.events"
+                "field": "stats.json.events_delta"
               }
             }
           }
