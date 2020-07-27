@@ -25,6 +25,7 @@ from suricata.models import Suricata
 from django.utils import timezone
 import os
 
+
 class Command(BaseCommand):
     help = 'Create a ruleset and populate it with rules from existing sources'
 
@@ -43,6 +44,7 @@ class Command(BaseCommand):
             ruleset = Ruleset.objects.filter(name = nruleset)[0]
         except:
             raise CommandError('No Ruleset with name "%s" found' % (nruleset))
+
         yaml_file = os.path.join(os.path.split(output.rstrip("/"))[0], 'suricata.yaml')
         suricata = Suricata.objects.create(
             name = name,
@@ -52,6 +54,5 @@ class Command(BaseCommand):
             ruleset = ruleset,
             created_date = timezone.now(),
             updated_date = timezone.now()
-            )
+        )
         self.stdout.write('Successfully created suricata "%s"' % suricata.name)
-

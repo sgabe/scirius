@@ -23,11 +23,12 @@ from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from rules.models import Ruleset, SourceAtVersion, Category
 
+
 class Command(BaseCommand):
     help = 'Create a ruleset and populate it with rules from existing sources'
 
     def add_arguments(self, parser):
-        parser.add_argument('name', help='Source name')
+        parser.add_argument('name', help = 'Source name')
 
     def handle(self, *args, **options):
         name = options['name']
@@ -39,15 +40,16 @@ class Command(BaseCommand):
             categories = Category.objects.all()
         except:
             raise CommandError("No Category is defined")
+
         ruleset = Ruleset.objects.create(
             name = name,
             created_date = timezone.now(),
             updated_date = timezone.now()
-            )
+        )
+
         for source in sourceat:
             ruleset.sources.add(source)
         for cat in categories:
             ruleset.categories.add(cat)
         ruleset.save()
         self.stdout.write('Successfully created default ruleset "%s"' % name)
-

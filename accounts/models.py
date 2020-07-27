@@ -23,6 +23,7 @@ from django.db import models
 from django.contrib.auth.models import User
 import pytz
 
+
 class SciriusUser(models.Model):
     TIMEZONES = ((x, x) for x in pytz.all_timezones)
 
@@ -31,14 +32,14 @@ class SciriusUser(models.Model):
 
     def to_dict(self):
         return {
-                  "pk": self.pk,
-                  "timezone": self.timezone,
-                  "username": self.user.username,
-                  "first_name": self.user.first_name,
-                  "last_name": self.user.last_name,
-                  "is_staff": self.user.is_staff,
-                  "is_active": self.user.is_active,
-                  "is_superuser": self.user.is_superuser,
-                  "email": self.user.email,
-                  "date_joined": self.user.date_joined
-                }
+            "pk": self.pk,
+            "timezone": self.timezone,
+            "username": self.user.username,
+            "first_name": self.user.first_name,
+            "last_name": self.user.last_name,
+            "is_staff": self.user.is_staff,
+            "is_active": self.user.is_active,
+            "is_superuser": self.user.is_superuser,
+            "email": self.user.email,
+            "date_joined": self.user.date_joined
+        }

@@ -23,14 +23,15 @@ from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from rules.models import Source
 
+
 class Command(BaseCommand):
     help = 'Create and update a source'
 
     def add_arguments(self, parser):
-        parser.add_argument('name', help='Source name')
-        parser.add_argument('uri', help='Uri of the source')
-        parser.add_argument('method', help='Method to import the source (http)')
-        parser.add_argument('datatype', help='Type of file to import (sig or sigs)')
+        parser.add_argument('name', help = 'Source name')
+        parser.add_argument('uri', help = 'Uri of the source')
+        parser.add_argument('method', help = 'Method to import the source (http)')
+        parser.add_argument('datatype', help = 'Type of file to import (sig or sigs)')
 
     def handle(self, *args, **options):
         name = options['name']
@@ -42,12 +43,14 @@ class Command(BaseCommand):
             raise CommandError("Method '%s' is not supported" % (method))
         if datatype not in ['sigs', 'sig']:
             raise CommandError("Data type '%s' is not supported" % (datatype))
+
         source = Source.objects.create(
             name = name,
             uri = uri,
             method = method,
             created_date = timezone.now(),
             datatype = datatype)
+
         self.stdout.write('Successfully created source "%s"' % name)
         if source.method == 'http':
             source.update()

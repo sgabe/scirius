@@ -27,7 +27,6 @@ from django.core.validators import validate_ipv4_address
 from django.db import transaction
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
-from django.db.models import Q
 from idstools import rule as rule_idstools
 from enum import Enum, unique
 from copy import deepcopy
@@ -50,6 +49,8 @@ from rules.filter_sets import FILTER_SETS
 
 from django.contrib.auth.models import User
 
+
+ES_ADDRESS = None
 
 _HUNT_FILTERS = [
     {
@@ -160,56 +161,55 @@ _HUNT_FILTERS = [
                 'id': 'http',
                 'title': 'HTTP',
                 'filterValues': [
-                    {'id': 'http_user_agent', 'title': 'User-Agent', 'placeholder': 'Filter by User Agent'},
-                    {'id': 'hostname', 'title': 'Host', 'placeholder': 'Filter by Host'},
-                    {'id': 'url', 'title': 'URL', 'placeholder': 'Filter by URL'},
-                    {'id': 'status', 'title': 'Status', 'placeholder': 'Filter by Status'},
-                    {'id': 'http_method', 'title': 'Method', 'placeholder': 'Filter by Method'},
-                    {'id': 'http_content_type', 'title': 'Content Type', 'placeholder': 'Filter by Content Type'},
-                    {'id': 'length', 'title': 'Length', 'placeholder': 'Filter by Content Length'},
+                    { 'id': 'http_user_agent', 'title': 'User-Agent', 'placeholder': 'Filter by User Agent' },
+                    { 'id': 'hostname', 'title': 'Host', 'placeholder': 'Filter by Host' },
+                    { 'id': 'url', 'title': 'URL', 'placeholder': 'Filter by URL' },
+                    { 'id': 'status', 'title': 'Status', 'placeholder': 'Filter by Status' },
+                    { 'id': 'http_method', 'title': 'Method', 'placeholder': 'Filter by Method' },
+                    { 'id': 'http_content_type', 'title': 'Content Type', 'placeholder': 'Filter by Content Type' },
+                    { 'id': 'length', 'title': 'Length', 'placeholder': 'Filter by Content Length' },
                 ]
             },
             {
                 'id': 'smtp',
                 'title': 'SMTP',
                 'filterValues': [
-                    {'id': 'mail_from', 'title': 'From', 'placeholder': 'Filter by From'},
-                    {'id': 'rcpt_to', 'title': 'To', 'placeholder': 'Filter by To'},
-                    {'id': 'helo', 'title': 'Helo', 'placeholder': 'Filter by Helo'}
+                    { 'id': 'mail_from', 'title': 'From', 'placeholder': 'Filter by From' },
+                    { 'id': 'rcpt_to', 'title': 'To', 'placeholder': 'Filter by To' },
+                    { 'id': 'helo', 'title': 'Helo', 'placeholder': 'Filter by Helo' }
                 ]
             },
             {
                 'id': 'smb',
                 'title': 'SMB',
                 'filterValues': [
-                    {'id': 'command', 'title': 'Command', 'placeholder': 'Filter by Command'},
-                    {'id': 'status', 'title': 'Status', 'placeholder': 'Filter by Status'},
-                    {'id': 'filename', 'title': 'Filename', 'placeholder': 'Filter by Filename'},
-                    {'id': 'share', 'title': 'Share', 'placeholder': 'Filter by Share'}
+                    { 'id': 'command', 'title': 'Command', 'placeholder': 'Filter by Command' },
+                    { 'id': 'status', 'title': 'Status', 'placeholder': 'Filter by Status' },
+                    { 'id': 'filename', 'title': 'Filename', 'placeholder': 'Filter by Filename' },
+                    { 'id': 'share', 'title': 'Share', 'placeholder': 'Filter by Share' }
                 ]
             },
             {
                 'id': 'ssh',
                 'title': 'SSH',
                 'filterValues': [
-                    {'id': 'client.software_version', 'title': 'Client Software', 'placeholder': 'Filter by Client Software'},
-                    {'id': 'client.proto_version', 'title': 'Client Version', 'placeholder': 'Filter by Client Version'},
-                    {'id': 'server.software_version', 'title': 'Server Software', 'placeholder': 'Filter by Server Software'},
-                    {'id': 'server.proto_version', 'title': 'Server Version', 'placeholder': 'Filter by Server Version'},
+                    { 'id': 'client.software_version', 'title': 'Client Software', 'placeholder': 'Filter by Client Software' },
+                    { 'id': 'client.proto_version', 'title': 'Client Version', 'placeholder': 'Filter by Client Version' },
+                    { 'id': 'server.software_version', 'title': 'Server Software', 'placeholder': 'Filter by Server Software' },
+                    { 'id': 'server.proto_version', 'title': 'Server Version', 'placeholder': 'Filter by Server Version' },
                 ]
             },
             {
                 'id': 'tls',
                 'title': 'TLS',
                 'filterValues': [
-                    {'id': 'subject', 'title': 'Subject DN', 'placeholder': 'Filter by Subject DN'},
-                    {'id': 'issuerdn', 'title': 'Issuer DN', 'placeholder': 'Filter by Issuer DN'},
-                    {'id': 'sni', 'title': 'Server Name Indication', 'placeholder': 'Filter by Server Name Indication'},
-                    {'id': 'version', 'title': 'Version', 'placeholder': 'Filter by Version'},
-                    {'id': 'fingerprint', 'title': 'Fingerprint', 'placeholder': 'Filter by Fingerprint'},
-                    {'id': 'serial', 'title': 'Serial', 'placeholder': 'Filter by Serial'},
-                    {'id': 'ja3.hash', 'title': 'JA3 Hash', 'placeholder': 'Filter by JA3 Hash'},
-                    {'id': 'ja3s.hash', 'title': 'JA3S Hash', 'placeholder': 'Filter by JA3S Hash'},
+                    { 'id': 'subject', 'title': 'Subject DN', 'placeholder': 'Filter by Subject DN' },
+                    { 'id': 'issuerdn', 'title': 'Issuer DN', 'placeholder': 'Filter by Issuer DN' },
+                    { 'id': 'sni', 'title': 'Server Name Indication', 'placeholder': 'Filter by Server Name Indication' },
+                    { 'id': 'version', 'title': 'Version', 'placeholder': 'Filter by Version' },
+                    { 'id': 'fingerprint', 'title': 'Fingerprint', 'placeholder': 'Filter by Fingerprint' },
+                    { 'id': 'serial', 'title': 'Serial', 'placeholder': 'Filter by Serial' },
+                    { 'id': 'ja3.hash', 'title': 'JA3 Hash', 'placeholder': 'Filter by JA3 Hash' },
                 ]
             },
         ]
@@ -241,11 +241,13 @@ def validate_hostname(val):
         if not re.match(HOSTNAME_RX, val):
             raise ValidationError('Invalid hostname or IP')
 
+
 def validate_port(val):
     try:
         int(val)
     except ValueError:
         raise ValidationError('Invalid port')
+
 
 def validate_proxy(val):
     if val.startswith('http://') or val.startswith('https://'):
@@ -267,6 +269,7 @@ def validate_proxy(val):
     validate_hostname(host)
     validate_port(port)
 
+
 def validate_url(val):
     # URL validator that does not require a FQDN
     if not (val.startswith('http://') or val.startswith('https://')):
@@ -284,11 +287,11 @@ def validate_url(val):
 
 
 class FilterSet(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete = models.CASCADE, blank = True, null = True)
     content = models.TextField()
-    name = models.CharField(max_length=150)
-    page = models.CharField(max_length=25)
-    description = models.TextField(blank=True, null=True)
+    name = models.CharField(max_length = 150)
+    page = models.CharField(max_length = 25)
+    description = models.TextField(blank = True, null = True)
 
     @staticmethod
     def get_default_filter_sets():
@@ -297,210 +300,210 @@ class FilterSet(models.Model):
 
 class UserAction(models.Model):
     ACTIONS = OrderedDict([
-               # Login/Logout
-               ('create_user', {
-                    'description': '{user} has created new user {new_user}',
-                    'title': 'Create User'
-                }),
-               ('edit_user', {
-                    'description': '{user} has edited user {other_user}',
-                    'title': 'Edit User'
-                }),
-               ('edit_user_token', {
-                    'description': '{user} has edited {other_user} token',
-                    'title': 'Edit User Token'
-                }),
-               ('edit_user_password', {
-                    'description': '{user} has edited {other_user} password',
-                    'title': 'Edit User Password'
-                }),
-               ('delete_user', {
-                    'description': '{user} has deleted user {old_user}',
-                    'title': 'Delete User'
-                }),
-               ('login', {
-                    'description': 'Logged in as {user}',
-                    'title': 'Login'
-                }),
-               ('logout', {
-                    'description': '{user} has logged out',
-                    'title': 'Logout'
-                }),
+        # Login/Logout
+        ('create_user', {
+            'description': '{user} has created new user {new_user}',
+            'title': 'Create User'
+        }),
+        ('edit_user', {
+            'description': '{user} has edited user {other_user}',
+            'title': 'Edit User'
+        }),
+        ('edit_user_token', {
+            'description': '{user} has edited {other_user} token',
+            'title': 'Edit User Token'
+        }),
+        ('edit_user_password', {
+            'description': '{user} has edited {other_user} password',
+            'title': 'Edit User Password'
+        }),
+        ('delete_user', {
+            'description': '{user} has deleted user {old_user}',
+            'title': 'Delete User'
+        }),
+        ('login', {
+            'description': 'Logged in as {user}',
+            'title': 'Login'
+        }),
+        ('logout', {
+            'description': '{user} has logged out',
+            'title': 'Logout'
+        }),
 
-               # Sources:
-               ('create_source', {
-                    'description': '{user} has created source {source}',
-                    'title': 'Create Source'
-                }),
-               ('update_source', {
-                    'description': '{user} has updated source {source}',
-                    'title': 'Update Source'
-                }),
-               ('edit_source', {
-                    'description': '{user} has edited source {source}',
-                    'title': 'Edit Source'
-                }),
-               ('upload_source', {
-                    'description': '{user} has uploaded source {source}',
-                    'title': 'Upload Source'
-                }),
-               ('enable_source', {
-                    'description': '{user} has enabled source {source} in ruleset {ruleset}',
-                    'title': 'Enable Source'
-                }),
-               ('disable_source', {
-                    'description': '{user} has disabled source {source} in ruleset {ruleset}',
-                    'title': 'Disable Source'
-                }),
-               ('delete_source', {
-                    'description': '{user} has deleted source {source}',
-                    'title': 'Delete Source'
-                }),
+        # Sources:
+        ('create_source', {
+            'description': '{user} has created source {source}',
+            'title': 'Create Source'
+        }),
+        ('update_source', {
+            'description': '{user} has updated source {source}',
+            'title': 'Update Source'
+        }),
+        ('edit_source', {
+            'description': '{user} has edited source {source}',
+            'title': 'Edit Source'
+        }),
+        ('upload_source', {
+            'description': '{user} has uploaded source {source}',
+            'title': 'Upload Source'
+        }),
+        ('enable_source', {
+            'description': '{user} has enabled source {source} in ruleset {ruleset}',
+            'title': 'Enable Source'
+        }),
+        ('disable_source', {
+            'description': '{user} has disabled source {source} in ruleset {ruleset}',
+            'title': 'Disable Source'
+        }),
+        ('delete_source', {
+            'description': '{user} has deleted source {source}',
+            'title': 'Delete Source'
+        }),
 
-               # Rulesets:
-               ('create_ruleset', {
-                    'description': '{user} has created ruleset {ruleset}',
-                    'title': 'Create Ruleset'
-                }),
-               ('transform_ruleset', {
-                    'description': '{user} has transformed ruleset {ruleset} to {transformation}',
-                    'title': 'Transform Ruleset'
-                }),
-               ('edit_ruleset', {
-                   'description': '{user} has edited ruleset {ruleset}',
-                   'title': 'Edit Ruleset'
-                }),
-               ('copy_ruleset', {
-                   'description': '{user} has copied ruleset {ruleset}',
-                   'title': 'Copy Ruleset'
-                }),
-               ('delete_ruleset', {
-                    'description': '{user} has deleted ruleset {ruleset}',
-                    'title': 'Delete Ruleset'
-                }),
+        # Rulesets:
+        ('create_ruleset', {
+            'description': '{user} has created ruleset {ruleset}',
+            'title': 'Create Ruleset'
+        }),
+        ('transform_ruleset', {
+            'description': '{user} has transformed ruleset {ruleset} to {transformation}',
+            'title': 'Transform Ruleset'
+        }),
+        ('edit_ruleset', {
+            'description': '{user} has edited ruleset {ruleset}',
+            'title': 'Edit Ruleset'
+        }),
+        ('copy_ruleset', {
+            'description': '{user} has copied ruleset {ruleset}',
+            'title': 'Copy Ruleset'
+        }),
+        ('delete_ruleset', {
+            'description': '{user} has deleted ruleset {ruleset}',
+            'title': 'Delete Ruleset'
+        }),
 
-               # Categories:
-               ('enable_category', {
-                    'description': '{user} has enabled category {category} in ruleset {ruleset}',
-                    'title': 'Enable Category'
-                }),
-               ('transform_category', {
-                    'description': '{user} has transformed category {category} to {transformation} in ruleset {ruleset}',
-                    'title': 'Transform Category'
-                }),
-               ('disable_category', {
-                    'description': '{user} has disabled category {category} in ruleset {ruleset}',
-                    'title': 'Disable Category'
-                }),
+        # Categories:
+        ('enable_category', {
+            'description': '{user} has enabled category {category} in ruleset {ruleset}',
+            'title': 'Enable Category'
+        }),
+        ('transform_category', {
+            'description': '{user} has transformed category {category} to {transformation} in ruleset {ruleset}',
+            'title': 'Transform Category'
+        }),
+        ('disable_category', {
+            'description': '{user} has disabled category {category} in ruleset {ruleset}',
+            'title': 'Disable Category'
+        }),
 
-               # Rules:
-               ('enable_rule', {
-                    'description': '{user} has enabled rule {rule} in ruleset {ruleset}',
-                    'title': 'Enable Rule'
-                }),
-               ('comment_rule', {
-                    'description': '{user} has commented rule {rule}',
-                    'title': 'Comment Rule'
-                }),
-               ('transform_rule', {
-                    'description': '{user} has transformed rule {rule} to {transformation} in ruleset {ruleset}',
-                    'title': 'Transform Rule'
-                }),
-               ('suppress_rule', {
-                    'description': '{user} has suppressed rule {rule} in ruleset {ruleset}',
-                    'title': 'Suppress Rule'
-                }),
-               ('disable_rule', {
-                    'description': '{user} has disabled rule {rule} in ruleset {ruleset}',
-                    'title': 'Disable Rule'
-                }),
-               ('delete_suppress_rule', {
-                    'description': '{user} has deleted suppressed rule {rule} in ruleset {ruleset}',
-                    'title': 'Delete Suppress Rule'
-                }),
+        # Rules:
+        ('enable_rule', {
+            'description': '{user} has enabled rule {rule} in ruleset {ruleset}',
+            'title': 'Enable Rule'
+        }),
+        ('comment_rule', {
+            'description': '{user} has commented rule {rule}',
+            'title': 'Comment Rule'
+        }),
+        ('transform_rule', {
+            'description': '{user} has transformed rule {rule} to {transformation} in ruleset {ruleset}',
+            'title': 'Transform Rule'
+        }),
+        ('suppress_rule', {
+            'description': '{user} has suppressed rule {rule} in ruleset {ruleset}',
+            'title': 'Suppress Rule'
+        }),
+        ('disable_rule', {
+            'description': '{user} has disabled rule {rule} in ruleset {ruleset}',
+            'title': 'Disable Rule'
+        }),
+        ('delete_suppress_rule', {
+            'description': '{user} has deleted suppressed rule {rule} in ruleset {ruleset}',
+            'title': 'Delete Suppress Rule'
+        }),
 
-               # Toggle availability
-               ('toggle_availability', {
-                    'description': '{user} has modified rule availability {rule}',
-                    'title': 'Toggle Availability'
-                }),
+        # Toggle availability
+        ('toggle_availability', {
+            'description': '{user} has modified rule availability {rule}',
+            'title': 'Toggle Availability'
+        }),
 
-               # Thresholds:
-               ('create_threshold', {
-                    'description': '{user} has created threshold on rule {rule} in ruleset {ruleset}',
-                    'title': 'Create Threshold'
-                }),
-               ('edit_threshold', {
-                    'description': '{user} has edited threshold {threshold} on rule {rule} in ruleset {ruleset}',
-                    'title': 'Edit Threshold'
-                }),
-               ('delete_threshold', {
-                    'description': '{user} has deleted threshold {threshold} on rule {rule} in ruleset {ruleset}',
-                    'title': 'Delete Threshold'
-                }),
+        # Thresholds:
+        ('create_threshold', {
+            'description': '{user} has created threshold on rule {rule} in ruleset {ruleset}',
+            'title': 'Create Threshold'
+        }),
+        ('edit_threshold', {
+            'description': '{user} has edited threshold {threshold} on rule {rule} in ruleset {ruleset}',
+            'title': 'Edit Threshold'
+        }),
+        ('delete_threshold', {
+            'description': '{user} has deleted threshold {threshold} on rule {rule} in ruleset {ruleset}',
+            'title': 'Delete Threshold'
+        }),
 
-                # Used only in REST API
-               ('delete_transform_ruleset', {
-                    'description': '{user} has deleted transformation {transformation} on ruleset {ruleset}',
-                    'title': 'Deleted Ruleset Transformation'
-                }),
-               ('delete_transform_rule', {
-                    'description': '{user} has deleted transformation {transformation} on rule {rule} in ruleset {ruleset}',
-                    'title': 'Delete Rule Transformation'
-                }),
-               ('delete_transform_category', {
-                    'description': '{user} has deleted transformation {transformation} on category {category} in ruleset {ruleset}',
-                    'title': 'Delete Category Transformation'
-                }),
-               # End REST API
+        # Used only in REST API
+        ('delete_transform_ruleset', {
+            'description': '{user} has deleted transformation {transformation} on ruleset {ruleset}',
+            'title': 'Deleted Ruleset Transformation'
+        }),
+        ('delete_transform_rule', {
+            'description': '{user} has deleted transformation {transformation} on rule {rule} in ruleset {ruleset}',
+            'title': 'Delete Rule Transformation'
+        }),
+        ('delete_transform_category', {
+            'description': '{user} has deleted transformation {transformation} on category {category} in ruleset {ruleset}',
+            'title': 'Delete Category Transformation'
+        }),
+        # End REST API
 
-               # Suricata
-               ('edit_suricata', {
-                    'description': '{user} has edited suricata',
-                    'title': 'Edit Suricata'
-                }),
-               ('create_suricata', {
-                    'description': '{user} has created suricata',
-                    'title': 'Create Suricata'
-                }),
-               ('update_push_all', {
-                    'description': '{user} has pushed ruleset {ruleset}',
-                    'title': 'Update/Push ruleset'
-                }),
+        # Suricata
+        ('edit_suricata', {
+            'description': '{user} has edited suricata',
+            'title': 'Edit Suricata'
+        }),
+        ('create_suricata', {
+            'description': '{user} has created suricata',
+            'title': 'Create Suricata'
+        }),
+        ('update_push_all', {
+            'description': '{user} has pushed ruleset {ruleset}',
+            'title': 'Update/Push ruleset'
+        }),
 
-               # Settings
-               ('system_settings', {
-                    'description': '{user} has edited system settings',
-                    'title': 'Edit System Settings'
-                }),
-               ('delete_alerts', {
-                    'description': '{user} has deleted alerts from rule {rule}',
-                    'title': 'Delete Alerts'
-                }),
+        # Settings
+        ('system_settings', {
+            'description': '{user} has edited system settings',
+            'title': 'Edit System Settings'
+        }),
+        ('delete_alerts', {
+            'description': '{user} has deleted alerts from rule {rule}',
+            'title': 'Delete Alerts'
+        }),
 
-               # Rule processing filter
-               ('create_rule_filter', {
-                    'description': '{user} has created rule filter {rule_filter}',
-                    'title': 'Create rule filter'
-                }),
-               ('edit_rule_filter', {
-                    'description': '{user} has edited rule filter {rule_filter}',
-                    'title': 'Edit rule filter'
-                }),
-               ('delete_rule_filter', {
-                    'description': '{user} has deleted rule filter {rule_filter}',
-                    'title': 'Delete rule filter'
-                })
-            ])
+        # Rule processing filter
+        ('create_rule_filter', {
+            'description': '{user} has created rule filter {rule_filter}',
+            'title': 'Create rule filter'
+        }),
+        ('edit_rule_filter', {
+            'description': '{user} has edited rule filter {rule_filter}',
+            'title': 'Edit rule filter'
+        }),
+        ('delete_rule_filter', {
+            'description': '{user} has deleted rule filter {rule_filter}',
+            'title': 'Delete rule filter'
+        })
+    ])
 
-    action_type = models.CharField(max_length=1000, null=True)
-    date = models.DateTimeField('event date', default=timezone.now)
-    comment = models.TextField(null=True, blank=True)
-    user = models.ForeignKey(User, default=None, on_delete=models.SET_NULL, null=True, blank=True)
-    username = models.CharField(max_length=150)
-    ua_objects = GenericRelation('UserActionObject', related_query_name='ua_objects')
+    action_type = models.CharField(max_length = 1000, null = True)
+    date = models.DateTimeField('event date', default = timezone.now)
+    comment = models.TextField(null = True, blank = True)
+    user = models.ForeignKey(User, default = None, on_delete = models.SET_NULL, null = True, blank = True)
+    username = models.CharField(max_length = 150)
+    ua_objects = GenericRelation('UserActionObject', related_query_name = 'ua_objects')
     # Compatibilty
-    description = models.CharField(max_length=1512, null=True)
+    description = models.CharField(max_length = 1512, null = True)
 
     def __init__(self, *args, **kwargs):
         super(UserAction, self).__init__(*args, **kwargs)
@@ -572,7 +575,7 @@ class UserAction(models.Model):
 
         try:
             html = format_html(actions_dict[self.action_type]['description'], **format_)
-        except KeyError as e:
+        except KeyError:
             # bug compatibility: workaround for action_value > 100
             # UserActionObjects related to UserAction (self) were
             # not inserted on creation
@@ -595,11 +598,9 @@ class UserAction(models.Model):
         return 'pficon-user'
 
     def get_icons(self):
-        from scirius.utils import get_middleware_module
-        actions_dict = get_middleware_module('common').get_user_actions_dict()
         actions = UserActionObject.objects.filter(user_action=self).all()
-
         icons = [(self.get_icon(), self.username)]
+
         for action in actions:
 
             # ==== Coner cases
@@ -629,8 +630,8 @@ class UserAction(models.Model):
                 icons.append((icon, lb))
 
         html = format_html_join(
-                '\n', '<div class="list-view-pf-additional-info-item"><span class="fa {}"></span>{}</div>',
-                ((icon, klass_name) for icon, klass_name in icons)
+            '\n', '<div class="list-view-pf-additional-info-item"><span class="fa {}"></span>{}</div>',
+            ((icon, klass_name) for icon, klass_name in icons)
         )
 
         return html
@@ -641,20 +642,31 @@ class UserAction(models.Model):
 
 
 class SystemSettings(models.Model):
-    use_http_proxy = models.BooleanField(default=False)
-    http_proxy = models.CharField(max_length=200, validators=[validate_proxy], default="", blank=True,
-                                    help_text='Proxy address of the form "host:port".')
-    https_proxy = models.CharField(max_length=200, validators=[validate_proxy], default="", blank=True)
-    use_elasticsearch = models.BooleanField(default=True)
-    custom_elasticsearch = models.BooleanField(default=False)
-    elasticsearch_url = models.CharField(max_length=200, validators=[validate_url], blank=False, null=False,
-                                    default='http://elasticsearch:9200/')
+    use_http_proxy = models.BooleanField(default = False)
+    http_proxy = models.CharField(
+        max_length = 200,
+        validators = [validate_proxy],
+        default = "",
+        blank = True,
+        help_text = 'Proxy address of the form "host:port".'
+    )
+    https_proxy = models.CharField(max_length = 200, validators = [validate_proxy], default = "", blank = True)
+    use_elasticsearch = models.BooleanField(default = True)
+    custom_elasticsearch = models.BooleanField(default = False)
+    elasticsearch_url = models.CharField(
+        max_length = 200,
+        validators = [validate_url],
+        blank = False,
+        null = False,
+        default = 'http://elasticsearch:9200/'
+    )
 
     def get_proxy_params(self):
         if self.use_http_proxy:
             return { 'http': self.http_proxy, 'https': self.https_proxy }
         else:
             return None
+
 
 def get_system_settings():
     gsettings = SystemSettings.objects.all()
@@ -676,7 +688,6 @@ def get_system_settings():
         return gsettings
 
 
-ES_ADDRESS = None
 def get_es_address():
     global ES_ADDRESS
     if ES_ADDRESS is not None:
@@ -704,35 +715,36 @@ def reset_es_address():
 def get_es_path(path):
     return get_es_address() + path.lstrip('/')
 
+
 class Source(models.Model):
     FETCH_METHOD = (
         ('http', 'HTTP URL'),
-#        ('https', 'HTTPS URL'),
+        # ('https', 'HTTPS URL'),
         ('local', 'Upload'),
     )
     CONTENT_TYPE = [
         ('sigs', 'Signatures files in tar archive'),
         ('sig', 'Individual Signatures file'),
-#        ('iprep', 'IP reputation files'),
+        # ('iprep', 'IP reputation files'),
         ('other', 'Other content'),
         ('b64dataset', 'String dataset file'),
     ]
     TMP_DIR = "/tmp/"
 
-    name = models.CharField(max_length=100, unique = True)
+    name = models.CharField(max_length = 100, unique = True)
     created_date = models.DateTimeField('date created')
     updated_date = models.DateTimeField('date updated', blank = True, null = True)
-    method = models.CharField(max_length=10, choices=FETCH_METHOD)
-    datatype = models.CharField(max_length=10, validators=[validate_source_datatype])
-    uri = models.CharField(max_length=400, blank = True, null = True)
-    cert_verif = models.BooleanField('Check certificates', default=True)
-    authkey = models.CharField(max_length=400, blank = True, null = True)
+    method = models.CharField(max_length = 10, choices = FETCH_METHOD)
+    datatype = models.CharField(max_length = 10, validators=[validate_source_datatype])
+    uri = models.CharField(max_length = 400, blank = True, null = True)
+    cert_verif = models.BooleanField('Check certificates', default = True)
+    authkey = models.CharField(max_length = 400, blank = True, null = True)
     cats_count = models.IntegerField(default = 0)
     rules_count = models.IntegerField(default = 0)
-    public_source = models.CharField(max_length=100, blank = True, null = True)
-    use_iprep = models.BooleanField('Use IP reputation for group signatures', default=True)
-    version = models.IntegerField(default=1)
-    use_sys_proxy = models.BooleanField(default=True, verbose_name='Use system proxy')
+    public_source = models.CharField(max_length = 100, blank = True, null = True)
+    use_iprep = models.BooleanField('Use IP reputation for group signatures', default = True)
+    version = models.IntegerField(default = 1)
+    use_sys_proxy = models.BooleanField(default = True, verbose_name = 'Use system proxy')
 
     editable = True
     # git repo where we store the physical thing
@@ -755,7 +767,7 @@ class Source(models.Model):
             self.update_ruleset = None
         self.first_run = False
         self.updated_rules = {"added": [], "deleted": [], "updated": []}
-        if len(Flowbit.objects.filter(source = self)) == 0:
+        if len(Flowbit.objects.filter(source=self)) == 0:
             self.init_flowbits = True
         else:
             self.init_flowbits = False
@@ -792,7 +804,7 @@ class Source(models.Model):
 
     def get_categories(self):
         source_git_dir = os.path.join(settings.GIT_SOURCES_BASE_DIRECTORY, str(self.pk))
-        catname = re.compile("(.+)\.rules$")
+        catname = re.compile(r"(.+)\.rules$")
         existing_rules_hash = {}
         for rule in Rule.objects.all().prefetch_related('category'):
             existing_rules_hash[rule.sid] = rule
@@ -802,9 +814,12 @@ class Source(models.Model):
                 name = match.groups()[0]
                 category = Category.objects.filter(source = self, name = name)
                 if not category:
-                    category = Category.objects.create(source = self,
-                                            name = name, created_date = timezone.now(),
-                                            filename = os.path.join('rules', f))
+                    category = Category.objects.create(
+                        source = self,
+                        name = name,
+                        created_date = timezone.now(),
+                        filename = os.path.join('rules', f)
+                    )
                 else:
                     category = category[0]
                 category.get_rules(self, existing_rules_hash = existing_rules_hash)
@@ -840,13 +855,17 @@ class Source(models.Model):
     def create_sourceatversion(self, version='HEAD'):
         # look for SourceAtVersion with name and HEAD
         # Update updated_date
-        sversions  = SourceAtVersion.objects.filter(source = self, version = version)
+        sversions = SourceAtVersion.objects.filter(source = self, version = version)
         if sversions:
             sversions[0].updated_date = self.updated_date
             sversions[0].save()
         else:
-            SourceAtVersion.objects.create(source = self, version = version,
-                                                    updated_date = self.updated_date, git_version = version)
+            SourceAtVersion.objects.create(
+                source = self,
+                version = version,
+                updated_date = self.updated_date,
+                git_version = version
+            )
 
     def _check_category_ids(self, f, filename, field_no):
         # Check the file object in argument does not contain category ids < 20
@@ -867,12 +886,12 @@ class Source(models.Model):
     # Rewrite of https://github.com/python/cpython/blob/master/Lib/tarfile.py
     # Extract tar file but force setting permissions
     @staticmethod
-    def _tar_extractall(tarfile, path=".", members=None, *, numeric_owner=False):
+    def _tar_extractall(tarfile, path = ".", members = None, *, numeric_owner = False):
         if members is None:
             members = tarfile
 
         for tarinfo in members:
-            tarfile.extract(tarinfo, path, set_attrs=False)
+            tarfile.extract(tarinfo, path, set_attrs = False)
             fpath = os.path.join(path, tarinfo.name)
 
             if tarinfo.isdir():
@@ -899,22 +918,28 @@ class Source(models.Model):
             # only file and dir are allowed
             if not (member.isfile() or member.isdir()):
                 raise SuspiciousOperation("Suspect tar file contains non regular file '%s'" % (member.name))
+
             if member.name.startswith('/') or '..' in member.name:
                 raise SuspiciousOperation("Suspect tar file contains invalid path '%s'" % (member.name))
+
             # don't allow tar file with file in root dir
-            if member.isfile() and not '/' in member.name:
+            if member.isfile() and '/' not in member.name:
                 raise SuspiciousOperation("Suspect tar file contains file in root directory '%s' instead of under 'rules' directory" % (member.name))
+
             if member.isdir() and ('/' + member.name).endswith('/rules'):
                 if rules_dir:
                     raise SuspiciousOperation("Tar file contains two 'rules' directory instead of one")
                 dir_list.append(member)
                 rules_dir = member.name
+
             if member.isfile() and member.name.split('/')[-2] == 'rules':
                 dir_list.append(member)
+
             if member.isfile() and member.name.endswith('categories.txt'):
                 f = tfile.extractfile(member.name)
                 self._check_category_ids(f, member.name, 0)
                 dir_list.append(member)
+
             if member.isfile() and member.name.endswith('.list'):
                 f = tfile.extractfile(member.name)
                 self._check_category_ids(f, member.name, 1)
@@ -923,7 +948,7 @@ class Source(models.Model):
             raise SuspiciousOperation("Tar file does not contain a 'rules' directory")
 
         source_git_dir = os.path.join(settings.GIT_SOURCES_BASE_DIRECTORY, str(self.pk))
-        self._tar_extractall(tfile, path=source_git_dir, members=dir_list)
+        tfile.extractall(path = source_git_dir, members=dir_list)
         if "/" in rules_dir:
             shutil.move(os.path.join(source_git_dir, rules_dir), os.path.join(source_git_dir, 'rules'))
             shutil.rmtree(os.path.join(source_git_dir, rules_dir.split('/')[0]))
@@ -932,7 +957,7 @@ class Source(models.Model):
         if len(index.diff(None)) or self.first_run:
             os.environ['USERNAME'] = 'scirius'
             index.add(['rules'])
-            message =  'source version at %s' % (self.updated_date)
+            message = 'source version at %s' % (self.updated_date)
             index.commit(message)
 
         self.save()
@@ -942,13 +967,12 @@ class Source(models.Model):
         # Get categories
         self.get_categories()
 
-    def handle_other_file(self, f, b64encode=False):
+    def handle_other_file(self, f, b64encode = False):
         self.updated_date = timezone.now()
         self.first_run = False
-
         repo = self.get_git_repo(delete = True)
-
         rules_dir = os.path.join(settings.GIT_SOURCES_BASE_DIRECTORY, str(self.pk), 'rules')
+
         # create rules dir if needed
         if not os.path.isdir(rules_dir):
             os.makedirs(rules_dir)
@@ -968,7 +992,7 @@ class Source(models.Model):
         if len(index.diff(None)) or self.first_run:
             os.environ['USERNAME'] = 'scirius'
             index.add(['rules'])
-            message =  'source version at %s' % (self.updated_date)
+            message = 'source version at %s' % (self.updated_date)
             index.commit(message)
 
         self.save()
@@ -977,10 +1001,9 @@ class Source(models.Model):
         self.create_sourceatversion()
 
     def handle_b64dataset(self, f):
-        return self.handle_other_file(f, b64encode=True)
+        return self.handle_other_file(f, b64encode = True)
 
     def handle_rules_file(self, f):
-
         f.seek(0)
         if (tarfile.is_tarfile(f.name)):
             raise OSError("This is a tar file and not a individual signature file, please select another category")
@@ -988,13 +1011,13 @@ class Source(models.Model):
 
         self.updated_date = timezone.now()
         self.first_run = False
-
         repo = self.get_git_repo(delete = True)
-
         rules_dir = os.path.join(settings.GIT_SOURCES_BASE_DIRECTORY, str(self.pk), 'rules')
+
         # create rules dir if needed
         if not os.path.isdir(rules_dir):
             os.makedirs(rules_dir)
+
         # copy file content to target
         f.seek(0)
         os.fsync(f)
@@ -1004,28 +1027,33 @@ class Source(models.Model):
         if len(index.diff(None)) or self.first_run:
             os.environ['USERNAME'] = 'scirius'
             index.add(["rules"])
-            message =  'source version at %s' % (self.updated_date)
+            message = 'source version at %s' % (self.updated_date)
             index.commit(message)
 
         self.save()
+
         # Now we must update SourceAtVersion for this source
         # or create it if needed
         self.create_sourceatversion()
         # category based on filename
         category = Category.objects.filter(source = self, name = ('%s Sigs' % (self.name))[:100])
         if not category:
-            category = Category.objects.create(source = self,
-                                    name = ('%s Sigs' % (self.name))[:100], created_date = timezone.now(),
-                                    filename = os.path.join('rules', 'sigs.rules'))
+            category = Category.objects.create(
+                source=self,
+                name=('%s Sigs' % (self.name))[:100],
+                created_date=timezone.now(),
+                filename=os.path.join('rules', 'sigs.rules')
+            )
             category.get_rules(self)
         else:
             category = category[0]
+
         category.get_rules(self)
-        if len(Rule.objects.filter(category=category)) == 0:
+        if len(Rule.objects.filter(category = category)) == 0:
             category.delete()
             raise ValidationError('The source %s contains no valid signature' % self.name)
 
-    def handle_custom_file(self, f, upload=False):
+    def handle_custom_file(self, f, upload = False):
         from scirius.utils import get_middleware_module
 
         f.seek(0)
@@ -1034,9 +1062,9 @@ class Source(models.Model):
 
         self.first_run = False
         self.updated_date = timezone.now()
-        repo = self.get_git_repo(delete=True)
-
+        repo = self.get_git_repo(delete = True)
         sources_dir = os.path.join(settings.GIT_SOURCES_BASE_DIRECTORY, str(self.pk))
+
         # create rules dir if needed
         if not os.path.isdir(sources_dir):
             os.makedirs(sources_dir)
@@ -1062,9 +1090,12 @@ class Source(models.Model):
     def json_rules_list(self, rlist):
         rules = []
         for rule in rlist:
-            rules.append({"sid":rule.sid, "msg": rule.msg,
+            rules.append({
+                "sid": rule.sid,
+                "msg": rule.msg,
                 "category": rule.category.name,
-                "pk": rule.pk })
+                "pk": rule.pk}
+            )
         # for each rule we create a json object sid + msg + content
         return rules
 
@@ -1084,7 +1115,6 @@ class Source(models.Model):
             changed = len(update["deleted"]) + len(update["added"]) + len(update["updated"]),
         )
 
-
     def build_counters(self):
         cats = Category.objects.filter(source = self)
         self.cats_count = len(cats)
@@ -1099,12 +1129,13 @@ class Source(models.Model):
         firstimport = False
         if not categories:
             firstimport = True
-        if not self.method in ['http', 'local']:
+
+        if self.method not in ['http', 'local']:
             raise FieldError("Currently unsupported method")
 
         need_update = False
         if self.update_ruleset:
-            f = tempfile.NamedTemporaryFile(dir=self.TMP_DIR)
+            f = tempfile.NamedTemporaryFile(dir = self.TMP_DIR)
             need_update = self.update_ruleset(f)
 
             if need_update:
@@ -1116,6 +1147,7 @@ class Source(models.Model):
                     self.handle_other_file(f)
                 elif self.datatype == 'b64dataset':
                     self.handle_b64dataset(f)
+
                 if self.datatype in self.custom_data_type:
                     self.handle_custom_file(f)
 
@@ -1136,6 +1168,7 @@ class Source(models.Model):
         source_git_dir = os.path.join(settings.GIT_SOURCES_BASE_DIRECTORY, str(self.pk))
         if not os.path.isdir(source_git_dir):
             raise IOError("You have to update source first")
+
         repo = git.Repo(source_git_dir)
         hcommit = repo.head.commit
         return hcommit.diff('HEAD~1', create_patch = True)
@@ -1145,6 +1178,7 @@ class Source(models.Model):
         repo = git.Repo(source_git_dir)
         cats_content = ''
         iprep_content = ''
+
         with tempfile.TemporaryFile(dir=self.TMP_DIR) as f:
             repo.archive(f, treeish=version)
             f.seek(0)
@@ -1156,28 +1190,31 @@ class Source(models.Model):
                 # only consider extra files in rules directory
                 if not member.name.startswith('rules/'):
                     continue
+
                 # don't copy original rules file to dest
                 if member.name.endswith('.rules') and self.datatype in ('sig', 'sigs'):
                     continue
+
                 if member.name.endswith('categories.txt') and self.datatype in ('sig', 'sigs'):
                     cats_content = tfile.extractfile(member).read()
                     continue
+
                 if member.name.endswith('.list') and self.datatype in ('sig', 'sigs'):
                     iprep_content = tfile.extractfile(member).read()
                     continue
 
                 if member.isfile():
                     member.name = os.path.join(*member.name.split("/", 2)[1:])
-                    mfile = tfile.extract(member, path=directory)
+                    tfile.extract(member, path=directory)
         return cats_content, iprep_content
 
     def get_absolute_url(self):
         from django.urls import reverse
-        return reverse('source', args=[str(self.id)])
+        return reverse('source', args = [str(self.id)])
 
     def update_ruleset_http(self, f):
         proxy_params = get_system_settings().get_proxy_params() if self.use_sys_proxy else None
-        hdrs = {'User-Agent': 'scirius'}
+        hdrs = { 'User-Agent': 'scirius' }
         if self.authkey:
             hdrs['Authorization'] = self.authkey
 
@@ -1191,7 +1228,7 @@ class Source(models.Model):
         try:
             version_server = 1
             if version_uri:
-                resp = requests.get(version_uri, proxies=proxy_params, headers=hdrs, verify=self.cert_verif)
+                resp = requests.get(version_uri, proxies = proxy_params, headers = hdrs, verify = self.cert_verif)
                 resp.raise_for_status()
                 version_server = int(resp.content.strip())
 
@@ -1199,7 +1236,7 @@ class Source(models.Model):
                     version_uri = None
 
             if version_uri is None:
-                resp = requests.get(self.uri, proxies=proxy_params, headers=hdrs, verify=self.cert_verif)
+                resp = requests.get(self.uri, proxies = proxy_params, headers = hdrs, verify = self.cert_verif)
                 resp.raise_for_status()
                 f.write(resp.content)
 
@@ -1226,9 +1263,10 @@ class Source(models.Model):
         return False
 
     def handle_uploaded_file(self, f):
-        dest = tempfile.NamedTemporaryFile(dir=self.TMP_DIR)
+        dest = tempfile.NamedTemporaryFile(dir = self.TMP_DIR)
         for chunk in f.chunks():
             dest.write(chunk)
+
         dest.seek(0)
         if self.datatype == 'sigs':
             self.handle_rules_in_tar(dest)
@@ -1239,7 +1277,7 @@ class Source(models.Model):
         elif self.datatype == 'b64dataset':
             self.handle_b64dataset(dest)
         elif self.datatype in self.custom_data_type:
-            self.handle_custom_file(dest, upload=True)
+            self.handle_custom_file(dest, upload = True)
 
     def new_uploaded_file(self, f, firstimport):
         self.handle_uploaded_file(f)
@@ -1254,6 +1292,7 @@ class Source(models.Model):
             sourceatversion = SourceAtVersion.objects.get(source = self, version = 'HEAD')
         except:
             return
+
         rulesets = Ruleset.objects.all()
         for ruleset in rulesets:
             if sourceatversion in ruleset.sources.all():
@@ -1261,20 +1300,20 @@ class Source(models.Model):
 
 
 class UserActionObject(models.Model):
-    action_key = models.CharField(max_length=20)
-    action_value = models.CharField(max_length=100)
+    action_key = models.CharField(max_length = 20)
+    action_value = models.CharField(max_length = 100)
 
-    user_action = models.ForeignKey(UserAction, on_delete=models.CASCADE, related_name='user_action_objects')
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True)
-    object_id = models.PositiveIntegerField(null=True)
+    user_action = models.ForeignKey(UserAction, on_delete = models.CASCADE, related_name = 'user_action_objects')
+    content_type = models.ForeignKey(ContentType, on_delete = models.CASCADE, null = True)
+    object_id = models.PositiveIntegerField(null = True)
     content = GenericForeignKey('content_type', 'object_id')
 
 
 class SourceAtVersion(models.Model):
-    source = models.ForeignKey(Source, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete = models.CASCADE)
     # Sha1 or HEAD or tag
-    version = models.CharField(max_length=42)
-    git_version = models.CharField(max_length=42, default = 'HEAD')
+    version = models.CharField(max_length = 42)
+    git_version = models.CharField(max_length = 42, default = 'HEAD')
     updated_date = models.DateTimeField('date updated', blank = True, default = timezone.now)
 
     def __str__(self):
@@ -1296,17 +1335,17 @@ class SourceAtVersion(models.Model):
         ruleset.save()
         if user:
             UserAction.create(
-                    action_type='enable_source',
-                    comment=comment,
-                    user=user,
-                    source=self.source,
-                    ruleset=ruleset
+                action_type = 'enable_source',
+                comment = comment,
+                user = user,
+                source = self.source,
+                ruleset = ruleset
             )
 
     def disable(self, ruleset, user = None, comment = None):
         ruleset.sources.remove(self)
 
-        for cat in Category.objects.filter(source=self.source):
+        for cat in Category.objects.filter(source = self.source):
             if cat in ruleset.categories.all():
                 ruleset.categories.remove(cat)
 
@@ -1314,11 +1353,11 @@ class SourceAtVersion(models.Model):
         ruleset.save()
         if user:
             UserAction.create(
-                    action_type='disable_source',
-                    comment=comment,
-                    user=user,
-                    source=self.source,
-                    ruleset=ruleset
+                action_type = 'disable_source',
+                comment = comment,
+                user = user,
+                source = self.source,
+                ruleset = ruleset
             )
 
     def export_files(self, directory):
@@ -1332,12 +1371,12 @@ class SourceAtVersion(models.Model):
         file_content += "\n".join(rules_content)
         return file_content
 
-
     def test_rule_buffer(self, rule_buffer, single = False):
         testor = TestRules()
         tmpdir = tempfile.mkdtemp()
         cats_content, iprep_content = self.export_files(tmpdir)
         related_files = {}
+
         for root, _, files in os.walk(tmpdir):
             for f in files:
                 fullpath = os.path.join(root, f)
@@ -1345,24 +1384,32 @@ class SourceAtVersion(models.Model):
                     with open(fullpath, 'r') as cf:
                         related_files[f] = cf.read()
         shutil.rmtree(tmpdir)
-        return testor.check_rule_buffer(rule_buffer, related_files=related_files, single=single, cats_content=cats_content, iprep_content=iprep_content)
+
+        return testor.check_rule_buffer(
+            rule_buffer,
+            related_files = related_files,
+            single = single,
+            cats_content = cats_content,
+            iprep_content = iprep_content
+        )
 
     def test(self):
         rule_buffer = self.to_buffer()
         return self.test_rule_buffer(rule_buffer)
 
+
 class SourceUpdate(models.Model):
-    source = models.ForeignKey(Source, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete = models.CASCADE)
     created_date = models.DateTimeField('date of update', blank = True, default = timezone.now)
     # Store update info as a JSON document
     data = models.TextField()
-    version = models.CharField(max_length=42)
-    changed = models.IntegerField(default=0)
+    version = models.CharField(max_length = 42)
+    changed = models.IntegerField(default = 0)
 
     def diff(self):
         data = json.loads(self.data)
         diff = data
-        diff['stats'] = {'updated':len(data['updated']), 'added':len(data['added']), 'deleted':len(data['deleted'])}
+        diff['stats'] = { 'updated': len(data['updated']), 'added': len(data['added']), 'deleted': len(data['deleted']) }
         diff['date'] = self.created_date
         return diff
 
@@ -1373,15 +1420,15 @@ class SourceUpdate(models.Model):
 
 class TransfoType(Enum):
     @classmethod
-    def get_choices(cls, attr_=None):
+    def get_choices(cls, attr_ = None):
         return [(attr.value, attr.name.replace('_', ' ').title()) for attr in cls if attr_ is None or attr_ == attr]
 
     @classmethod
-    def get_choices_name(cls, attr_=None):
+    def get_choices_name(cls, attr_ = None):
         return [attr.name.replace('_', ' ').title() for attr in cls if attr_ is None or attr_ == attr]
 
     @classmethod
-    def get_choices_value(cls, attr_=None):
+    def get_choices_value(cls, attr_ = None):
         return [attr.value for attr in cls if attr_ is None or attr_ == attr]
 
 
@@ -1467,18 +1514,18 @@ class Transformation(models.Model):
     }
 
     # Fields
-    key = models.CharField(max_length=15, choices=Type.get_choices(), default=Type.ACTION.value)
-    value = models.CharField(max_length=15, default=ActionTransfoType.NONE.value)
+    key = models.CharField(max_length = 15, choices = Type.get_choices(), default = Type.ACTION.value)
+    value = models.CharField(max_length = 15, default = ActionTransfoType.NONE.value)
 
 
 class Transformable:
     def get_transformation(self, ruleset, key):
         raise NotImplementedError()
 
-    def is_transformed(self, ruleset, key=Transformation.ACTION, value=Transformation.A_DROP):
+    def is_transformed(self, ruleset, key = Transformation.ACTION, value = Transformation.A_DROP):
         raise NotImplementedError()
 
-    def _set_target(self, rule, target="dest_ip"):
+    def _set_target(self, rule, target = "dest_ip"):
         target = ' target:%s;)' % target
         rule.raw = re.sub(r"\)$", "%s" % (target), rule.raw) if target not in rule.raw else rule.raw
 
@@ -1496,30 +1543,30 @@ class Transformable:
         dst = terms[5]
 
         if self._test_scan_rules(rule_ids):
-            self._set_target(rule_ids, target="dest_ip")
+            self._set_target(rule_ids, target = "dest_ip")
         # external net always seen as bad guy on attack if not OUTBOUND
         elif src == "$EXTERNAL_NET":
-            self._set_target(rule_ids, target="dest_ip")
+            self._set_target(rule_ids, target = "dest_ip")
 
         # external net always seen as bad guy on attack
         elif dst == "$EXTERNAL_NET":
-            self._set_target(rule_ids, target="src_ip")
+            self._set_target(rule_ids, target = "src_ip")
 
         # any or IP address list on one side and a variable on other side implies variable is our asset so target
         elif (src == "any" or src.startswith("[")) and dst.startswith("$"):
-            self._set_target(rule_ids, target="dest_ip")
+            self._set_target(rule_ids, target = "dest_ip")
 
         # any or IP address list on one side and a variable on other side implies variable is our asset so target
         elif src.startswith("$") and (dst == "any" or dst.startswith("[")):
-            self._set_target(rule_ids, target="src_ip")
+            self._set_target(rule_ids, target = "src_ip")
 
         elif rule_ids.sid in [2017060, 2023070, 2023071, 2023549, 2024297, 2023548, 2024435, 2023149]:
-            self._set_target(rule_ids, target="dest_ip")
+            self._set_target(rule_ids, target = "dest_ip")
 
         elif rule_ids.sid in []:
-            self._set_target(rule_ids, target="src_ip")
+            self._set_target(rule_ids, target = "src_ip")
 
-    def apply_lateral_target_transfo(self, content, key=Transformation.LATERAL, value=Transformation.L_YES):
+    def apply_lateral_target_transfo(self, content, key = Transformation.LATERAL, value = Transformation.L_YES):
         try:
             rule_ids = rule_idstools.parse(content)
         except:
@@ -1551,10 +1598,10 @@ class Transformable:
         # TARGET + DST/SRC
         if key == Transformation.TARGET:
             if value == Transformation.T_SOURCE:
-                self._set_target(rule_ids, target='src_ip')
+                self._set_target(rule_ids, target = 'src_ip')
                 return rule_ids.format().encode("utf-8")
             elif value == Transformation.T_DESTINATION:
-                self._set_target(rule_ids, target='dest_ip')
+                self._set_target(rule_ids, target = 'dest_ip')
                 return rule_ids.format().encode("utf-8")
             elif value == Transformation.T_AUTO:
                 target_client = False
@@ -1610,157 +1657,217 @@ class Cache:
             ruleset_str = Ruleset.__name__.lower()
 
             cls.TRANSFORMATIONS = {
-                    ACTION: {
-                        rule_str: {
-                            A_DROP: None, A_REJECT: None, A_FILESTORE: None, A_NONE: None, A_BYPASS: None,
-                        },
-                        category_str: {
-                            A_DROP: None, A_REJECT: None, A_FILESTORE: None, A_NONE: None, A_BYPASS: None,
-                        },
-                        ruleset_str: {
-                            A_DROP: None, A_REJECT: None, A_FILESTORE: None, A_BYPASS: None,
-                        }
+                ACTION: {
+                    rule_str: {
+                        A_DROP: None, A_REJECT: None, A_FILESTORE: None, A_NONE: None, A_BYPASS: None,
                     },
-                    LATERAL: {
-                        rule_str: {
-                            L_AUTO: None, L_YES: None, L_NO: None,
-                        },
-                        category_str: {
-                            L_AUTO: None, L_YES: None, L_NO: None,
-                        },
-                        ruleset_str: {
-                            L_AUTO: None, L_YES: None,
-                        }
+                    category_str: {
+                        A_DROP: None, A_REJECT: None, A_FILESTORE: None, A_NONE: None, A_BYPASS: None,
                     },
-                    TARGET: {
-                        rule_str: {
-                            T_AUTO: None, T_SOURCE: None, T_DST: None, T_NONE: None,
-                        },
-                        category_str: {
-                            T_AUTO: None, T_SOURCE: None, T_DST: None, T_NONE: None,
-                        },
-                        ruleset_str: {
-                            T_AUTO: None, T_SOURCE: None, T_DST: None,
-                        }
+                    ruleset_str: {
+                        A_DROP: None, A_REJECT: None, A_FILESTORE: None, A_BYPASS: None,
+                    }
+                },
+                LATERAL: {
+                    rule_str: {
+                        L_AUTO: None, L_YES: None, L_NO: None,
+                    },
+                    category_str: {
+                        L_AUTO: None, L_YES: None, L_NO: None,
+                    },
+                    ruleset_str: {
+                        L_AUTO: None, L_YES: None,
+                    }
+                },
+                TARGET: {
+                    rule_str: {
+                        T_AUTO: None, T_SOURCE: None, T_DST: None, T_NONE: None,
+                    },
+                    category_str: {
+                        T_AUTO: None, T_SOURCE: None, T_DST: None, T_NONE: None,
+                    },
+                    ruleset_str: {
+                        T_AUTO: None, T_SOURCE: None, T_DST: None,
                     }
                 }
+            }
 
             # ##### Rules
             # Actions
             drop_rules = Rule.objects.filter(
-                                ruletransformation__key=ACTION.value,
-                                ruletransformation__value=A_DROP.value).values_list('pk', flat=True)
+                ruletransformation__key = ACTION.value,
+                ruletransformation__value = A_DROP.value
+            ).values_list('pk', flat = True)
+
             reject_rules = Rule.objects.filter(
-                                ruletransformation__key=ACTION.value,
-                                ruletransformation__value=A_REJECT.value).values_list('pk', flat=True)
+                ruletransformation__key = ACTION.value,
+                ruletransformation__value = A_REJECT.value
+            ).values_list('pk', flat = True)
+
             filestore_rules = Rule.objects.filter(
-                                ruletransformation__key=ACTION.value,
-                                ruletransformation__value=A_FILESTORE.value).values_list('pk', flat=True)
+                ruletransformation__key = ACTION.value,
+                ruletransformation__value = A_FILESTORE.value
+            ).values_list('pk', flat = True)
+
             none_rules = Rule.objects.filter(
-                                ruletransformation__key=ACTION.value,
-                                ruletransformation__value=A_NONE.value).values_list('pk', flat=True)
+                ruletransformation__key = ACTION.value,
+                ruletransformation__value = A_NONE.value
+            ).values_list('pk', flat = True)
+
             bypass_rules = Rule.objects.filter(
-                                ruletransformation__key=ACTION.value,
-                                ruletransformation__value=A_BYPASS.value).values_list('pk', flat=True)
+                ruletransformation__key = ACTION.value,
+                ruletransformation__value = A_BYPASS.value
+            ).values_list('pk', flat = True)
+
             # Lateral
             rule_l_auto = Rule.objects.filter(
-                                ruletransformation__key=LATERAL.value,
-                                ruletransformation__value=L_AUTO.value).values_list('pk', flat=True)
+                ruletransformation__key = LATERAL.value,
+                ruletransformation__value = L_AUTO.value
+            ).values_list('pk', flat = True)
+
             rule_l_yes = Rule.objects.filter(
-                                ruletransformation__key=LATERAL.value,
-                                ruletransformation__value=L_YES.value).values_list('pk', flat=True)
+                ruletransformation__key = LATERAL.value,
+                ruletransformation__value = L_YES.value
+            ).values_list('pk', flat = True)
+
             rule_l_no = Rule.objects.filter(
-                                ruletransformation__key=LATERAL.value,
-                                ruletransformation__value=L_NO.value).values_list('pk', flat=True)
+                ruletransformation__key = LATERAL.value,
+                ruletransformation__value = L_NO.value
+            ).values_list('pk', flat = True)
 
             # Target
             rule_t_auto = Rule.objects.filter(
-                                ruletransformation__key=TARGET.value,
-                                ruletransformation__value=T_AUTO.value).values_list('pk', flat=True)
+                ruletransformation__key = TARGET.value,
+                ruletransformation__value = T_AUTO.value
+            ).values_list('pk', flat = True)
+
             rule_t_src = Rule.objects.filter(
-                                ruletransformation__key=TARGET.value,
-                                ruletransformation__value=T_SOURCE.value).values_list('pk', flat=True)
+                ruletransformation__key = TARGET.value,
+                ruletransformation__value = T_SOURCE.value
+            ).values_list('pk', flat = True)
+
             rule_t_dst = Rule.objects.filter(
-                                ruletransformation__key=TARGET.value,
-                                ruletransformation__value=T_DST.value).values_list('pk', flat=True)
+                ruletransformation__key = TARGET.value,
+                ruletransformation__value = T_DST.value
+            ).values_list('pk', flat = True)
+
             rule_t_none = Rule.objects.filter(
-                                ruletransformation__key=TARGET.value,
-                                ruletransformation__value=T_NONE.value).values_list('pk', flat=True)
+                ruletransformation__key = TARGET.value,
+                ruletransformation__value = T_NONE.value
+            ).values_list('pk', flat = True)
 
             # #### Categories
             # Actions
             drop_cats = Category.objects.filter(
-                                categorytransformation__key=ACTION.value,
-                                categorytransformation__value=A_DROP.value).values_list('pk', flat=True)
+                categorytransformation__key = ACTION.value,
+                categorytransformation__value = A_DROP.value
+            ).values_list('pk', flat = True)
+
             reject_cats = Category.objects.filter(
-                                categorytransformation__key=ACTION.value,
-                                categorytransformation__value=A_REJECT.value).values_list('pk', flat=True)
+                categorytransformation__key = ACTION.value,
+                categorytransformation__value = A_REJECT.value
+            ).values_list('pk', flat = True)
+
             filestore_cats = Category.objects.filter(
-                                categorytransformation__key=ACTION.value,
-                                categorytransformation__value=A_FILESTORE.value).values_list('pk', flat=True)
+                categorytransformation__key = ACTION.value,
+                categorytransformation__value = A_FILESTORE.value
+            ).values_list('pk', flat = True)
+
             none_cats = Category.objects.filter(
-                                categorytransformation__key=ACTION.value,
-                                categorytransformation__value=A_NONE.value).values_list('pk', flat=True)
+                categorytransformation__key = ACTION.value,
+                categorytransformation__value = A_NONE.value
+            ).values_list('pk', flat = True)
+
             bypass_cats = Category.objects.filter(
-                                categorytransformation__key=ACTION.value,
-                                categorytransformation__value=A_BYPASS.value).values_list('pk', flat=True)
+                categorytransformation__key = ACTION.value,
+                categorytransformation__value = A_BYPASS.value
+            ).values_list('pk', flat = True)
 
             # Lateral
             cat_l_auto = Category.objects.filter(
-                                categorytransformation__key=LATERAL.value,
-                                categorytransformation__value=L_AUTO.value).values_list('pk', flat=True)
+                categorytransformation__key = LATERAL.value,
+                categorytransformation__value = L_AUTO.value
+            ).values_list('pk', flat = True)
+
             cat_l_yes = Category.objects.filter(
-                                categorytransformation__key=LATERAL.value,
-                                categorytransformation__value=L_YES.value).values_list('pk', flat=True)
+                categorytransformation__key = LATERAL.value,
+                categorytransformation__value = L_YES.value
+            ).values_list('pk', flat = True)
+
             cat_l_no = Category.objects.filter(
-                                categorytransformation__key=LATERAL.value,
-                                categorytransformation__value=L_NO.value).values_list('pk', flat=True)
+                categorytransformation__key = LATERAL.value,
+                categorytransformation__value = L_NO.value
+            ).values_list('pk', flat = True)
+
             # Target
             cat_t_auto = Category.objects.filter(
-                                categorytransformation__key=TARGET.value,
-                                categorytransformation__value=T_AUTO.value).values_list('pk', flat=True)
+                categorytransformation__key = TARGET.value,
+                categorytransformation__value = T_AUTO.value
+            ).values_list('pk', flat = True)
+
             cat_t_src = Category.objects.filter(
-                                categorytransformation__key=TARGET.value,
-                                categorytransformation__value=T_SOURCE.value).values_list('pk', flat=True)
+                categorytransformation__key = TARGET.value,
+                categorytransformation__value = T_SOURCE.value
+            ).values_list('pk', flat = True)
+
             cat_t_dst = Category.objects.filter(
-                                categorytransformation__key=TARGET.value,
-                                categorytransformation__value=T_DST.value).values_list('pk', flat=True)
+                categorytransformation__key = TARGET.value,
+                categorytransformation__value = T_DST.value
+            ).values_list('pk', flat = True)
+
             cat_t_none = Category.objects.filter(
-                                categorytransformation__key=TARGET.value,
-                                categorytransformation__value=T_NONE.value).values_list('pk', flat=True)
+                categorytransformation__key = TARGET.value,
+                categorytransformation__value = T_NONE.value
+            ).values_list('pk', flat = True)
 
             # #### Rulesets
             # Actions
             drop_rulesets = Ruleset.objects.filter(
-                                rulesettransformation__key=ACTION.value,
-                                rulesettransformation__value=A_DROP.value).values_list('pk', flat=True)
+                rulesettransformation__key = ACTION.value,
+                rulesettransformation__value = A_DROP.value
+            ).values_list('pk', flat = True)
+
             reject_rulesets = Ruleset.objects.filter(
-                                rulesettransformation__key=ACTION.value,
-                                rulesettransformation__value=A_REJECT.value).values_list('pk', flat=True)
+                rulesettransformation__key = ACTION.value,
+                rulesettransformation__value = A_REJECT.value
+            ).values_list('pk', flat = True)
+
             filestore_rulesets = Ruleset.objects.filter(
-                                rulesettransformation__key=ACTION.value,
-                                rulesettransformation__value=A_FILESTORE.value).values_list('pk', flat=True)
+                rulesettransformation__key = ACTION.value,
+                rulesettransformation__value = A_FILESTORE.value
+            ).values_list('pk', flat = True)
+
             bypass_rulesets = Ruleset.objects.filter(
-                                rulesettransformation__key=ACTION.value,
-                                rulesettransformation__value=A_BYPASS.value).values_list('pk', flat=True)
+                rulesettransformation__key = ACTION.value,
+                rulesettransformation__value = A_BYPASS.value
+            ).values_list('pk', flat = True)
 
             # Lateral
             ruleset_l_auto = Ruleset.objects.filter(
-                                rulesettransformation__key=LATERAL.value,
-                                rulesettransformation__value=L_AUTO.value).values_list('pk', flat=True)
+                rulesettransformation__key = LATERAL.value,
+                rulesettransformation__value = L_AUTO.value
+            ).values_list('pk', flat = True)
+
             ruleset_l_yes = Ruleset.objects.filter(
-                                rulesettransformation__key=LATERAL.value,
-                                rulesettransformation__value=L_YES.value).values_list('pk', flat=True)
+                rulesettransformation__key = LATERAL.value,
+                rulesettransformation__value = L_YES.value
+            ).values_list('pk', flat = True)
+
             # Target
             ruleset_t_auto = Ruleset.objects.filter(
-                                rulesettransformation__key=TARGET.value,
-                                rulesettransformation__value=T_AUTO.value).values_list('pk', flat=True)
+                rulesettransformation__key = TARGET.value,
+                rulesettransformation__value = T_AUTO.value
+            ).values_list('pk', flat = True)
+
             ruleset_t_src = Ruleset.objects.filter(
-                                rulesettransformation__key=TARGET.value,
-                                rulesettransformation__value=T_SOURCE.value).values_list('pk', flat=True)
+                rulesettransformation__key = TARGET.value,
+                rulesettransformation__value = T_SOURCE.value
+            ).values_list('pk', flat = True)
+
             ruleset_t_dst = Ruleset.objects.filter(
-                                rulesettransformation__key=TARGET.value,
-                                rulesettransformation__value=T_DST.value).values_list('pk', flat=True)
+                rulesettransformation__key = TARGET.value,
+                rulesettransformation__value = T_DST.value
+            ).values_list('pk', flat = True)
 
             # Set rules action cache
             cls.TRANSFORMATIONS[ACTION][rule_str][A_DROP] = set(drop_rules)
@@ -1822,8 +1929,8 @@ class Cache:
 class Category(models.Model, Transformable, Cache):
     name = models.CharField(max_length=100)
     filename = models.CharField(max_length=200)
-    descr = models.CharField(max_length=400, blank = True)
-    created_date = models.DateTimeField('date created', default = timezone.now)
+    descr = models.CharField(max_length = 400, blank = True)
+    created_date = models.DateTimeField('date created', default=timezone.now)
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
 
     class Meta:
@@ -1842,8 +1949,9 @@ class Category(models.Model, Transformable, Cache):
 
     def build_sigs_group(self):
         # query sigs with group set
-        rules = Rule.objects.filter(group = True, category = self)
+        rules = Rule.objects.filter(group=True, category=self)
         sigs_groups = {}
+
         # build hash on message
         for rule in rules:
             # let's get the new IP only, will output that as text field at save time
@@ -1871,6 +1979,7 @@ class Category(models.Model, Transformable, Cache):
             return
         if rule is None:
             return
+
         rule_base_msg = Rule.GROUPSNAMEREGEXP.findall(rule.msg)[0]
         # check if we already have a signature in the group signatures
         # that match
@@ -1904,7 +2013,7 @@ class Category(models.Model, Transformable, Cache):
                 track_by = 'src'
             else:
                 track_by = 'dst'
-            content = content.replace(';)','; iprep:%s,%s,>,1;)' % (track_by, iprep_group))
+            content = content.replace(';)', '; iprep:%s,%s,>,1;)' % (track_by, iprep_group))
             # replace IP list by any
             content = re.sub(r'\[\d+.*\d+\]', r'any', content)
             # fix message
@@ -1921,10 +2030,18 @@ class Category(models.Model, Transformable, Cache):
                 group_rule.rev = rule.rev
                 rules_update["updated"].append(group_rule)
             else:
-                group_rule = Rule(category = self, sid = rule.sid, group = True,
-                        rev = rule.rev - 1, content = content, msg = rule_base_msg,
-                        state_in_source = state, state = state,
-                        imported_date = creation_date, updated_date = creation_date)
+                group_rule = Rule(
+                    category=self,
+                    sid=rule.sid,
+                    group=True,
+                    rev=rule.rev - 1,
+                    content=content,
+                    msg=rule_base_msg,
+                    state_in_source=state,
+                    state=state,
+                    imported_date=creation_date,
+                    updated_date=creation_date
+                )
                 rules_update["updated"].append(group_rule)
                 group_rule.parse_metadata()
                 group_rule.parse_flowbits(source, flowbits, addition = True)
@@ -1939,9 +2056,9 @@ class Category(models.Model, Transformable, Cache):
     def get_rules(self, source, existing_rules_hash=None):
         # parse file
         # return an object with updates
-        getsid = re.compile("sid *: *(\d+)")
-        getrev = re.compile("rev *: *(\d+)")
-        getmsg = re.compile("msg *: *\"(.*?)\"")
+        getsid = re.compile(r"sid *: *(\d+)")
+        getrev = re.compile(r"rev *: *(\d+)")
+        getmsg = re.compile(r"msg *: *\"(.*?)\"")
         source_git_dir = os.path.join(settings.GIT_SOURCES_BASE_DIRECTORY, str(self.source.pk))
         rfile = open(os.path.join(source_git_dir, self.filename))
 
@@ -2033,9 +2150,17 @@ class Category(models.Model, Transformable, Cache):
                     else:
                         if rev is None:
                             rev = 0
-                        rule = Rule(category = self, sid = sid,
-                                            rev = rev, content = line, msg = msg,
-                                            state_in_source = state, state = state, imported_date = creation_date, updated_date = creation_date)
+                        rule = Rule(
+                            category=self,
+                            sid=sid,
+                            rev=rev,
+                            content=line,
+                            msg=msg,
+                            state_in_source=state,
+                            state=state,
+                            imported_date=creation_date,
+                            updated_date=creation_date
+                        )
                         rule.parse_metadata()
                         rules_update["added"].append(rule)
                         rule.parse_flowbits(source, flowbits, addition = True)
@@ -2066,9 +2191,11 @@ class Category(models.Model, Transformable, Cache):
                 Flowbit.set.through.objects.bulk_create(flowbits["added"]["through_set"])
             if len(flowbits["added"]["through_isset"]):
                 Flowbit.isset.through.objects.bulk_create(flowbits["added"]["through_isset"])
-            rules_update["deleted"] = list(set(rules_list) -
-                                      set(rules_update["added"]).union(set(rules_update["updated"])) -
-                                      set(rules_unchanged))
+            rules_update["deleted"] = list(
+                set(rules_list) -
+                set(rules_update["added"]).union(set(rules_update["updated"])) -
+                set(rules_unchanged)
+            )
             source.aggregate_update(rules_update)
 
     def get_absolute_url(self):
@@ -2081,11 +2208,11 @@ class Category(models.Model, Transformable, Cache):
         ruleset.save()
         if user:
             UserAction.create(
-                    action_type='enable_category',
-                    comment=comment,
-                    user=user,
-                    category=self,
-                    ruleset=ruleset
+                action_type='enable_category',
+                comment=comment,
+                user=user,
+                category=self,
+                ruleset=ruleset
             )
 
     def disable(self, ruleset, user = None, comment = None):
@@ -2094,38 +2221,41 @@ class Category(models.Model, Transformable, Cache):
         ruleset.save()
         if user:
             UserAction.create(
-                    action_type='disable_category',
-                    comment=comment,
-                    user=user,
-                    category=self,
-                    ruleset=ruleset
+                action_type='disable_category',
+                comment=comment,
+                user=user,
+                category=self,
+                ruleset=ruleset
             )
 
     def is_transformed(self, ruleset, key=Transformation.ACTION, value=Transformation.A_DROP):
         if Category.TRANSFORMATIONS == {}:
-            return (self.pk in ruleset.get_transformed_categories(key=key, value=value).values_list('pk', flat=True))
+            return (self.pk in ruleset.get_transformed_categories(key=key, value=value).values_list('pk', flat = True))
 
         category_str = Category.__name__.lower()
         return (self.pk in Category.TRANSFORMATIONS[key][category_str][value])
 
     def suppress_transformation(self, ruleset, key):
         CategoryTransformation.objects.filter(
-                ruleset=ruleset,
-                category_transformation=self,
-                key=key.value).delete()
+            ruleset=ruleset,
+            category_transformation=self,
+            key=key.value
+        ).delete()
 
     def toggle_transformation(self, ruleset, key=Transformation.ACTION, value=Transformation.A_DROP):
         if self.is_transformed(ruleset, key=key, value=value):
             CategoryTransformation.objects.filter(
-                    ruleset=ruleset,
-                    category_transformation=self,
-                    key=key.value).delete()
+                ruleset=ruleset,
+                category_transformation=self,
+                key=key.value
+            ).delete()
         else:
             c = CategoryTransformation(
-                    ruleset=ruleset,
-                    category_transformation=self,
-                    key=key.value,
-                    value=value.value)
+                ruleset=ruleset,
+                category_transformation=self,
+                key=key.value,
+                value=value.value
+            )
             c.save()
         ruleset.needs_test()
 
@@ -2143,16 +2273,18 @@ class Category(models.Model, Transformable, Cache):
 
         if Category.TRANSFORMATIONS == {}:
             ct = CategoryTransformation.objects.filter(
-                                    key=key.value,
-                                    ruleset=ruleset,
-                                    category_transformation=self)
+                key=key.value,
+                ruleset=ruleset,
+                category_transformation=self
+            )
             if len(ct) > 0:
                 return TYPE(ct[0].value)
 
             if override:
                 rt = RulesetTransformation.objects.filter(
-                                    key=key.value,
-                                    ruleset_transformation=ruleset)
+                    key=key.value,
+                    ruleset_transformation=ruleset
+                )
                 if len(rt) > 0:
                     return TYPE(rt[0].value)
 
@@ -2220,7 +2352,7 @@ class Category(models.Model, Transformable, Cache):
 
 
 class Rule(models.Model, Transformable, Cache):
-    GROUP_BY_CHOICES= (('by_src', 'by_src'),('by_dst', 'by_dst'))
+    GROUP_BY_CHOICES = (('by_src', 'by_src'), ('by_dst', 'by_dst'))
     sid = models.IntegerField(primary_key=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     msg = models.CharField(max_length=1000)
@@ -2238,14 +2370,15 @@ class Rule(models.Model, Transformable, Cache):
 
     hits = 0
 
-    BITSREGEXP = {'flowbits': re.compile("flowbits *: *(isset|set),(.*?) *;"),
-                  'hostbits': re.compile("hostbits *: *(isset|set),(.*?) *;"),
-                  'xbits': re.compile("xbits *: *(isset|set),(.*?) *;"),
-                 }
+    BITSREGEXP = {
+        'flowbits': re.compile("flowbits *: *(isset|set),(.*?) *;"),
+        'hostbits': re.compile("hostbits *: *(isset|set),(.*?) *;"),
+        'xbits': re.compile("xbits *: *(isset|set),(.*?) *;"),
+    }
 
-    IPSREGEXP = {'src': re.compile('^\S+ +\S+ (.*) +\S+ +\->'), 'dest': re.compile('\-> (.*) +\S+$')}
+    IPSREGEXP = {'src': re.compile(r'^\S+ +\S+ (.*) +\S+ +\->'), 'dest': re.compile(r'\-> (.*) +\S+$')}
 
-    GROUPSNAMEREGEXP = re.compile('^(.*) +group +\d+$')
+    GROUPSNAMEREGEXP = re.compile(r'^(.*) +group +\d+$')
 
     def __str__(self):
         return str(self.sid) + ":" + self.msg
@@ -2275,8 +2408,11 @@ class Rule(models.Model, Transformable, Cache):
                         continue
                     # create Flowbit if needed
                     if not flowinst[1] in list(flowbits[ftype].keys()):
-                        elt = Flowbit(type = ftype, name = flowinst[1],
-                                      source = source)
+                        elt = Flowbit(
+                            type=ftype,
+                            name=flowinst[1],
+                            source=source
+                        )
                         flowbits['last_pk'] += 1
                         elt.id = flowbits['last_pk']
                         flowbits[ftype][flowinst[1]] = elt
@@ -2298,7 +2434,7 @@ class Rule(models.Model, Transformable, Cache):
         if sdate:
             de = sdate.split('_')
             try:
-                return datetime_date(int(de[0]),int(de[1]),int(de[2]))
+                return datetime_date(int(de[0]), int(de[1]), int(de[2]))
             except ValueError:
                 # Catches conversion to int failure, in case the date is 'unknown'
                 pass
@@ -2326,7 +2462,7 @@ class Rule(models.Model, Transformable, Cache):
         return False
 
     # flowbit dependency:
-    # if we disable a rule that is the last one set a flag then we must disable all the 
+    # if we disable a rule that is the last one set a flag then we must disable all the
     # dependant rules
     def get_dependant_rules(self, ruleset):
         # get list of flowbit we are setting
@@ -2347,17 +2483,17 @@ class Rule(models.Model, Transformable, Cache):
         return dependant_rules
 
     def get_actions(self):
-        uas = UserAction.objects.filter(
-                user_action_objects__content_type=ContentType.objects.get_for_model(Rule),
-                user_action_objects__object_id=self.pk).order_by('-date')
-        return uas
+        return UserAction.objects.filter(
+            user_action_objects__content_type=ContentType.objects.get_for_model(Rule),
+            user_action_objects__object_id=self.pk
+        ).order_by('-date')
 
     def get_comments(self):
-        uas = UserAction.objects.filter(
-                action_type__in=['comment_rule', 'transform_rule', 'enable_rule', 'suppress_rule', 'disable_rule', 'delete_suppress_rule'],
-                user_action_objects__content_type=ContentType.objects.get_for_model(Rule),
-                user_action_objects__object_id=self.pk).order_by('-date')
-        return uas
+        return UserAction.objects.filter(
+            action_type__in=['comment_rule', 'transform_rule', 'enable_rule', 'suppress_rule', 'disable_rule', 'delete_suppress_rule'],
+            user_action_objects__content_type=ContentType.objects.get_for_model(Rule),
+            user_action_objects__object_id=self.pk
+        ).order_by('-date')
 
     def enable(self, ruleset, user = None, comment = None):
         enable_rules = [self]
@@ -2365,11 +2501,11 @@ class Rule(models.Model, Transformable, Cache):
         ruleset.enable_rules(enable_rules)
         if user:
             UserAction.create(
-                    action_type='enable_rule',
-                    comment=comment,
-                    user=user,
-                    rule=self,
-                    ruleset=ruleset
+                action_type='enable_rule',
+                comment=comment,
+                user=user,
+                rule=self,
+                ruleset=ruleset
             )
         return
 
@@ -2379,11 +2515,11 @@ class Rule(models.Model, Transformable, Cache):
         ruleset.disable_rules(disable_rules)
         if user:
             UserAction.create(
-                    action_type='disable_rule',
-                    comment=comment,
-                    user=user,
-                    rule=self,
-                    ruleset=ruleset
+                action_type='disable_rule',
+                comment=comment,
+                user=user,
+                rule=self,
+                ruleset=ruleset
             )
         return
 
@@ -2406,17 +2542,17 @@ class Rule(models.Model, Transformable, Cache):
 
         if key == Transformation.ACTION:
             if value == Transformation.A_REJECT:
-                content = re.sub("^ *\S+", "reject", content)
+                content = re.sub(r"^ *\S+", "reject", content)
             elif value == Transformation.A_DROP:
-                content = re.sub("^ *\S+", "drop", content)
+                content = re.sub(r"^ *\S+", "drop", content)
             elif value == Transformation.A_FILESTORE:
-                content = re.sub("; *\)", "; filestore;)", content)
+                content = re.sub(r"; *\)", "; filestore;)", content)
             elif value == Transformation.A_BYPASS:
                 if 'noalert' in content:
-                    content = re.sub("; noalert;", "; noalert; bypass;", content)
+                    content = re.sub(r"; noalert;", "; noalert; bypass;", content)
                 else:
-                    content = re.sub("; *\)", "; noalert; bypass;)", content)
-                content = re.sub("^ *\S+", "pass", content)
+                    content = re.sub(r"; *\)", "; noalert; bypass;)", content)
+                content = re.sub(r"^ *\S+", "pass", content)
 
         elif key == Transformation.LATERAL or key == Transformation.TARGET:
             content = self.apply_lateral_target_transfo(content, key, value)
@@ -2430,7 +2566,6 @@ class Rule(models.Model, Transformable, Cache):
         return self.content.split(' ')[1] in ('http', 'smtp', 'smb', 'nfs', 'ftp-data')
 
     def can_lateral(self, value):
-        content = self.content.encode('utf8')
         try:
             rule_ids = rule_idstools.parse(content)
         except:
@@ -2455,7 +2590,7 @@ class Rule(models.Model, Transformable, Cache):
 
     def is_transformed(self, ruleset, key=Transformation.ACTION, value=Transformation.A_DROP):
         if Rule.TRANSFORMATIONS == {}:
-            return (self in ruleset.get_transformed_rules(key=key, value=value).values_list('pk', flat=True))
+            return (self in ruleset.get_transformed_rules(key=key, value=value).values_list('pk', flat = True))
 
         rule_str = Rule.__name__.lower()
         return (self.pk in Rule.TRANSFORMATIONS[key][rule_str][value])
@@ -2474,23 +2609,28 @@ class Rule(models.Model, Transformable, Cache):
 
         if Rule.TRANSFORMATIONS == {}:
             rt = RuleTransformation.objects.filter(
-                                key=key.value,
-                                ruleset=ruleset,
-                                rule_transformation=self).all()
+                key=key.value,
+                ruleset=ruleset,
+                rule_transformation=self
+            ).all()
+
             if len(rt) > 0:
                 return TYPE(rt[0].value)
 
             if override:
                 ct = CategoryTransformation.objects.filter(
-                                        key=key.value,
-                                        ruleset=ruleset,
-                                        category_transformation=self.category).all()
+                    key=key.value,
+                    ruleset=ruleset,
+                    category_transformation=self.category
+                ).all()
+
                 if len(ct) > 0:
                     return TYPE(ct[0].value)
 
                 rt = RulesetTransformation.objects.filter(
-                                    key=key.value,
-                                    ruleset_transformation=ruleset)
+                    key=key.value,
+                    ruleset_transformation=ruleset
+                )
                 if len(rt) > 0:
                     return TYPE(rt[0].value)
 
@@ -2516,9 +2656,10 @@ class Rule(models.Model, Transformable, Cache):
 
     def remove_transformations(self, ruleset, key):
         RuleTransformation.objects.filter(
-                ruleset=ruleset,
-                rule_transformation=self,
-                key=key.value).delete()
+            ruleset=ruleset,
+            rule_transformation=self,
+            key=key.value
+        ).delete()
 
         ruleset.needs_test()
         ruleset.save()
@@ -2527,10 +2668,11 @@ class Rule(models.Model, Transformable, Cache):
         self.remove_transformations(ruleset, key)
 
         r = RuleTransformation(
-                ruleset=ruleset,
-                rule_transformation=self,
-                key=key.value,
-                value=value.value)
+            ruleset=ruleset,
+            rule_transformation=self,
+            key=key.value,
+            value=value.value
+        )
         r.save()
 
         ruleset.needs_test()
@@ -2647,8 +2789,10 @@ class Rule(models.Model, Transformable, Cache):
 
         return tuple(allowed_choices)
 
+
 def build_iprep_name(msg):
-    return re.sub('[^0-9a-zA-Z]+', '_', msg.replace(' ',''))
+    return re.sub('[^0-9a-zA-Z]+', '_', msg.replace(' ', ''))
+
 
 class Flowbit(models.Model):
     FLOWBIT_TYPE = (('flowbits', 'Flowbits'), ('hostbits', 'Hostbits'), ('xbits', 'Xbits'))
@@ -2680,9 +2824,18 @@ class Ruleset(models.Model, Transformable):
     sources = models.ManyToManyField(SourceAtVersion)
     # List of Category selected in the ruleset
     categories = models.ManyToManyField(Category, blank=True)
-    rules_transformation = models.ManyToManyField(Rule, through='RuleTransformation', related_name='rules_transformed', blank=True)
-    categories_transformation = models.ManyToManyField(Category, through='CategoryTransformation', related_name='categories_transformed', blank=True)
-
+    rules_transformation = models.ManyToManyField(
+        Rule,
+        through='RuleTransformation',
+        related_name='rules_transformed',
+        blank=True
+    )
+    categories_transformation = models.ManyToManyField(
+        Category,
+        through='CategoryTransformation',
+        related_name='categories_transformed',
+        blank=True
+    )
 
     # List or Rules to suppressed from the Ruleset
     # Exported as suppression list in oinkmaster
@@ -2759,8 +2912,9 @@ class Ruleset(models.Model, Transformable):
 
     def remove_transformation(self, key):
         RulesetTransformation.objects.filter(
-                ruleset_transformation=self,
-                key=key.value).delete()
+            ruleset_transformation=self,
+            key=key.value
+        ).delete()
 
         self.needs_test()
         self.save()
@@ -2769,9 +2923,10 @@ class Ruleset(models.Model, Transformable):
         self.remove_transformation(key)
 
         r = RulesetTransformation(
-                ruleset_transformation=self,
-                key=key.value,
-                value=value.value)
+            ruleset_transformation=self,
+            key=key.value,
+            value=value.value
+        )
         r.save()
 
         self.needs_test()
@@ -2788,9 +2943,10 @@ class Ruleset(models.Model, Transformable):
             return Category.objects.filter(categorytransformation__ruleset=self)
 
         categories = Category.objects.filter(
-                            categorytransformation__ruleset=self,
-                            categorytransformation__key=key.value,
-                            categorytransformation__value=value.value)
+            categorytransformation__ruleset=self,
+            categorytransformation__key=key.value,
+            categorytransformation__value=value.value
+        )
 
         if order_by is not None:
             categories = categories.order_by(order_by)
@@ -2815,9 +2971,10 @@ class Ruleset(models.Model, Transformable):
             return Rule.objects.filter(ruletransformation__ruleset=self)
 
         rules = Rule.objects.filter(
-                            ruletransformation__ruleset=self,
-                            ruletransformation__key=key.value,
-                            ruletransformation__value=value.value)
+            ruletransformation__ruleset=self,
+            ruletransformation__key=key.value,
+            ruletransformation__value=value.value
+        )
 
         if order_by is not None:
             rules = rules.order_by(order_by)
@@ -2848,8 +3005,10 @@ class Ruleset(models.Model, Transformable):
             raise Exception("Key '%s' is unknown" % key)
 
         rt = RulesetTransformation.objects.filter(
-                                key=key.value,
-                                ruleset_transformation=self).exclude(value=NONE.value)
+            key=key.value,
+            ruleset_transformation=self
+        ).exclude(value=NONE.value)
+
         if len(rt) > 0:
             return TYPE(rt[0].value)
 
@@ -2857,10 +3016,11 @@ class Ruleset(models.Model, Transformable):
 
     def is_transformed(self, key=Transformation.ACTION, value=Transformation.A_DROP):
         rulesets_t = Ruleset.objects.filter(
-                rulesettransformation__key=key.value,
-                rulesettransformation__value=value.value)
+            rulesettransformation__key=key.value,
+            rulesettransformation__value=value.value
+        )
 
-        return (self.pk in rulesets_t.values_list('pk', flat=True))
+        return (self.pk in rulesets_t.values_list('pk', flat = True))
 
     def get_absolute_url(self):
         from django.urls import reverse
@@ -2888,7 +3048,7 @@ class Ruleset(models.Model, Transformable):
         # TODO: manage other types
         S_SUPPRESSED = Transformation.S_SUPPRESSED
 
-        sources = self.sources.values_list('source', flat=True)
+        sources = self.sources.values_list('source', flat = True)
         rules = Rule.objects.select_related('category')
         rules = rules.filter(category__source__pk__in=sources, category__in=self.categories.all(), state=True)
         rules = rules.exclude(ruletransformation__value=S_SUPPRESSED.value)
@@ -2961,7 +3121,7 @@ class Ruleset(models.Model, Transformable):
         sdiff = {}
         for sourceat in sourcesatversion:
             supdate = SourceUpdate.objects.filter(source = sourceat.source).order_by('-created_date')
-            if len(supdate) > 0: 
+            if len(supdate) > 0:
                 srcdiff = supdate[0].diff()
                 if mode == 'short':
                     num = 0
@@ -3009,9 +3169,16 @@ class Ruleset(models.Model, Transformable):
             for f in files:
                 fullpath = os.path.join(root, f)
                 with open(fullpath, 'r') as cf:
-                    related_files[f] = cf.read( 50 * 1024)
+                    related_files[f] = cf.read(50 * 1024)
         shutil.rmtree(tmpdir)
-        return testor.check_rule_buffer(rule_buffer, related_files=related_files, single=single, cats_content=cats_content, iprep_content=iprep_content)
+
+        return testor.check_rule_buffer(
+            rule_buffer,
+            related_files=related_files,
+            single=single,
+            cats_content=cats_content,
+            iprep_content=iprep_content
+        )
 
     def test(self):
         self.need_test = False
@@ -3031,14 +3198,19 @@ class Ruleset(models.Model, Transformable):
         S_SUPPRESSED = Transformation.S_SUPPRESSED
 
         rts = []
-        suppressed_rules = self.get_transformed_rules(key=SUPPRESSED, value=S_SUPPRESSED).values_list('pk', flat=True)
+        suppressed_rules = self.get_transformed_rules(
+            key=SUPPRESSED,
+            value=S_SUPPRESSED
+        ).values_list('pk', flat = True)
+
         for rule in rules:
             if rule.pk not in suppressed_rules:
                 rt = RuleTransformation(
-                        ruleset=self,
-                        rule_transformation=rule,
-                        key=SUPPRESSED.value,
-                        value=S_SUPPRESSED.value)
+                    ruleset=self,
+                    rule_transformation=rule,
+                    key=SUPPRESSED.value,
+                    value=S_SUPPRESSED.value
+                )
                 rts.append(rt)
 
         RuleTransformation.objects.bulk_create(rts)
@@ -3049,10 +3221,12 @@ class Ruleset(models.Model, Transformable):
         S_SUPPRESSED = Transformation.S_SUPPRESSED
 
         RuleTransformation.objects.filter(
-                        ruleset=self,
-                        rule_transformation__in=rules,
-                        key=SUPPRESSED.value,
-                        value=S_SUPPRESSED.value).delete()
+            ruleset=self,
+            rule_transformation__in=rules,
+            key=SUPPRESSED.value,
+            value=S_SUPPRESSED.value
+        ).delete()
+
         self.needs_test()
 
     def needs_test(self):
@@ -3086,7 +3260,7 @@ class RulesetTransformation(Transformation):
 class Threshold(models.Model):
     THRESHOLD_TYPES = (('threshold', 'threshold'), ('suppress', 'suppress'))
     THRESHOLD_TYPE_TYPES = (('limit', 'limit'), ('threshold', 'threshold'), ('both', 'both'))
-    TRACK_BY_CHOICES= (('by_src', 'by_src'),('by_dst', 'by_dst'))
+    TRACK_BY_CHOICES = (('by_src', 'by_src'), ('by_dst', 'by_dst'))
     descr = models.CharField(max_length=400, blank = True)
     threshold_type = models.CharField(max_length=20, choices=THRESHOLD_TYPES, default='suppress')
     type = models.CharField(max_length=20, choices=THRESHOLD_TYPE_TYPES, default='limit')
@@ -3104,6 +3278,7 @@ class Threshold(models.Model):
             net = self.net
             if ',' in self.net:
                 net = '[%s]' % self.net
+
             rep = "suppress gen_id %d, sig_id %d" % (self.gid, self.rule.sid)
             rep += ", track %s, ip %s" % (self.track_by, net)
         else:
@@ -3117,11 +3292,14 @@ class Threshold(models.Model):
     def contain(self, elt):
         if elt.threshold_type != self.threshold_type:
             return False
+
         if elt.track_by != self.track_by:
             return False
+
         if elt.threshold_type == 'suppress':
             if not IPy.IP(self.net).overlaps(IPy.IP(elt.net)):
                 return False
+
         return True
 
 
@@ -3153,21 +3331,21 @@ class RuleProcessingFilter(models.Model):
 
         try:
             msg = self.filter_defs.get(key='msg').value
-            sids = list(Rule.objects.filter(msg__icontains=msg).order_by('sid').values_list('sid', flat=True))
-            sid_track_ip = dict([(str(sid), []) for sid in sids]) if msg else None
+            sids = list(Rule.objects.filter(msg__icontains=msg).order_by('sid').values_list('sid', flat = True))
+            sid_track_ip = dict([(str(sid_), []) for sid_ in sids]) if msg else None
         except models.ObjectDoesNotExist:
             pass
 
         try:
             content = self.filter_defs.get(key='content').value
-            sids = list(Rule.objects.filter(content__icontains=content).order_by('sid').values_list('sid', flat=True))
-            sid_track_ip = dict([(str(sid), []) for sid in sids]) if content else None
+            sids = list(Rule.objects.filter(content__icontains=content).order_by('sid').values_list('sid', flat = True))
+            sid_track_ip = dict([(str(sid_), []) for sid_ in sids]) if content else None
         except models.ObjectDoesNotExist:
             pass
 
         try:
             msg = self.filter_defs.get(key='alert.signature').value
-            sids = list(Rule.objects.filter(msg=msg).order_by('sid').values_list('sid', flat=True))
+            sids = list(Rule.objects.filter(msg=msg).order_by('sid').values_list('sid', flat = True))
             sid_track_ip = dict([(str(sid), []) for sid in sids]) if msg else None
         except models.ObjectDoesNotExist:
             pass
@@ -3177,14 +3355,17 @@ class RuleProcessingFilter(models.Model):
                 src_ip = self.filter_defs.get(key='src_ip')
             except models.ObjectDoesNotExist:
                 src_ip = None
+
             try:
                 dest_ip = self.filter_defs.get(key='dest_ip')
             except models.ObjectDoesNotExist:
                 dest_ip = None
+
             try:
                 alert_target_ip = self.filter_defs.get(key='alert.target.ip')
             except models.ObjectDoesNotExist:
                 alert_target_ip = None
+
             try:
                 alert_source_ip = self.filter_defs.get(key='alert.source.ip')
             except models.ObjectDoesNotExist:
@@ -3264,6 +3445,7 @@ class RuleProcessingFilterDef(models.Model):
         op = self.OPERATOR_DISPLAY.get(self.operator, self.operator)
         return '%s %s %s' % (self.key, op, self.value)
 
+
 def dependencies_check(obj):
     if obj == Source:
         return
@@ -3276,14 +3458,16 @@ def dependencies_check(obj):
         return
 
     if len(Source.objects.all()) == 0:
-            return "You need first to create a source and a ruleset."
+        return "You need first to create a source and a ruleset."
 
     if len(Ruleset.objects.all()) == 0:
-            return "You need first to create a ruleset."
+        return "You need first to create a ruleset."
+
 
 def export_iprep_files(target_dir, cats_content, iprep_content):
     group_rules = Rule.objects.filter(group = True)
     cat_map = {}
+
     with open(target_dir + "/" + "scirius-categories.txt", 'w') as rfile:
         index = 1
         for rule in group_rules:
@@ -3292,6 +3476,7 @@ def export_iprep_files(target_dir, cats_content, iprep_content):
             index = index + 1
         if cats_content:
             rfile.write(cats_content)
+
     with open(target_dir + "/" + "scirius-iprep.list", 'w') as rfile:
         for cate in cat_map:
             for IP in cat_map[cate].group_ips_list.split(','):

@@ -46,6 +46,7 @@ class Info():
         return 'danger'
     def disk(self):
         return psutil.disk_usage('/')
+
     def memory(self):
         return psutil.virtual_memory()
 
@@ -56,14 +57,16 @@ class Info():
     def cpu(self):
         return psutil.cpu_percent(interval=0.2)
 
+
 def get_es_template():
     return 'rules/elasticsearch.html'
 
+
 def help_links(djlink):
     HELP_LINKS_TABLE = {
-        "suricata_edit": {"name": "Suricata setup", "base_url": "doc/suricata-ce.html", "anchor": "#setup" },
-        "suricata_update": {"name": "Updating Suricata ruleset", "base_url": "doc/suricata-ce.html", "anchor": "#updating-ruleset" },
-        }
+        "suricata_edit": { "name": "Suricata setup", "base_url": "doc/suricata-ce.html", "anchor": "#setup" },
+        "suricata_update": { "name": "Updating Suricata ruleset", "base_url": "doc/suricata-ce.html", "anchor": "#updating-ruleset" },
+    }
     if djlink in HELP_LINKS_TABLE:
         return HELP_LINKS_TABLE[djlink]
     return None
@@ -130,9 +133,8 @@ def validate_rule_postprocessing(data, partial):
     if errors:
         raise serializers.ValidationError({'filter_defs': errors})
 
-def get_processing_filter_thresholds(ruleset):
-    from rules.models import RuleProcessingFilter
 
+def get_processing_filter_thresholds(ruleset):
     for f in ruleset.processing_filters.filter(enabled=True, action__in=('suppress', 'threshold')):
         for item in f.get_threshold_content(ruleset):
             yield item
@@ -191,6 +193,7 @@ def get_default_filter_sets():
         fset['id'] = -idx
 
     return fsets
+
 
 def es_bool_clauses(request):
     return ''

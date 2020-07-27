@@ -19,18 +19,18 @@ along with Scirius.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-from django.core.management.base import BaseCommand, CommandError
-from django.utils import timezone
+from django.core.management.base import BaseCommand
 from rules.models import Source
+
 
 class Command(BaseCommand):
     help = 'Delete a source'
 
     def add_arguments(self, parser):
-        parser.add_argument('name', help='Source name')
+        parser.add_argument('name', help = 'Source name')
 
     def handle(self, *args, **options):
         name = options['name']
 
-        source = Source.objects.filter(name = name).delete()
+        Source.objects.filter(name = name).delete()
         self.stdout.write('Successfully deleted source "%s"' % name)

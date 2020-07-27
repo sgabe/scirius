@@ -21,7 +21,6 @@ along with Scirius.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
 
-from django.shortcuts import redirect
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
@@ -33,9 +32,11 @@ from scirius.utils import scirius_render, get_middleware_module
 revproxy_logger = logging.getLogger('revproxy')
 revproxy_logger.setLevel(logging.WARNING)
 
+
 def homepage(request):
     context = get_middleware_module('common').get_homepage_context()
     return scirius_render(request, 'rules/home.html', context)
+
 
 # Proxy
 class KibanaProxyView(ProxyView):
@@ -52,6 +53,7 @@ class KibanaProxyView(ProxyView):
 class EveboxProxyView(ProxyView):
     upstream = settings.EVEBOX_URL
     add_remote_user = True
+
 
 class MolochProxyView(ProxyView):
     upstream = settings.MOLOCH_URL

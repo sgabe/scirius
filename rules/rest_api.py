@@ -1,5 +1,5 @@
 
-from rules.suripyg import SuriHTMLFormat
+from .suripyg import SuriHTMLFormat
 
 from django.conf import settings
 from django.conf.urls import url
@@ -26,22 +26,19 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rules.rest_permissions import IsOwnerOrReadOnly
 
 from django_filters import rest_framework as filters
-from django_filters import fields as filters_fields
 from elasticsearch.exceptions import ConnectionError
-from django.contrib.auth.models import User
 
-from rules.models import Rule, Category, Ruleset, RuleTransformation, CategoryTransformation, RulesetTransformation, \
-        Source, SourceAtVersion, SourceUpdate, UserAction, UserActionObject, Transformation, SystemSettings, get_system_settings, \
-        FilterSet
+from rules.models import Rule, Category, Ruleset, RuleTransformation, CategoryTransformation, RulesetTransformation, FilterSet
+from rules.models import Source, SourceAtVersion, SourceUpdate, UserAction, UserActionObject, Transformation, SystemSettings, get_system_settings
 from rules.views import get_public_sources, fetch_public_sources, extract_rule_references
 from rules.rest_processing import RuleProcessingFilterViewSet
 from rules.es_data import ESData
 from rules.es_query import ESPaginator
 
-from rules.es_graphs import ESStats, ESRulesStats, ESSidByHosts, ESFieldStats, \
-        ESTimeline, ESMetricsTimeline, ESHealth, ESIndicesStats, ESRulesPerCategory, ESAlertsCount, \
-        ESLatestStats, ESIppairAlerts, ESIppairNetworkAlerts, ESAlertsTail, ESSuriLogTail, ESPoststats, \
-        ESSigsListHits, ESTopRules, ESError, ESDeleteAlertsBySid, ESEventsFromFlowID, ESFieldsStats
+from rules.es_graphs import ESStats, ESRulesStats, ESSidByHosts, ESFieldStats
+from rules.es_graphs import ESTimeline, ESMetricsTimeline, ESHealth, ESIndicesStats, ESRulesPerCategory, ESAlertsCount
+from rules.es_graphs import ESLatestStats, ESIppairAlerts, ESIppairNetworkAlerts, ESAlertsTail, ESSuriLogTail, ESPoststats
+from rules.es_graphs import ESSigsListHits, ESTopRules, ESError, ESDeleteAlertsBySid, ESEventsFromFlowID, ESFieldsStats
 
 from scirius.rest_utils import SciriusReadOnlyModelViewSet
 from scirius.settings import USE_EVEBOX, USE_KIBANA, KIBANA_PROXY, KIBANA_URL, ELASTICSEARCH_KEYWORD
@@ -214,10 +211,10 @@ class RulesetViewSet(viewsets.ModelViewSet):
         comment_serializer.is_valid(raise_exception=True)
 
         UserAction.create(
-                action_type='create_ruleset',
-                comment=comment_serializer.validated_data['comment'],
-                user=request.user,
-                ruleset=serializer.instance
+            action_type='create_ruleset',
+            comment=comment_serializer.validated_data['comment'],
+            user=request.user,
+            ruleset=serializer.instance
         )
 
         headers = self.get_success_headers(serializer.data)
@@ -230,10 +227,10 @@ class RulesetViewSet(viewsets.ModelViewSet):
         comment_serializer.is_valid(raise_exception=True)
 
         UserAction.create(
-                action_type='delete_ruleset',
-                user=request.user,
-                ruleset=ruleset,
-                comment=comment_serializer.validated_data['comment']
+            action_type='delete_ruleset',
+            user=request.user,
+            ruleset=ruleset,
+            comment=comment_serializer.validated_data['comment']
         )
         return super(RulesetViewSet, self).destroy(request, *args, **kwargs)
 
@@ -262,10 +259,10 @@ class RulesetViewSet(viewsets.ModelViewSet):
         comment_serializer.is_valid(raise_exception=True)
 
         UserAction.create(
-                action_type='edit_ruleset',
-                comment=comment_serializer.validated_data['comment'],
-                user=request.user,
-                ruleset=instance
+            action_type='edit_ruleset',
+            comment=comment_serializer.validated_data['comment'],
+            user=request.user,
+            ruleset=instance
         )
 
     def update(self, request, *args, **kwargs):
@@ -288,11 +285,11 @@ class RulesetViewSet(viewsets.ModelViewSet):
         ruleset.copy(copy_serializer.validated_data['name'])
 
         UserAction.create(
-                action_type='copy_ruleset',
-                comment=comment,
-                user=request.user,
-                ruleset=ruleset
-            )
+            action_type='copy_ruleset',
+            comment=comment,
+            user=request.user,
+            ruleset=ruleset
+        )
 
         return Response({'copy': 'ok'})
 
@@ -353,8 +350,11 @@ class CategoryViewSet(SciriusReadOnlyModelViewSet):
         category = self.get_object()
         serializer = CategoryChangeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        category.enable(serializer.validated_data['ruleset'], request.user,
-                serializer.validated_data.get('comment', None))
+        category.enable(
+            serializer.validated_data['ruleset'],
+            request.user,
+            serializer.validated_data.get('comment', None)
+        )
         return Response({'enable': 'ok'})
 
     @action(detail=True, methods=['post'])
@@ -362,8 +362,10 @@ class CategoryViewSet(SciriusReadOnlyModelViewSet):
         category = self.get_object()
         serializer = CategoryChangeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        category.disable(serializer.validated_data['ruleset'], request.user,
-                serializer.validated_data.get('comment', None))
+        category.disable(
+            serializer.validated_data['ruleset'], request.user,
+            serializer.validated_data.get('comment', None)
+        )
         return Response({'disable': 'ok'})
 
     def get_serializer_class(self):
@@ -402,7 +404,10 @@ class RuleSerializer(serializers.ModelSerializer):
         data = super(RuleSerializer, self).to_representation(instance)
         request = self.context['request']
         highlight_str = request.query_params.get('highlight', 'false')
-        is_highlight = lambda value: bool(value) and value.lower() not in ('false', '0')
+
+        def is_highlight(value):
+            return bool(value) and value.lower() not in ('false', '0')
+
         highlight = is_highlight(highlight_str)
 
         if highlight is True:
@@ -564,7 +569,7 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
         isdataat:!1,relative; flow:to_server,established; flowbits: set,traffic/id/bing; flowbits:set,traffic/label/search; noalert; sid:300000000; rev:1;)\\n","imported_date":"2018-07-18T13:54:05.153618+02:00","updated_date":"2018-07-18T13:54:05.153618+02:00"}
 
     Show a rule and its none transformed content in html:\n
-        curl -k https://x.x.x.x/rest/rules/rule/<sid-rule>/\?highlight=true -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/rule/<sid-rule>/?highlight=true -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
 
     Return:\n
         HTTP/1.1 200 OK
@@ -596,7 +601,7 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
         {"1":{"active":true,"valid":{"status":true,"errors":""},"name":"Ruleset1","transformations":{"action":"reject","lateral":null,"target":null}},"2":{"active":true,"valid":{"status":true,"errors":""},"name":"copyRuleset1","transformations":{"action":"reject","lateral":null,"target":null}},"4":{"active":true,"valid":{"status":true,"errors":""},"name":"copyRuleset123","transformations":{"action":"reject","lateral":null,"target":null}}}
 
     Show a transformed rule content in html:\n
-        curl -k https://x.x.x.x/rest/rules/rule/<sid-rule>/content/\?highlight=true -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/rule/<sid-rule>/content/?highlight=true -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
 
     Get rule's comments:\n
         curl -v -k https://x.x.x.x/rest/rules/rule/<sid-rule>/comment/ -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
@@ -621,7 +626,7 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
         <span class=\"err\">)</span><span class=\"w\"></span>\\n</pre></div>\\n"}
 
     Filter by action/reject on all transformed rules:\n
-        curl -k https://x.x.x.x/rest/rules/rule/transformation/\?transfo_type\=action\&transfo_value\=reject -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
+        curl -k https://x.x.x.x/rest/rules/rule/transformation/?transfo_type=action&transfo_value=reject -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
 
     ==== POST ====\n
     Disable a rule in a ruleset.\n
@@ -795,9 +800,11 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
         rule = self.get_object()
         rulesets = Ruleset.objects.filter(categories__rule=rule)
         res = {}
-
         highlight_str = request.query_params.get('highlight', 'false')
-        is_highlight = lambda value: bool(value) and value.lower() not in ('false', '0')
+
+        def is_highlight(value):
+            return bool(value) and value.lower() not in ('false', '0')
+
         highlight = is_highlight(highlight_str)
 
         for ruleset in rulesets:
@@ -816,11 +823,11 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
             comment_serializer.is_valid(raise_exception=True)
 
             UserAction.create(
-                    action_type='comment_rule',
-                    comment=comment,
-                    user=request.user,
-                    rule=rule
-                )
+                action_type='comment_rule',
+                comment=comment,
+                user=request.user,
+                rule=rule
+            )
             return Response({'comment': 'ok'})
         elif request.method == 'GET':
             rule = self.get_object()
@@ -845,11 +852,11 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
         rule.toggle_availability()
 
         UserAction.create(
-                action_type='toggle_availability',
-                comment=comment,
-                user=request.user,
-                rule=rule
-            )
+            action_type='toggle_availability',
+            comment=comment,
+            user=request.user,
+            rule=rule
+        )
 
         return Response({'toggle_availability': 'ok'})
 
@@ -858,8 +865,10 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
         rule = self.get_object()
         serializer = RuleChangeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        rule.enable(serializer.validated_data['ruleset'], request.user,
-                serializer.validated_data.get('comment', None))
+        rule.enable(
+            serializer.validated_data['ruleset'], request.user,
+            serializer.validated_data.get('comment', None)
+        )
         return Response({'enable': 'ok'})
 
     @action(detail=True, methods=['post'])
@@ -867,8 +876,10 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
         rule = self.get_object()
         serializer = RuleChangeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        rule.disable(serializer.validated_data['ruleset'], request.user,
-                serializer.validated_data.get('comment', None))
+        rule.disable(
+            serializer.validated_data['ruleset'], request.user,
+            serializer.validated_data.get('comment', None)
+        )
         return Response({'disable': 'ok'})
 
     def get_serializer_class(self):
@@ -923,7 +934,7 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
         except ESError:
             return data
 
-        ## reformat ES's output
+        # reformat ES's output
         hits = {}
         for r in result:
             hits[r['key']] = self._scirius_hit(r)
@@ -944,6 +955,7 @@ class RuleViewSet(SciriusReadOnlyModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
+        self._add_hits(request, serializer.data)
         return self.get_paginated_response(serializer.data)
 
 
@@ -1405,10 +1417,10 @@ class BaseSourceViewSet(viewsets.ModelViewSet):
         source = serializer.instance
 
         UserAction.create(
-                action_type='create_source',
-                comment=comment_serializer.validated_data['comment'],
-                user=request.user,
-                source=source
+            action_type='create_source',
+            comment=comment_serializer.validated_data['comment'],
+            user=request.user,
+            source=source
         )
 
         headers = self.get_success_headers(serializer.data)
@@ -1423,10 +1435,10 @@ class BaseSourceViewSet(viewsets.ModelViewSet):
         comment_serializer.is_valid(raise_exception=True)
 
         UserAction.create(
-                action_type='delete_source',
-                user=request.user,
-                source=source,
-                comment=comment_serializer.validated_data['comment']
+            action_type='delete_source',
+            user=request.user,
+            source=source,
+            comment=comment_serializer.validated_data['comment']
         )
         return super(BaseSourceViewSet, self).destroy(request, *args, **kwargs)
 
@@ -1455,10 +1467,10 @@ class BaseSourceViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError({'upload': [str(error)]})
 
         UserAction.create(
-                action_type='upload_source',
-                comment=comment_serializer.validated_data['comment'],
-                user=request.user,
-                source=source
+            action_type='upload_source',
+            comment=comment_serializer.validated_data['comment'],
+            user=request.user,
+            source=source
         )
 
         return Response({'upload': 'ok'}, status=200)
@@ -1469,7 +1481,10 @@ class BaseSourceViewSet(viewsets.ModelViewSet):
         # because we are not using serializer there
         comment = request.data.get('comment', None)
         is_async_str = request.query_params.get('async', 'false')
-        is_async = lambda value: bool(value) and value.lower() not in ('false', '0')
+
+        def is_async(value):
+            return bool(value) and value.lower() not in ('false', '0')
+
         async_ = is_async(is_async_str)
 
         source = self.get_object()
@@ -1498,10 +1513,10 @@ class BaseSourceViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError({'update': [msg]})
 
         UserAction.create(
-                action_type='update_source',
-                comment=comment_serializer.validated_data['comment'],
-                user=request.user,
-                source=source
+            action_type='update_source',
+            comment=comment_serializer.validated_data['comment'],
+            user=request.user,
+            source=source
         )
         return Response({'update': msg})
 
@@ -1623,9 +1638,9 @@ class PublicSourceViewSet(BaseSourceViewSet):
         {"pk":4,"name":"sonic public source","created_date":"2018-05-07T11:54:56.450782+02:00","updated_date":"2018-05-07T11:54:56.450791+02:00","method":"http","datatype":"sig","uri":"https://raw.githubusercontent.com/jasonish/suricata-trafficid/master/rules/traffic-id.rules","cert_verif":true,"cats_count":0,"rules_count":0,"public_source":"oisf/trafficid"}
 
     Update public source:\n
-        curl -k https://x.x.x.x/rest/rules/public_source/<pk-public-source>/update_source/\\?async=true -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X POST
+        curl -k https://x.x.x.x/rest/rules/public_source/<pk-public-source>/update_source/?async=true -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X POST
 
-        curl -k https://x.x.x.x/rest/rules/public_source/<pk-public-source>/update_source/\\?async=false -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X POST
+        curl -k https://x.x.x.x/rest/rules/public_source/<pk-public-source>/update_source/?async=false -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X POST
 
     Return:\n
         HTTP/1.1 200 OK
@@ -1885,10 +1900,10 @@ class ChangelogViewSet(viewsets.ReadOnlyModelViewSet):
         "version":"9b73cdc0e25b36ce3a80fdcced631f3769a4f6f6","changed":2}]}
 
     Show changelogs filter by source:\n
-        curl -k https://x.x.x.x/rest/rules/changelog/source/\?source\=2 -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
+        curl -k https://x.x.x.x/rest/rules/changelog/source/?source=2 -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
 
     Show changelogs filter by version:\n
-        curl -k https://x.x.x.x/rest/rules/changelog/source/\?version\=9b73cdc0e25b36ce3a80fdcced631f3769a4f6f6 -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
+        curl -k https://x.x.x.x/rest/rules/changelog/source/?version=9b73cdc0e25b36ce3a80fdcced631f3769a4f6f6 -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
 
     =============================================================================================================================================================
     """
@@ -1921,8 +1936,8 @@ class ESRulesViewSet(ESBaseViewSet):
     qfilter: "filter in Elasticsearch Query String Query format"
 
     Show rules stats:\n
-        curl -k https://x.x.x.x/rest/rules/es/rules/\?hosts\=ProbeMain\&from_date\=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
-        curl -k https://x.x.x.x/rest/rules/es/rules/\?hosts\=ProbeMain\&from_date\=1537264545477\&qfilter=<"filter in Elasticsearch Query String Query format"> -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
+        curl -k https://x.x.x.x/rest/rules/es/rules/?hosts=ProbeMain&from_date=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
+        curl -k https://x.x.x.x/rest/rules/es/rules/?hosts=ProbeMain&from_date=1537264545477&qfilter=<"filter in Elasticsearch Query String Query format"> -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
 
     Return:\n
         HTTP/1.1 200 OK
@@ -1947,7 +1962,7 @@ class ESRuleViewSet(ESBaseViewSet):
     =============================================================================================================================================================
     ==== GET ====\n
     Show a rule stats:\n
-        curl -k https://x.x.x.x/rest/rules/es/rule/\?sid\=2522628\&from_date\=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/es/rule/?sid=2522628&from_date=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
 
     Return:\n
         HTTP/1.1 200 OK
@@ -2036,9 +2051,12 @@ class ESFieldsStatsViewSet(ESBaseViewSet):
             else:
                 tmpl_fields.append({'name': field, 'key': field})
 
-        values = ESFieldsStats(request).get(sid, tmpl_fields,
-                                   count=count,
-                                   dict_format=True)
+        values = ESFieldsStats(request).get(
+            sid,
+            tmpl_fields,
+            count=count,
+            dict_format=True
+        )
 
         return Response(values)
 
@@ -2062,9 +2080,12 @@ class ESFieldStatsViewSet(ESBaseViewSet):
         if filter_ip not in ['src_port', 'dest_port', 'alert.signature_id', 'alert.severity', 'http.length', 'http.status', 'vlan', 'geoip.provider.autonomous_system_number', 'tunnel.depth']:
             filter_ip = filter_ip + '.' + settings.ELASTICSEARCH_KEYWORD
 
-        hosts = ESFieldStats(request).get(sid, filter_ip,
-                                   count=count,
-                                   dict_format=True)
+        hosts = ESFieldStats(request).get(
+            sid,
+            filter_ip,
+            count=count,
+            dict_format=True
+        )
 
         return Response(hosts)
 
@@ -2079,14 +2100,14 @@ class ESFilterIPViewSet(ESBaseViewSet):
            rule_source / rule_target: IP of the source & target of the attack
 
     Show a rule stats:\n
-        curl -k https://x.x.x.x/rest/rules/es/filter_ip/\?field\=rule_src\&sid\=2522628\&from_date\=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/es/filter_ip/?field=rule_src&sid=2522628&from_date=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
 
     Return:\n
         HTTP/1.1 200 OK
         [{"key":"212.47.239.163","doc_count":1}]
 
     Show a rule stats:\n
-        curl -k https://x.x.x.x/rest/rules/es/filter_ip/\?field\=rule_dest\&sid\=2522628\&from_date\=1537264545477 -H 'Authorization: Token dba92b07973ba061f9a0d48a1afd98d1e7b717d6' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/es/filter_ip/?field=rule_dest&sid=2522628&from_date=1537264545477 -H 'Authorization: Token dba92b07973ba061f9a0d48a1afd98d1e7b717d6' -H 'Content-Type: application/json' -X GET
 
     Return:\n
         HTTP/1.1 200 OK
@@ -2112,10 +2133,12 @@ class ESFilterIPViewSet(ESBaseViewSet):
         filter_ip = self.RULE_FIELDS_MAPPING[field]
         count = request.GET.get('page_size', 10)
 
-        hosts = ESFieldStats(request).get(sid,
-                                   filter_ip + '.' + settings.ELASTICSEARCH_KEYWORD,
-                                   count=count,
-                                   dict_format=True)
+        hosts = ESFieldStats(request).get(
+            sid,
+            filter_ip + '.' + settings.ELASTICSEARCH_KEYWORD,
+            count=count,
+            dict_format=True
+        )
 
         return Response(hosts)
 
@@ -2127,8 +2150,8 @@ class ESTimelineViewSet(ESBaseViewSet):
     qfilter: "filter in Elasticsearch Query String Query format"
 
     Show timeline:\n
-        curl -k https://x.x.x.x/rest/rules/es/timeline/\?hosts\=ProbeMain\&from_date\=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
-        curl -k https://x.x.x.x/rest/rules/es/timeline/\?hosts\=ProbeMain\&from_date\=1537264545477\&qfilter\=<"filter in Elasticsearch Query String Query format"> -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/es/timeline/?hosts=ProbeMain&from_date=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/es/timeline/?hosts=ProbeMain&from_date=1537264545477&qfilter=<"filter in Elasticsearch Query String Query format"> -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
 
     Return:\n
        HTTP/1.1 200 OK
@@ -2150,9 +2173,9 @@ class ESLogstashEveViewSet(ESBaseViewSet):
 
     Logstash Events examples:\n
         1. curl -k "https://x.x.x.x/rest/rules/es/logstash_eve/?value=system.cpu.user.pct&from_date=1540211796478&hosts=stamus"  -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
-        2. curl -k https://x.x.x.x/rest/rules/es/logstash_eve/\?value\=system.memory.actual.used.pct\&from_date\=1537264545477\&hosts\=ProbeMain -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
-        3. curl -k https://x.x.x.x/rest/rules/es/logstash_eve/\?value\=system.network.in.bytes\&from_date\=1537264545477\&hosts\=ProbeMain\&qfilter\=system.network.name:eth0 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
-        4. curl -k https://x.x.x.x/rest/rules/es/logstash_eve/\?value\=system.filesystem.used.pct\&from_date\=1537264545477\&hosts\=ProbeMain\&qfilter\=system.filesystem.mount_point.raw:/var/lib/lxc/elasticsearch/rootfs/var/lib/elasticsearch -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        2. curl -k https://x.x.x.x/rest/rules/es/logstash_eve/?value=system.memory.actual.used.pct&from_date=1537264545477&hosts=ProbeMain -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        3. curl -k https://x.x.x.x/rest/rules/es/logstash_eve/?value=system.network.in.bytes&from_date=1537264545477&hosts=ProbeMain&qfilter=system.network.name:eth0 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        4. curl -k https://x.x.x.x/rest/rules/es/logstash_eve/?value=system.filesystem.used.pct&from_date=1537264545477&hosts=ProbeMain&qfilter=system.filesystem.mount_point.raw:/var/lib/lxc/elasticsearch/rootfs/var/lib/elasticsearch -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
         5. curl -k "https://x.x.x.x/rest/rules/es/logstash_eve/?value=system.filesystem.used.pct&from_date=1540210439302&hosts=stamus&qfilter=system.filesystem.mount_point.raw:\"/var/lib/lxc/elasticsearch/rootfs/var/lib/elasticsearch\"" -H 'Authorization: Token <token>' -H 'Content-Type: application/json'  -X GET
 
     Return:\n
@@ -2308,8 +2331,8 @@ class ESRulesPerCategoryViewSet(ESBaseViewSet):
     qfilter: "filter in Elasticsearch Query String Query format"
 
     Show rules per category:\n
-        curl -k https://x.x.x.x/rest/rules/es/rules_per_category/\?hosts\=ProbeMain\&from_date\=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
-        curl -k https://x.x.x.x/rest/rules/es/rules_per_category/\?hosts\=ProbeMain\&from_date\=1537264545477\&qfilter\=<"filter in Elasticsearch Query String Query format"> -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/es/rules_per_category/?hosts=ProbeMain&from_date=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/es/rules_per_category/?hosts=ProbeMain&from_date=1537264545477&qfilter=<"filter in Elasticsearch Query String Query format"> -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
 
     Return:\n
         HTTP/1.1 200 OK
@@ -2336,9 +2359,9 @@ class ESAlertsCountViewSet(ESBaseViewSet):
     qfilter: "filter in Elasticsearch Query String Query format"
 
     Show alerts count:\n
-        1. curl -k https://x.x.x.x/rest/rules/es/alerts_count/\?hosts\=ProbeMain\&from_date\=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
-        2. curl -k https://x.x.x.x/rest/rules/es/alerts_count/\?hosts\=ProbeMain\&from_date\=1537264545477&prev=true -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
-        3. curl -k https://x.x.x.x/rest/rules/es/alerts_count/\?hosts\=ProbeMain\&from_date\=1537264545477&prev=true\&qfilter\=<"filter in Elasticsearch Query String Query format"> -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        1. curl -k https://x.x.x.x/rest/rules/es/alerts_count/?hosts=ProbeMain&from_date=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        2. curl -k https://x.x.x.x/rest/rules/es/alerts_count/?hosts=ProbeMain&from_date=1537264545477&prev=true -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        3. curl -k https://x.x.x.x/rest/rules/es/alerts_count/?hosts=ProbeMain&from_date=1537264545477&prev=true&qfilter=<"filter in Elasticsearch Query String Query format"> -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
 
     Return:\n
         HTTP/1.1 200 OK
@@ -2361,7 +2384,7 @@ class ESLatestStatsViewSet(ESBaseViewSet):
     qfilter: "filter in Elasticsearch Query String Query format"
 
     Show alerts count:\n
-        curl -k https://192.168.0.17/rest/rules/es/latest_stats/\?hosts\=ProbeMain\&from_date\=1537264545477 -H 'Authorization: Token dba92b07973ba061f9a0d48a1afd98d1e7b717d6' -H 'Content-Type: application/json' -X GET
+        curl -k https://192.168.0.17/rest/rules/es/latest_stats/?hosts=ProbeMain&from_date=1537264545477 -H 'Authorization: Token dba92b07973ba061f9a0d48a1afd98d1e7b717d6' -H 'Content-Type: application/json' -X GET
 
     Return:\n
         HTTP/1.1 200 OK
@@ -2391,8 +2414,8 @@ class ESIPPairAlertsViewSet(ESBaseViewSet):
     qfilter: "filter in Elasticsearch Query String Query format"
 
     Show ip pair alerts:\n
-        curl -k https://x.x.x.x/rest/rules/es/ip_pair_alerts/\?hosts\=ProbeMain\&from_date\=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
-        curl -k https://x.x.x.x/rest/rules/es/ip_pair_alerts/\?hosts\=ProbeMain\&from_date\=1537264545477\&qfilter\=<"filter in Elasticsearch Query String Query format"> -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/es/ip_pair_alerts/?hosts=ProbeMain&from_date=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/es/ip_pair_alerts/?hosts=ProbeMain&from_date=1537264545477&qfilter=<"filter in Elasticsearch Query String Query format"> -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
 
     Return:\n
         HTTP/1.1 200 OK
@@ -2417,7 +2440,7 @@ class ESIPPairNetworkAlertsViewSet(ESBaseViewSet):
     qfilter: "filter in Elasticsearch Query String Query format"
 
     Show ip pair network alerts:\n
-        curl -k https://x.x.x.x/rest/rules/es/ip_pair_network_alerts/\?hosts\=ProbeMain\&from_date\=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/es/ip_pair_network_alerts/?hosts=ProbeMain&from_date=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
 
     Return:\n
         HTTP/1.1 200 OK
@@ -2438,7 +2461,7 @@ class ESAlertsTailViewSet(ESBaseViewSet):
     qfilter: "filter in Elasticsearch Query String Query format"
 
     Show alert tail:\n
-        curl -k https://x.x.x.x/rest/rules/es/alerts_tail/\?from_date\=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/es/alerts_tail/?from_date=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
 
     Return:\n
         HTTP/1.1 200 OK
@@ -2464,7 +2487,7 @@ class ESEventsFromFlowIDViewSet(ESBaseViewSet):
     =============================================================================================================================================================
     ==== GET ====\n
     Show events from an alert.flow_id:\n
-        curl -k https://x.x.x.x/rest/rules/es/events_from_flow_id/\?from_date\=1537264545477\&qfilter=flow_id:1259054449405574 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://x.x.x.x/rest/rules/es/events_from_flow_id/?from_date=1537264545477&qfilter=flow_id:1259054449405574 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
 
     Return:\n
         HTTP/1.1 200 OK
@@ -2483,7 +2506,7 @@ class ESSuriLogTailViewSet(ESBaseViewSet):
     =============================================================================================================================================================
     ==== GET ====\n
     Show alert tail:\n
-        curl -k https://192.168.0.17/rest/rules/es/suri_log_tail/\?hosts\=ProbeMain\&from_date\=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
+        curl -k https://192.168.0.17/rest/rules/es/suri_log_tail/?hosts=ProbeMain&from_date=1537264545477 -H 'Authorization: Token <token>' -H 'Content-Type: application/json' -X GET
 
     Return:\n
         HTTP/1.1 200 OK
@@ -2522,7 +2545,7 @@ class ESDeleteLogsViewSet(APIView):
 
         try:
             es_data.es_clear()
-        except ConnectionError as e:
+        except ConnectionError:
             msg = 'Could not connect to Elasticsearch'
         except Exception as e:
             msg = 'Clearing failed: %s' % e
@@ -2613,9 +2636,9 @@ class SystemSettingsViewSet(UpdateModelMixin, RetrieveModelMixin, viewsets.Gener
         comment_serializer.is_valid(raise_exception=True)
 
         UserAction.create(
-                action_type='system_settings',
-                comment=comment_serializer.validated_data['comment'],
-                user=request.user
+            action_type='system_settings',
+            comment=comment_serializer.validated_data['comment'],
+            user=request.user
         )
 
     def update(self, request, *args, **kwargs):
@@ -2744,7 +2767,7 @@ def get_custom_urls():
         'get': 'retrieve',
         'put': 'update',
         'patch': 'partial_update',
-        }), name='systemsettings')
+    }), name='systemsettings')
 
     urls.append(url_)
 

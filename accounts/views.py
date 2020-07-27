@@ -34,6 +34,7 @@ from accounts.models import SciriusUser
 from ipware.ip import get_client_ip
 import logging
 
+
 def loginview(request, target):
     if request.method == 'POST':
         form = LoginForm(request.POST)
@@ -41,6 +42,7 @@ def loginview(request, target):
             form = LoginForm()
             context = { 'form': form, 'error': 'Invalid form' }
             return scirius_render(request, 'accounts/login.html', context)
+
         username = form.cleaned_data['username']
         password = form.cleaned_data['password']
         user = authenticate(username=username, password=password)
@@ -51,15 +53,16 @@ def loginview(request, target):
                     SciriusUser.objects.get(user=user)
                 except SciriusUser.DoesNotExist:
                     SciriusUser.objects.create(user=user, timezone = 'UTC')
-                    
+
                 if not form.cleaned_data['persistent']:
                     request.session.set_expiry(0)
+
                 logger = logging.getLogger('authentication')
                 logger.info("Successful login for '%s' from '%s'", username, get_client_ip(request))
                 UserAction.create(
-                        action_type='login',
-                        user=user,
-                        force_insert=True
+                    action_type = 'login',
+                    user = user,
+                    force_insert = True
                 )
                 return redirect("/" + target)
             else:
@@ -118,18 +121,18 @@ def editview(request, action):
             orig_staff = request.user.is_staff
             if form.is_valid():
                 if action == 'token':
-                    current_tokens = Token.objects.filter(user=request.user)
+                    current_tokens = Token.objects.filter(user = request.user)
                     for token in current_tokens:
                         token.delete()
-                    Token.objects.create(user=request.user)
+                    Token.objects.create(user = request.user)
 
                     UserAction.create(
-                        action_type='edit_user_token',
-                        comment=form.cleaned_data['comment'],
-                        user=request.user,
-                        other_user=request.user
+                        action_type = 'edit_user_token',
+                        comment = form.cleaned_data['comment'],
+                        user = request.user,
+                        other_user = request.user
                     )
-                    return redirect('accounts_edit', action='token')
+                    return redirect('accounts_edit', action = 'token')
 
                 context['edition'] = False
                 context['action'] = 'User settings'
@@ -143,23 +146,26 @@ def editview(request, action):
                     update_session_auth_hash(request, ruser)
 
                     UserAction.create(
-                        action_type='edit_user_password',
-                        comment=form.cleaned_data['comment'],
-                        user=request.user,
-                        other_user=request.user
+                        action_type = 'edit_user_password',
+                        comment = form.cleaned_data['comment'],
+                        user = request.user,
+                        other_user = request.user
                     )
                 if action == 'settings':
                     try:
                         sciriususer = ruser.sciriususer
                         sciriususer.timezone = form.cleaned_data['timezone']
                     except:
-                        sciriususer = SciriusUser.objects.create(user = ruser, timezone = form.cleaned_data['timezone'])
+                        sciriususer = SciriusUser.objects.create(
+                            user = ruser,
+                            timezone = form.cleaned_data['timezone']
+                        )
 
                     UserAction.create(
-                        action_type='edit_user',
-                        comment=form.cleaned_data['comment'],
-                        user=request.user,
-                        other_user=request.user
+                        action_type = 'edit_user',
+                        comment = form.cleaned_data['comment'],
+                        user = request.user,
+                        other_user = request.user
                     )
                     sciriususer.save()
         return scirius_render(request, 'accounts/edit.html', context)
@@ -173,14 +179,14 @@ def manageview(request, action):
             if request.user.is_superuser:
                 ruser = form.save()
 
-                sciriususer = SciriusUser.objects.create(user=ruser, timezone='UTC')
+                sciriususer = SciriusUser.objects.create(user = ruser, timezone = 'UTC')
                 sciriususer.save()
 
                 UserAction.create(
-                    action_type='create_user',
-                    comment=form.cleaned_data['comment'],
-                    user=request.user,
-                    new_user=sciriususer.user
+                    action_type = 'create_user',
+                    comment = form.cleaned_data['comment'],
+                    user = request.user,
+                    new_user = sciriususer.user
                 )
             else:
                 context['error'] = 'Not enough permission to create users'
@@ -205,19 +211,21 @@ def manageview(request, action):
             context = { 'form': form, 'current_action': 'Add user'}
             return scirius_render(request, 'accounts/user.html', context)
 
-    return scirius_listing(request, User, 'Users', adduri="/accounts/manage/add")
+    return scirius_listing(request, User, 'Users', adduri = "/accounts/manage/add")
+
 
 def manageuser(request, user_id):
-    user = get_object_or_404(User, pk=user_id)
-    context = {'action': 'User actions', 'user': user}
+    user = get_object_or_404(User, pk = user_id)
+    context = { 'action': 'User actions', 'user': user }
     if not request.user.is_superuser:
         context['error'] = 'Unsufficient permissions'
-        context['user'] = get_object_or_404(User, pk=request.user.pk)
+        context['user'] = get_object_or_404(User, pk = request.user.pk)
     return scirius_render(request, 'accounts/user.html', context)
 
+
 def manageuseraction(request, user_id, action):
-    user = get_object_or_404(User, pk=user_id)
-    context = {'action': 'User actions', 'user': user}
+    user = get_object_or_404(User, pk = user_id)
+    context = { 'action': 'User actions', 'user': user }
     if request.method == 'POST':
         if not request.user.is_superuser:
             context['error'] = 'Unsufficient permissions'
@@ -230,14 +238,17 @@ def manageuseraction(request, user_id, action):
                     sciriususer = user.sciriususer
                     sciriususer.timezone = form.cleaned_data['timezone']
                 except:
-                    sciriususer = SciriusUser.objects.create(user = user, timezone = form.cleaned_data['timezone'])
+                    sciriususer = SciriusUser.objects.create(
+                        user = user,
+                        timezone = form.cleaned_data['timezone']
+                    )
                 sciriususer.save()
 
                 UserAction.create(
-                    action_type='edit_user',
-                    comment=form.cleaned_data['comment'],
-                    user=request.user,
-                    other_user=user
+                    action_type = 'edit_user',
+                    comment = form.cleaned_data['comment'],
+                    user = request.user,
+                    other_user = user
                 )
             else:
                 context['error'] = 'Edition form is not valid'
@@ -252,10 +263,10 @@ def manageuseraction(request, user_id, action):
                     update_session_auth_hash(request, user)
 
                 UserAction.create(
-                    action_type='edit_user_password',
-                    comment=form.cleaned_data['comment'],
-                    user=request.user,
-                    other_user=user
+                    action_type = 'edit_user_password',
+                    comment = form.cleaned_data['comment'],
+                    user = request.user,
+                    other_user = user
                 )
             else:
                 context['error'] = 'Password form is not valid'
@@ -266,10 +277,10 @@ def manageuseraction(request, user_id, action):
                     user.delete()
 
                     UserAction.create(
-                        action_type='delete_user',
-                        comment=form.cleaned_data['comment'],
-                        user=request.user,
-                        old_user=user
+                        action_type = 'delete_user',
+                        comment = form.cleaned_data['comment'],
+                        user = request.user,
+                        old_user = user
                     )
                     return redirect('/accounts/manage/')
             else:
@@ -279,7 +290,7 @@ def manageuseraction(request, user_id, action):
 
     if not request.user.is_superuser:
         context['error'] = 'Unsufficient permissions'
-        context['user'] = get_object_or_404(User, pk=request.user.pk)
+        context['user'] = get_object_or_404(User, pk = request.user.pk)
         return scirius_render(request, 'accounts/user.html', context)
 
     if action == "activate":
@@ -316,9 +327,9 @@ def manageuseraction(request, user_id, action):
 def logoutview(request):
     from rules.models import UserAction
     UserAction.create(
-            action_type='logout',
-            user=request.user,
-            force_insert=True
+        action_type = 'logout',
+        user = request.user,
+        force_insert = True
     )
     logout(request)
     return redirect(settings.LOGIN_URL)

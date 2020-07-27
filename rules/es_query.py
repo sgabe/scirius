@@ -10,10 +10,7 @@ from collections import OrderedDict
 from django.conf import settings
 from django.template import Context, Template
 from django.utils.safestring import mark_safe
-from rest_framework.response import Response
-from rest_framework.utils.urls import replace_query_param, remove_query_param
 import requests
-
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -164,7 +161,7 @@ class ESQuery(object):
                 else:
                     indexes = settings.ELASTICSEARCH_LOGSTASH_INDEX + "*"
             else:
-                start = datetime.fromtimestamp(int(from_date)/1000)
+                start = datetime.fromtimestamp(int(from_date) / 1000)
                 indexes = self._build_es_timestamping(start, data = data)
         return self.URL % (get_es_address(), indexes)
 
@@ -183,7 +180,7 @@ class ESQuery(object):
 
         return from_date
 
-    def _to_date(self, params=None, es_format=False):
+    def _to_date(self, params = None, es_format = False):
         to_date = 'now'
         if params and 'to_date' in params:
             return params['to_date']
@@ -198,7 +195,7 @@ class ESQuery(object):
                 return time() * 1000
         return to_date
 
-    def _interval(self, dictionary=None):
+    def _interval(self, dictionary = None):
         if dictionary and 'interval' in dictionary:
             interval = int(dictionary['interval']) * 1000
         elif self.request and 'interval' in self.request.GET:
@@ -211,7 +208,7 @@ class ESQuery(object):
 
         return interval
 
-    def _render_template(self, tmpl, _dictionary, ignore_middleware=False):
+    def _render_template(self, tmpl, _dictionary, ignore_middleware = False):
         dictionary = es_string_escape(_dictionary)
         hosts = ['*']
         qfilter = None
@@ -256,17 +253,17 @@ class ESQuery(object):
             'hostname': settings.ELASTICSEARCH_HOSTNAME,
             'timestamp': settings.ELASTICSEARCH_TIMESTAMP,
             'from_date': self._from_date(dictionary),
-            'to_date': mark_safe(self._to_date(dictionary, es_format=True)), # mark quotes around "now" as safe
+            'to_date': mark_safe(self._to_date(dictionary, es_format = True)),  # mark quotes around "now" as safe
             'query_filter': query_filter,
             'bool_clauses': bool_clauses,
             'interval': str(self._interval(dictionary)) + 'ms'
         })
 
-        return bytearray(templ.render(context), encoding="utf-8")
+        return bytearray(templ.render(context), encoding = "utf-8")
 
-    def _urlopen(self, url, data=None, method=None, contenttype='application/json'):
+    def _urlopen(self, url, data = None, method = None, contenttype = 'application/json'):
         from rules.es_graphs import ESError
-        headers = {'content-type': contenttype}
+        headers = { 'content-type': contenttype }
 
         if method is None:
             if data:
@@ -275,7 +272,7 @@ class ESQuery(object):
                 method = 'GET'
 
         try:
-            out = requests.request(method, url, data=data, headers=headers, timeout=self.TIMEOUT)
+            out = requests.request(method, url, data = data, headers = headers, timeout = self.TIMEOUT)
         except (requests.HTTPError, socket.timeout) as e:
             msg = url + '\n'
             if isinstance(e, socket.timeout):
@@ -326,7 +323,7 @@ class ESQuery(object):
         if scroll_id:
             url = get_es_address() + '_search/scroll'
             query = '{"scroll_id": "%s"}' % scroll_id
-            self._urlopen(url, query, method='DELETE')
+            self._urlopen(url, query, method = 'DELETE')
 
     def _scroll_composite(self, es_url, query):
         _query = json.loads(query.decode('utf-8'))

@@ -19,21 +19,31 @@ along with Scirius.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-from django.conf import settings
-from django.template.defaultfilters import filesizeformat
 from datetime import datetime
-
-import requests
+import math
 import json
 from time import mktime
-import math
+
+import requests
+from django.conf import settings
 
 from rules.es_query import ESQuery
-from rules.models import get_es_path
+from rules.models import get_es_path, Rule
+from rules.tables import ExtendedRuleTable, RuleStatsTable
+import django_tables2 as tables
+
 from scirius.utils import merge_dict_deeply
 
 
 ES_VERSION = None
+HEALTH_URL = "/_cluster/health"
+STATS_URL = "/_cluster/stats"
+INDICES_STATS_DOCS_URL = "/_stats/docs"
+INDICES_STATS_SIZE_URL = "/_stats/store"
+DELETE_ALERTS_URL = "/%s*/_query?q=alert.signature_id:%%d" % settings.ELASTICSEARCH_LOGSTASH_ALERT_INDEX
+DELETE_ALERTS_URL_V5 = "%s*/_delete_by_query" % settings.ELASTICSEARCH_LOGSTASH_ALERT_INDEX
+
+
 def get_es_major_version():
     global ES_VERSION
     if ES_VERSION is not None:
@@ -589,6 +599,7 @@ def get_timeline_query():
         }
             """
 
+
 def get_stats_query():
     if get_es_major_version() < 2:
         return """
@@ -819,6 +830,7 @@ def get_stats_query():
         }
             """
 
+
 def get_rules_per_category():
     if get_es_major_version() < 6:
         return """
@@ -940,6 +952,7 @@ def get_rules_per_category():
         }
         """
 
+
 def get_alerts_count_per_host():
     if get_es_major_version() < 6:
         return """
@@ -1001,6 +1014,7 @@ def get_alerts_count_per_host():
           "aggs": {}
         }
         """
+
 
 def get_alerts_trend_per_host():
     if get_es_major_version() < 6:
@@ -1091,6 +1105,7 @@ def get_alerts_trend_per_host():
           }
         }
         """
+
 
 def get_latest_stats_entry():
     if get_es_major_version() < 6:
@@ -1287,6 +1302,7 @@ def get_ippair_alerts_count():
         }
         """
 
+
 def get_ippair_netinfo_alerts_count():
     if get_es_major_version() < 6:
         return """
@@ -1451,6 +1467,7 @@ def get_ippair_netinfo_alerts_count():
         }
         """
 
+
 ALERTS_TAIL = """
 {
   "size": {{ size }},
@@ -1517,6 +1534,7 @@ EVENTS_FROM_FLOW_ID = """
   }
 }
 """
+
 
 SURICATA_LOGS_TAIL = """
 {
@@ -1765,6 +1783,7 @@ def get_sigs_list_hits():
             }
             """
 
+
 POSTSTATS_SUMMARY = """
 {
   "size": 0,
@@ -1816,17 +1835,6 @@ POSTSTATS_SUMMARY = """
 }
 """
 
-HEALTH_URL = "/_cluster/health"
-STATS_URL = "/_cluster/stats"
-INDICES_STATS_DOCS_URL = "/_stats/docs"
-INDICES_STATS_SIZE_URL = "/_stats/store"
-DELETE_ALERTS_URL = "/%s*/_query?q=alert.signature_id:%%d" % settings.ELASTICSEARCH_LOGSTASH_ALERT_INDEX
-DELETE_ALERTS_URL_V5 = "%s*/_delete_by_query" % settings.ELASTICSEARCH_LOGSTASH_ALERT_INDEX
-
-from rules.models import Rule
-from rules.tables import ExtendedRuleTable, RuleStatsTable
-import django_tables2 as tables
-
 
 class ESError(Exception):
     def __init__(self, msg, initial_exception=None):
@@ -1858,13 +1866,13 @@ class ESRulesStats(ESQuery):
             return data if data is not None else []
 
         rules = []
-        if data != None:
+        if data is not None:
             for elt in data:
                 try:
                     if get_es_major_version() >= 2:
-                        sid=elt['key']
+                        sid = elt['key']
                     else:
-                        sid=elt['term']
+                        sid = elt['term']
                     rule = Rule.objects.get(sid=sid)
                 except:
                     print("Can not find rule with sid %s" % sid)
@@ -1935,12 +1943,12 @@ class ESFieldStatsAsTable(ESQuery):
             tables.RequestConfig(self.request).configure(objects)
             return objects
         objects = []
-        if data != None:
+        if data is not None:
             for elt in data:
                 if get_es_major_version() >= 2:
-                    fstat = {'host': elt['key'], 'count': elt['doc_count'] }
+                    fstat = { 'host': elt['key'], 'count': elt['doc_count'] }
                 else:
-                    fstat = {'host': elt['term'], 'count': elt['count'] }
+                    fstat = { 'host': elt['term'], 'count': elt['count'] }
                 objects.append(fstat)
             objects = FieldTable(objects)
             tables.RequestConfig(self.request).configure(objects)
@@ -1969,7 +1977,7 @@ class ESSidByHosts(ESQuery):
             return data if data is not None else []
 
         stats = []
-        if data != None:
+        if data is not None:
             for elt in data:
                 if get_es_major_version() >= 2:
                     hstat = {'host': elt['key'], 'count': elt['doc_count']}
@@ -2136,34 +2144,34 @@ class ESRulesPerCategory(ESQuery):
 def es_delete_alerts_by_sid_v2(sid):
     delete_url = get_es_path(DELETE_ALERTS_URL) % int(sid)
     try:
-        r = requests.delete(delete_url)
+        req = requests.delete(delete_url)
     except Exception as err:
-        return {'msg': 'Elasticsearch error: %s' % err, 'status': 500 }
-    if r.status_code == 200:
-        data = json.loads(r.text)
+        return { 'msg': 'Elasticsearch error: %s' % err, 'status': 500 }
+    if req.status_code == 200:
+        data = json.loads(req.text)
         return data
-    elif r.status_code == 400:
-        return {'msg': 'Elasticsearch 2.x needs to have delete-by-plugin installed to delete alerts for a rule.', 'status': r.status_code }
+    elif req.status_code == 400:
+        return { 'msg': 'Elasticsearch 2.x needs to have delete-by-plugin installed to delete alerts for a rule.', 'status': req.status_code }
     else:
-        return {'msg': 'Unknown error', 'status': r.status_code }
+        return { 'msg': 'Unknown error', 'status': req.status_code }
 
 
 def es_delete_alerts_by_sid_v5(sid):
     delete_url = get_es_path(DELETE_ALERTS_URL_V5)
     data = { "query": { "match": { "alert.signature_id": sid } } }
     try:
-        headers = {'content-type': 'application/json'}
-        r = requests.post(delete_url, data = json.dumps(data), headers=headers)
+        headers = { 'content-type': 'application/json' }
+        req = requests.post(delete_url, data=json.dumps(data), headers=headers)
     except Exception as err:
-        return {'msg': 'Elasticsearch error: %s' % err, 'status': 500 }
-    if r.status_code == 200:
-        data = json.loads(r.text)
+        return { 'msg': 'Elasticsearch error: %s' % err, 'status': 500 }
+    if req.status_code == 200:
+        data = json.loads(req.text)
         data['status'] = 200
         return data
-    elif r.status_code == 400:
-        return {'msg': r.text, 'status': r.status_code }
+    elif req.status_code == 400:
+        return { 'msg': req.text, 'status': req.status_code }
     else:
-        return {'msg': 'Unknown error', 'status': r.status_code }
+        return { 'msg': 'Unknown error', 'status': req.status_code }
 
 
 class ESDeleteAlertsBySid(ESQuery):
@@ -2250,7 +2258,7 @@ class ESAlertsCount(ESQuery):
             start_datetime = from_datetime - (datetime.now() - from_datetime)
             start_date = mktime(start_datetime.timetuple()) * 1000
             context['start_date'] = int(start_date)
-            es_url = self._get_es_url(from_date=start_date)
+            es_url = self._get_es_url(from_date = start_date)
         else:
             es_url = self._get_es_url()
         data = self._render_template(templ, context)
@@ -2259,16 +2267,16 @@ class ESAlertsCount(ESQuery):
             try:
                 countsdata = data["aggregations"]["trend"]["buckets"]
             except KeyError:
-                return {"prev_doc_count": 0, "doc_count": 0}
-            return {"prev_doc_count": countsdata[0]["doc_count"], "doc_count": countsdata[1]["doc_count"]}
+                return { "prev_doc_count": 0, "doc_count": 0 }
+            return { "prev_doc_count": countsdata[0]["doc_count"], "doc_count": countsdata[1]["doc_count"] }
         else:
-            return {"doc_count": data["hits"]["total"] };
+            return { "doc_count": data["hits"]["total"] }
 
 
 class ESLatestStats(ESQuery):
     def get(self):
         data = self._render_template(get_latest_stats_entry(), {})
-        es_url = self._get_es_url(data='stats')
+        es_url = self._get_es_url(data = 'stats')
         data = self._urlopen(es_url, data)
         try:
             res = data['hits']['hits'][0]['_source']
@@ -2294,15 +2302,14 @@ class ESIppairAlerts(ESQuery):
             else:
                 group = 4
             if not src_ip['key'] in ip_list:
-                nodes.append({'id': src_ip['key'], 'group': group})
+                nodes.append({ 'id': src_ip['key'], 'group': group })
                 ip_list.append(src_ip['key'])
             for dest_ip in src_ip['dest_ip']['buckets']:
                 if not dest_ip['key'] in ip_list:
                     nodes.append({'id': dest_ip['key'], 'group': group})
                     ip_list.append(dest_ip['key'])
-                links.append({'source': ip_list.index(src_ip['key']), 'target': ip_list.index(dest_ip['key']), 'value': (math.log(dest_ip['doc_count']) + 1) * 2, 'alerts': dest_ip['alerts']['buckets']})
-        #nodes = set(nodes)
-        return {'nodes': nodes, 'links': links}
+                links.append({ 'source': ip_list.index(src_ip['key']), 'target': ip_list.index(dest_ip['key']), 'value': (math.log(dest_ip['doc_count']) + 1) * 2, 'alerts': dest_ip['alerts']['buckets'] })
+        return { 'nodes': nodes, 'links': links }
 
 
 class ESIppairNetworkAlerts(ESQuery):
@@ -2321,7 +2328,7 @@ class ESIppairNetworkAlerts(ESQuery):
                 continue
             if not src_ip['key'] in ip_list:
                 group = dest_obj['key']
-                nodes.append({'id': src_ip['key'], 'group': group, 'type': 'source'})
+                nodes.append({ 'id': src_ip['key'], 'group': group, 'type': 'source' })
                 ip_list.append(src_ip['key'])
             else:
                 for node in nodes:
@@ -2333,21 +2340,20 @@ class ESIppairNetworkAlerts(ESQuery):
                         group = dest_ip['net_dest']['buckets'][0]['key']
                     except:
                         continue
-                    nodes.append({'id': dest_ip['key'], 'group': group, 'type': 'target'})
+                    nodes.append({ 'id': dest_ip['key'], 'group': group, 'type': 'target' })
                     ip_list.append(dest_ip['key'])
-                links.append({'source': ip_list.index(src_ip['key']), 'target': ip_list.index(dest_ip['key']), 'value': (math.log(dest_ip['doc_count']) + 1) * 2, 'alerts': dest_ip['net_dest']['buckets'][0]['alerts']['buckets']})
-        #nodes = set(nodes)
-        return {'nodes': nodes, 'links': links}
+                links.append({ 'source': ip_list.index(src_ip['key']), 'target': ip_list.index(dest_ip['key']), 'value': (math.log(dest_ip['doc_count']) + 1) * 2, 'alerts': dest_ip['net_dest']['buckets'][0]['alerts']['buckets'] })
+        return { 'nodes': nodes, 'links': links }
 
 
 class ESAlertsTail(ESQuery):
-    def get(self, es_params, search_target=True, index='alert'):
+    def get(self, es_params, search_target = True, index = 'alert'):
         if search_target:
-            es_params.update({'target_only': 'AND alert.target.ip:*'})
+            es_params.update({ 'target_only': 'AND alert.target.ip:*' })
         else:
-            es_params.update({'target_only': ''})
+            es_params.update({ 'target_only': '' })
 
-        es_params.update({'event_type': index})
+        es_params.update({ 'event_type': index })
         data = self._render_template(ALERTS_TAIL, es_params)
         es_url = self._get_es_url(index)
         data = self._urlopen(es_url, data)
@@ -2357,7 +2363,7 @@ class ESAlertsTail(ESQuery):
 class ESEventsFromFlowID(ESQuery):
     def get(self):
         data = self._render_template(EVENTS_FROM_FLOW_ID, {})
-        es_url = self._get_es_url(data='all')
+        es_url = self._get_es_url(data = 'all')
         data = self._urlopen(es_url, data)
 
         res = {}
@@ -2372,7 +2378,7 @@ class ESSuriLogTail(ESQuery):
     def get(self):
         context = {'hostname': settings.ELASTICSEARCH_HOSTNAME}
         data = self._render_template(SURICATA_LOGS_TAIL, context)
-        es_url = self._get_es_url(data='engine')
+        es_url = self._get_es_url(data = 'engine')
         data = self._urlopen(es_url, data)
         data = data['hits']['hits']
         data.reverse()
@@ -2380,8 +2386,8 @@ class ESSuriLogTail(ESQuery):
 
 
 class ESTopRules(ESQuery):
-    def get(self, count=20, order="desc"):
-        data = self._render_template(get_top_alerts(), {'count': count, 'order': order})
+    def get(self, count = 20, order = "desc"):
+        data = self._render_template(get_top_alerts(), { 'count': count, 'order': order })
         es_url = self._get_es_url()
         data = self._urlopen(es_url, data)
         try:
@@ -2391,9 +2397,9 @@ class ESTopRules(ESQuery):
 
 
 class ESSigsListHits(ESQuery):
-    def get(self, sids, order="desc"):
+    def get(self, sids, order = "desc"):
         count = len(sids.split(','))
-        data = self._render_template(get_sigs_list_hits(), {'sids': sids, 'count': count})
+        data = self._render_template(get_sigs_list_hits(), { 'sids': sids, 'count': count })
         es_url = self._get_es_url()
         data = self._urlopen(es_url, data)
         try:

@@ -1,10 +1,8 @@
-
 from rest_framework.views import APIView
 from rest_framework import serializers
 from rest_framework.routers import DefaultRouter
 from rest_framework.response import Response
 from suricata.models import Suricata
-from rest_framework.decorators import action
 from django.utils import timezone
 from django.conf.urls import url
 
@@ -26,12 +24,12 @@ class SuricataViewSet(APIView):
     =============================================================================================================================================================
     """
 
-    def post(self, request, format=None):
+    def post(self, request, format = None):
         suri = Suricata.objects.first()
         try:
             suri.ruleset.update()
         except IOError as e:
-            raise serializers.ValidationError({'update_push_all': ['Can not fetch data: %s' % e]})
+            raise serializers.ValidationError({ 'update_push_all': ['Can not fetch data: %s' % e] })
         suri.generate()
         ret = suri.push()
         suri.updated_date = timezone.now()
@@ -41,21 +39,21 @@ class SuricataViewSet(APIView):
         if ret:
             msg = 'ok'
             comment = request.data.get('comment', None)
-            comment_serializer = CommentSerializer(data={'comment': comment})
-            comment_serializer.is_valid(raise_exception=True)
+            comment_serializer = CommentSerializer(data = { 'comment': comment })
+            comment_serializer.is_valid(raise_exception = True)
 
             UserAction.create(
-                    action_type='update_push_all',
-                    user=request.user,
-                    ruleset=suri.ruleset,
-                    comment=comment_serializer.validated_data['comment']
+                action_type = 'update_push_all',
+                user = request.user,
+                ruleset = suri.ruleset,
+                comment = comment_serializer.validated_data['comment']
             )
-        return Response({'update_push_all': msg})
+        return Response({ 'update_push_all': msg })
 
 
 def get_custom_urls():
     urls = []
-    url_ = url(r'suricata/update_push_all/$', SuricataViewSet.as_view(), name='suricata')
+    url_ = url(r'suricata/update_push_all/$', SuricataViewSet.as_view(), name = 'suricata')
     urls.append(url_)
     return urls
 
