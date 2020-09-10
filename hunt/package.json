@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@babel/polyfill": "7.0.0",
+    "@babel/polyfill": "7.11.5",
     "autoprefixer": "7.1.6",
     "axios": "^0.18.1",
     "babel-core": "6.26.3",
