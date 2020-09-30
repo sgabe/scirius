@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update django-dbbackup requirement from <3.0 to <4.0.
 
 ### Security
+- Bump http-proxy from 1.17.0 to 1.18.1 in /hunt.
+- Bump jest from 24.7.1 to 26.4.2 in /hunt.
+- Bump elliptic from 6.4.0 to 6.5.3 in /hunt.
 - Bump eslint-utils from 1.3.1 to 1.4.3 in /hunt.
 - Bump lodash-es from 4.17.10 to 4.17.15 in /hunt.
 - Bump lodash.template from 4.4.0 to 4.5.0 in /hunt.
