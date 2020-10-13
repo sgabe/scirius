@@ -2,8 +2,8 @@
 from django.urls import include, re_path
 from django.conf import settings
 
-from scirius.views import homepage, KibanaProxyView, EveboxProxyView, MolochProxyView
-from scirius.rest_api import router
+from .views import homepage, KibanaProxyView, EveboxProxyView, MolochProxyView, static_redirect
+from .rest_api import router
 
 urlpatterns = [
     re_path(r'^rules/', include('rules.urls')),
@@ -30,3 +30,8 @@ urlpatterns = [
     # Moloch proxy
     re_path(r'^moloch/(?P<path>.*)$', MolochProxyView.as_view()),
 ]
+
+if settings.STATIC_AUTHENTICATED:
+    urlpatterns += [
+        url(r'^static/(?P<static_path>.*)$', static_redirect, name='static_redirect'),
+    ]

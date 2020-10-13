@@ -23,6 +23,8 @@ import logging
 
 from django.shortcuts import redirect
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
 
 from revproxy.views import ProxyView
 from scirius.utils import scirius_render, get_middleware_module
@@ -52,3 +54,12 @@ class MolochProxyView(ProxyView):
         headers = super(MolochProxyView, self).get_request_headers()
         headers['REMOTE_USER'] = 'moloch'
         return headers
+
+
+def static_redirect(request, static_path):
+    if static_path.endswith('.js') and not request.user.is_authenticated:
+        raise PermissionDenied()
+    response = HttpResponse(status=200)
+    response['Content-Type'] = ''
+    response['X-Accel-Redirect'] = '/protected-static/' + static_path
+    return response
