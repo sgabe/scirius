@@ -28,6 +28,8 @@ from django.core.exceptions import SuspiciousOperation, ValidationError
 from django.contrib import messages
 import requests
 
+from csp.decorators import csp
+
 from scirius.utils import scirius_render, scirius_listing
 
 from rules.es_data import ESData
@@ -1883,6 +1885,7 @@ def delete_comment(request, comment_id):
     data = {'status': 'OK'}
     return HttpResponse(json.dumps(data), content_type="application/json")
 
+@csp(DEFAULT_SRC=["'self'"], SCRIPT_SRC=["'self'", "'unsafe-eval'"], STYLE_SRC=["'self'", "'unsafe-inline'"])
 def hunt(request):
     context = { }
     return scirius_render(request, 'rules/hunt.html', context)
