@@ -1423,7 +1423,7 @@ class RestAPIListTestCase(RestAPITestBase, APITestCase):
             v.request = HttpRequest()
             v.request.user = None
 
-            if v.get_queryset().ordered or not issubclass(viewset, mixins.ListModelMixin):
+            if v.get_queryset().ordered or not issubclass(viewset, mixins.ListModelMixin) or not getattr(v, 'ordering_test', True) or v.ordering_test is False:
                 continue
             ERR = 'Viewset "%s" must set an "ordering" attribute or have an ordered queryset' % viewset.__name__
             self.assertTrue(hasattr(viewset, 'ordering'), ERR)
@@ -1432,7 +1432,10 @@ class RestAPIListTestCase(RestAPITestBase, APITestCase):
     def test_002_list(self):
         for url, viewset, view_name in self.router.registry:
             if issubclass(viewset, mixins.ListModelMixin):
-                self.http_get(reverse(view_name + '-list'))
+                url = reverse(view_name + '-list')
+                if view_name.startswith('threat'):
+                    url += '?event_view=false'
+                self.http_get(url)
 
     def test_003_list_order(self):
         for url, viewset, view_name in self.router.registry:
@@ -1472,6 +1475,8 @@ class RestAPIListTestCase(RestAPITestBase, APITestCase):
             if not hasattr(viewset, 'search_fields'):
                 continue
             url = reverse(view_name + '-list') + '?search=0'
+            if view_name.startswith('threat'):
+                continue
             self.http_get(url)
 
     def test_006_documentation(self):
