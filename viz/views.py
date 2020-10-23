@@ -24,7 +24,9 @@ along with Scirius.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.shortcuts import render
 from scirius.utils import scirius_render
+
 from django.conf import settings
+from csp.decorators import csp_replace
 
 Probe = __import__(settings.RULESET_MIDDLEWARE)
 
@@ -60,6 +62,8 @@ def dashboard_target(request):
     context['reload'] = reload
     return scirius_render(request, 'viz/dashboard_target.html', context)
 
+
+@csp_replace(IMG_SRC=["'self'", "data:"])
 def pktcity(request):
     context = {}
     if request.method == 'POST' and 'filter' in request.POST:
