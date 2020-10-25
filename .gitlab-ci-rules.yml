@@ -9,7 +9,7 @@ nodejs:
       - rules/static/webpack-stats.prod.json
   before_script:
     - npm install -g npm 
-    - npm install -g webpack@3.11
+    - npm install -g webpack@3.12
     - npm install node-sass
     - npm install node-gyp
   script:
@@ -31,7 +31,7 @@ eslint:
     - python tests/eslint_check.py $(find hunt -name \*.js |grep -v /node_modules/)
 
 python:
-  image: python:3.8.3-buster
+  image: python:3.8.6-buster
   stage: build
   before_script:
     - python -m pip install --upgrade pip wheel setuptools
@@ -44,7 +44,7 @@ python:
     - python -m pip install -r requirements.txt
 
 dlint:
-  image: python:3.8.3-buster
+  image: python:3.8.6-buster
   stage: test
   before_script:
     - python -m pip install dlint
