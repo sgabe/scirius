@@ -1910,19 +1910,7 @@ def get_js_files(config, filetype, bundles=['main']):
             entry['hash'] = "sha256-%s" % b64
             files.append(entry)
 
-    return files
-
-
-def get_bundle_csp_hash(*args, **kwargs):
-    return ["'%s'" % f['hash'] for f in get_js_files(*args, **kwargs)]
-
-
-hunt_js_files = get_js_files('DEFAULT', 'js')
-
-
-@csp(DEFAULT_SRC=["'self'"],
-     SCRIPT_SRC=get_bundle_csp_hash('DEFAULT', 'js'),
-     STYLE_SRC=["'self'", "'unsafe-inline'"])
+@csp(DEFAULT_SRC=["'self'"], SCRIPT_SRC=["'unsafe-eval'"], STYLE_SRC=["'self'", "'unsafe-inline'"])
 def hunt(request):
     context = {'js_files': hunt_js_files}
     return scirius_render(request, 'rules/hunt.html', context)
