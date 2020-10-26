@@ -52,168 +52,169 @@ from django.contrib.auth.models import User
 
 
 _HUNT_FILTERS = [
-                    {
-                      'id': 'hits_min',
-                      'title': 'Hits min',
-                      'placeholder': 'Minimum Hits Count',
-                      'filterType': 'number',
-                      'valueType': 'positiveint',
-                      'queryType': 'rest'
-                    },
-                    {
-                      'id': 'hits_max',
-                      'title': 'Hits max',
-                      'placeholder': 'Maximum Hits Count',
-                      'filterType': 'number',
-                      'valueType': 'positiveint',
-                      'queryType': 'rest'
-                    },
-                    {
-                      'id': 'ip',
-                      'title': 'IP',
-                      'placeholder': 'Filter by IP',
-                      'filterType': 'text',
-                      'valueType': 'ip',
-                      'queryType': 'filter'
-                    },
-                    {
-                      'id': 'host',
-                      'title': 'Probe',
-                      'placeholder': 'Filter by Probes',
-                      'filterType': 'text',
-                      'valueType': 'text',
-                      'queryType': 'filter'
-                    },
-                    {
-                      'id': 'msg',
-                      'title': 'Message',
-                      'placeholder': 'Filter by Message',
-                      'filterType': 'text',
-                      'valueType': 'text',
-                      'queryType': 'filter'
-                    },
-                    {
-                      'id': 'not_in_msg',
-                      'title': 'Not in Message',
-                      'placeholder': 'Filter by not in Message',
-                      'filterType': 'text',
-                      'valueType': 'text',
-                      'queryType': 'filter'
-                    },
-                    {
-                      'id': 'search',
-                      'title': 'Content',
-                      'placeholder': 'Filter by Content',
-                      'filterType': 'text',
-                      'valueType': 'text',
-                      'queryType': 'rest'
-                    },
-                    {
-                      'id': 'not_in_content',
-                      'title': 'Not in Content',
-                      'placeholder': 'Filter by not in Content',
-                      'filterType': 'text',
-                      'valueType': 'text',
-                      'queryType': 'rest'
-                    },
-                    {
-                      'id': 'port',
-                      'title': 'Port',
-                      'placeholder': 'Filter by Port (src/dest)',
-                      'filterType': 'number',
-                      'valueType': 'positiveint',
-                      'queryType': 'filter'
-                    },
-                    {
-                      'id': 'alert.signature_id',
-                      'title': 'Signature ID',
-                      'placeholder': 'Filter by Signature ID',
-                      'filterType': 'number',
-                      'valueType': 'positiveint',
-                      'queryType': 'filter'
-                    },
-                    {
-                      'id': 'es_filter',
-                      'title': 'ES Filter',
-                      'placeholder': 'Free ES Filter',
-                      'filterType': 'text',
-                      'valueType': 'text',
-                      'queryType': 'filter'
-                    },
-                    {
-                      'id': 'protocol',
-                      'title': 'Protocol',
-                      'placeholder': 'Filter by Protocol',
-                      'filterType': 'complex-select-text',
-                      'filterCategoriesPlaceholder': 'Filter by type',
-                      'queryType': 'filter',
-                      'filterCategories': [
-                          {
-                              'id': 'dns',
-                              'title': 'DNS',
-                              'filterValues': [
-                                  {'id': 'query.rrname', 'title': 'Query Name'},
-                                  {'id': 'query.rrtype', 'title': 'Query Type'},
-                               ]
-                          },
-                          {
-                              'id': 'http',
-                              'title': 'HTTP',
-                              'filterValues': [
-                                  {'id': 'http_user_agent', 'title': 'User-Agent', 'placeholder': 'Filter by User Agent'},
-                                  {'id': 'hostname', 'title': 'Host', 'placeholder': 'Filter by Host'},
-                                  {'id': 'url', 'title': 'URL', 'placeholder': 'Filter by URL'},
-                                  {'id': 'status', 'title': 'Status', 'placeholder': 'Filter by Status'},
-                                  {'id': 'http_method', 'title': 'Method', 'placeholder': 'Filter by Method'},
-                                  {'id': 'http_content_type', 'title': 'Content Type', 'placeholder': 'Filter by Content Type'},
-                                  {'id': 'length', 'title': 'Length', 'placeholder': 'Filter by Content Length'},
-                               ]
-                          },
-                          {
-                              'id': 'smtp',
-                              'title': 'SMTP',
-                              'filterValues': [
-                                  {'id': 'mail_from', 'title': 'From', 'placeholder': 'Filter by From'},
-                                  {'id': 'rcpt_to', 'title': 'To', 'placeholder': 'Filter by To'},
-                                  {'id': 'helo', 'title': 'Helo', 'placeholder': 'Filter by Helo'}
-                               ]
-                          },
-                          {
-                              'id': 'smb',
-                              'title': 'SMB',
-                              'filterValues': [
-                                  {'id': 'command', 'title': 'Command', 'placeholder': 'Filter by Command'},
-                                  {'id': 'status', 'title': 'Status', 'placeholder': 'Filter by Status'},
-                                  {'id': 'filename', 'title': 'Filename', 'placeholder': 'Filter by Filename'},
-                                  {'id': 'share', 'title': 'Share', 'placeholder': 'Filter by Share'}
-                               ]
-                          },
-                          {
-                              'id': 'ssh',
-                              'title': 'SSH',
-                              'filterValues': [
-                                  {'id': 'client.software_version', 'title': 'Client Software', 'placeholder': 'Filter by Client Software'},
-                                  {'id': 'client.proto_version', 'title': 'Client Version', 'placeholder': 'Filter by Client Version'},
-                                  {'id': 'server.software_version', 'title': 'Server Software', 'placeholder': 'Filter by Server Software'},
-                                  {'id': 'server.proto_version', 'title': 'Server Version', 'placeholder': 'Filter by Server Version'},
-                               ]
-                          },
-                          {
-                              'id': 'tls',
-                              'title': 'TLS',
-                              'filterValues': [
-                                  {'id': 'subject', 'title': 'Subject DN', 'placeholder': 'Filter by Subject DN'},
-                                  {'id': 'issuerdn', 'title': 'Issuer DN', 'placeholder': 'Filter by Issuer DN'},
-                                  {'id': 'sni', 'title': 'Server Name Indication', 'placeholder': 'Filter by Server Name Indication'},
-                                  {'id': 'version', 'title': 'Version', 'placeholder': 'Filter by Version'},
-                                  {'id': 'fingerprint', 'title': 'Fingerprint', 'placeholder': 'Filter by Fingerprint'},
-                                  {'id': 'serial', 'title': 'Serial', 'placeholder': 'Filter by Serial'},
-                                  {'id': 'ja3.hash', 'title': 'JA3 Hash', 'placeholder': 'Filter by JA3 Hash'},
-                               ]
-                          },
-                       ]
-                    }
+    {
+        'id': 'hits_min',
+        'title': 'Hits min',
+        'placeholder': 'Minimum Hits Count',
+        'filterType': 'number',
+        'valueType': 'positiveint',
+        'queryType': 'rest'
+    },
+    {
+        'id': 'hits_max',
+        'title': 'Hits max',
+        'placeholder': 'Maximum Hits Count',
+        'filterType': 'number',
+        'valueType': 'positiveint',
+        'queryType': 'rest'
+    },
+    {
+        'id': 'ip',
+        'title': 'IP',
+        'placeholder': 'Filter by IP',
+        'filterType': 'text',
+        'valueType': 'ip',
+        'queryType': 'filter'
+    },
+    {
+        'id': 'host',
+        'title': 'Probe',
+        'placeholder': 'Filter by Probes',
+        'filterType': 'text',
+        'valueType': 'text',
+        'queryType': 'filter'
+    },
+    {
+        'id': 'msg',
+        'title': 'Message',
+        'placeholder': 'Filter by Message',
+        'filterType': 'text',
+        'valueType': 'text',
+        'queryType': 'filter'
+    },
+    {
+        'id': 'not_in_msg',
+        'title': 'Not in Message',
+        'placeholder': 'Filter by not in Message',
+        'filterType': 'text',
+        'valueType': 'text',
+        'queryType': 'filter'
+    },
+    {
+        'id': 'search',
+        'title': 'Content',
+        'placeholder': 'Filter by Content',
+        'filterType': 'text',
+        'valueType': 'text',
+        'queryType': 'rest'
+    },
+    {
+        'id': 'not_in_content',
+        'title': 'Not in Content',
+        'placeholder': 'Filter by not in Content',
+        'filterType': 'text',
+        'valueType': 'text',
+        'queryType': 'rest'
+    },
+    {
+        'id': 'port',
+        'title': 'Port',
+        'placeholder': 'Filter by Port (src/dest)',
+        'filterType': 'number',
+        'valueType': 'positiveint',
+        'queryType': 'filter'
+    },
+    {
+        'id': 'alert.signature_id',
+        'title': 'Signature ID',
+        'placeholder': 'Filter by Signature ID',
+        'filterType': 'number',
+        'valueType': 'positiveint',
+        'queryType': 'filter'
+    },
+    {
+        'id': 'es_filter',
+        'title': 'ES Filter',
+        'placeholder': 'Free ES Filter',
+        'filterType': 'text',
+        'valueType': 'text',
+        'queryType': 'filter'
+    },
+    {
+        'id': 'protocol',
+        'title': 'Protocol',
+        'placeholder': 'Filter by Protocol',
+        'filterType': 'complex-select-text',
+        'filterCategoriesPlaceholder': 'Filter by type',
+        'queryType': 'filter',
+        'filterCategories': [
+            {
+                'id': 'dns',
+                'title': 'DNS',
+                'filterValues': [
+                    {'id': 'query.rrname', 'title': 'Query Name'},
+                    {'id': 'query.rrtype', 'title': 'Query Type'},
                 ]
+            },
+            {
+                'id': 'http',
+                'title': 'HTTP',
+                'filterValues': [
+                    {'id': 'http_user_agent', 'title': 'User-Agent', 'placeholder': 'Filter by User Agent'},
+                    {'id': 'hostname', 'title': 'Host', 'placeholder': 'Filter by Host'},
+                    {'id': 'url', 'title': 'URL', 'placeholder': 'Filter by URL'},
+                    {'id': 'status', 'title': 'Status', 'placeholder': 'Filter by Status'},
+                    {'id': 'http_method', 'title': 'Method', 'placeholder': 'Filter by Method'},
+                    {'id': 'http_content_type', 'title': 'Content Type', 'placeholder': 'Filter by Content Type'},
+                    {'id': 'length', 'title': 'Length', 'placeholder': 'Filter by Content Length'},
+                ]
+            },
+            {
+                'id': 'smtp',
+                'title': 'SMTP',
+                'filterValues': [
+                    {'id': 'mail_from', 'title': 'From', 'placeholder': 'Filter by From'},
+                    {'id': 'rcpt_to', 'title': 'To', 'placeholder': 'Filter by To'},
+                    {'id': 'helo', 'title': 'Helo', 'placeholder': 'Filter by Helo'}
+                ]
+            },
+            {
+                'id': 'smb',
+                'title': 'SMB',
+                'filterValues': [
+                    {'id': 'command', 'title': 'Command', 'placeholder': 'Filter by Command'},
+                    {'id': 'status', 'title': 'Status', 'placeholder': 'Filter by Status'},
+                    {'id': 'filename', 'title': 'Filename', 'placeholder': 'Filter by Filename'},
+                    {'id': 'share', 'title': 'Share', 'placeholder': 'Filter by Share'}
+                ]
+            },
+            {
+                'id': 'ssh',
+                'title': 'SSH',
+                'filterValues': [
+                    {'id': 'client.software_version', 'title': 'Client Software', 'placeholder': 'Filter by Client Software'},
+                    {'id': 'client.proto_version', 'title': 'Client Version', 'placeholder': 'Filter by Client Version'},
+                    {'id': 'server.software_version', 'title': 'Server Software', 'placeholder': 'Filter by Server Software'},
+                    {'id': 'server.proto_version', 'title': 'Server Version', 'placeholder': 'Filter by Server Version'},
+                ]
+            },
+            {
+                'id': 'tls',
+                'title': 'TLS',
+                'filterValues': [
+                    {'id': 'subject', 'title': 'Subject DN', 'placeholder': 'Filter by Subject DN'},
+                    {'id': 'issuerdn', 'title': 'Issuer DN', 'placeholder': 'Filter by Issuer DN'},
+                    {'id': 'sni', 'title': 'Server Name Indication', 'placeholder': 'Filter by Server Name Indication'},
+                    {'id': 'version', 'title': 'Version', 'placeholder': 'Filter by Version'},
+                    {'id': 'fingerprint', 'title': 'Fingerprint', 'placeholder': 'Filter by Fingerprint'},
+                    {'id': 'serial', 'title': 'Serial', 'placeholder': 'Filter by Serial'},
+                    {'id': 'ja3.hash', 'title': 'JA3 Hash', 'placeholder': 'Filter by JA3 Hash'},
+                    {'id': 'ja3s.hash', 'title': 'JA3S Hash', 'placeholder': 'Filter by JA3S Hash'},
+                ]
+            },
+        ]
+    }
+]
 
 
 def get_hunt_filters():
