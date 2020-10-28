@@ -26,7 +26,6 @@ from django.shortcuts import render
 from scirius.utils import scirius_render
 
 from django.conf import settings
-from csp.decorators import csp_replace
 
 Probe = __import__(settings.RULESET_MIDDLEWARE)
 
