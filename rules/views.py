@@ -1888,27 +1888,6 @@ def history(request):
     context = {'history': history[:50]}
     return scirius_render(request, 'rules/history.html', context)
 
-def delete_comment(request, comment_id):
-    ua = get_object_or_404(UserAction, pk=comment_id, action="comment", user = request.user)
-    ua.delete()
-    data = {'status': 'OK'}
-    return HttpResponse(json.dumps(data), content_type="application/json")
-
-def get_js_files(config, filetype, bundles=['main']):
-    files = []
-    for bundle in bundles:
-        try:
-            wfiles = webpack_files(bundle, filetype, config=config)
-        except OSError:
-            # Ignore loading error when the bundle is not yet compiled
-            continue
-        for entry in wfiles:
-            f = entry['path']
-            with open(f, 'rb') as fd:
-                digest = hashlib.sha256(fd.read()).digest()
-            b64 = base64.b64encode(digest).decode('ascii')
-            entry['hash'] = "sha256-%s" % b64
-            files.append(entry)
 
 @csp(DEFAULT_SRC=["'self'"], SCRIPT_SRC=["'unsafe-eval'"], STYLE_SRC=["'self'", "'unsafe-inline'"])
 def hunt(request):
