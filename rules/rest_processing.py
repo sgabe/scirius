@@ -23,7 +23,7 @@ import json
 from IPy import IP
 
 from django.db import models
-from rest_framework import serializers, viewsets, exceptions
+from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 

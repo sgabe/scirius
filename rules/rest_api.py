@@ -2,6 +2,7 @@
 from rules.suripyg import SuriHTMLFormat
 
 from django.conf import settings
+from django.conf.urls import url
 from django.utils import timezone
 from django.db import models
 from collections import OrderedDict
@@ -17,7 +18,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 from rest_framework.exceptions import APIException, ParseError
-from rest_framework.routers import DefaultRouter, url
+from rest_framework.routers import DefaultRouter
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.mixins import UpdateModelMixin, RetrieveModelMixin
@@ -1073,10 +1074,10 @@ class BaseTransformationViewSet(viewsets.ModelViewSet):
 
 
 class RulesetTransformationSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = RulesetTransformation
         fields = ('pk', 'ruleset', 'transfo_type', 'transfo_value')
+
         extra_kwargs = {
             'ruleset': {'source': 'ruleset_transformation'},
             'transfo_type': {'source': 'key'},
@@ -2776,8 +2777,8 @@ router = DefaultRouter()
 router.register('rules/ruleset', RulesetViewSet)
 router.register('rules/category', CategoryViewSet)
 router.register('rules/rule', RuleViewSet)
-router.register('rules/source', SourceViewSet, base_name='source')
-router.register('rules/public_source', PublicSourceViewSet, base_name='publicsource')
+router.register('rules/source', SourceViewSet, basename='source')
+router.register('rules/public_source', PublicSourceViewSet, basename='publicsource')
 router.register('rules/transformation/ruleset', RulesetTransformationViewSet)
 router.register('rules/transformation/category', CategoryTransformationViewSet)
 router.register('rules/transformation/rule', RuleTransformationViewSet)
@@ -2785,4 +2786,4 @@ router.register('rules/history', UserActionViewSet)
 router.register('rules/changelog/source', ChangelogViewSet)
 router.register('rules/system_settings', SystemSettingsViewSet)
 router.register('rules/processing-filter', RuleProcessingFilterViewSet)
-router.register('rules/hunt_filter_sets', FilterSetViewSet, base_name='hunt_filter_sets')
+router.register('rules/hunt_filter_sets', FilterSetViewSet, basename='hunt_filter_sets')

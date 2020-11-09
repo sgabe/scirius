@@ -1,11 +1,12 @@
 
 from rest_framework.views import APIView
 from rest_framework import serializers
-from rest_framework.routers import DefaultRouter, url
+from rest_framework.routers import DefaultRouter
 from rest_framework.response import Response
 from suricata.models import Suricata
 from rest_framework.decorators import action
 from django.utils import timezone
+from django.conf.urls import url
 
 from rules.models import UserAction
 from rules.rest_api import CommentSerializer
