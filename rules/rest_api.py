@@ -36,6 +36,7 @@ from rules.models import Rule, Category, Ruleset, RuleTransformation, CategoryTr
 from rules.views import get_public_sources, fetch_public_sources, extract_rule_references
 from rules.rest_processing import RuleProcessingFilterViewSet
 from rules.es_data import ESData
+from rules.es_query import ESPaginator
 
 from rules.es_graphs import ESStats, ESRulesStats, ESSidByHosts, ESFieldStats, \
         ESTimeline, ESMetricsTimeline, ESHealth, ESIndicesStats, ESRulesPerCategory, ESAlertsCount, \
@@ -2448,9 +2449,14 @@ class ESAlertsTailViewSet(ESBaseViewSet):
     """
 
     def _get(self, request, format=None):
+        pagination = ESPaginator(request)
+        es_params = pagination.get_es_params(self)
+
         search_target = request.GET.get('search_target', True)
         search_target = False if search_target is not True else True
-        return Response(ESAlertsTail(request).get(search_target=search_target))
+
+        data = ESAlertsTail(request).get(search_target=search_target, es_params=es_params)
+        return pagination.get_paginated_response(data, full=True)
 
 
 class ESEventsFromFlowIDViewSet(ESBaseViewSet):
