@@ -732,6 +732,7 @@ class Source(models.Model):
     public_source = models.CharField(max_length=100, blank = True, null = True)
     use_iprep = models.BooleanField('Use IP reputation for group signatures', default=True)
     version = models.IntegerField(default=1)
+    use_sys_proxy = models.BooleanField(default=True, verbose_name='Use system proxy')
 
     editable = True
     # git repo where we store the physical thing
@@ -1175,8 +1176,8 @@ class Source(models.Model):
         return reverse('source', args=[str(self.id)])
 
     def update_ruleset_http(self, f):
-        proxy_params = get_system_settings().get_proxy_params()
-        hdrs = { 'User-Agent': 'scirius' }
+        proxy_params = get_system_settings().get_proxy_params() if self.use_sys_proxy else None
+        hdrs = {'User-Agent': 'scirius'}
         if self.authkey:
             hdrs['Authorization'] = self.authkey
 
