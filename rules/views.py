@@ -1891,5 +1891,5 @@ def history(request):
 
 @csp(DEFAULT_SRC=["'self'"], SCRIPT_SRC=["'unsafe-eval'"], STYLE_SRC=["'self'", "'unsafe-inline'"])
 def hunt(request):
-    context = {'js_files': hunt_js_files}
+    context = {}
     return scirius_render(request, 'rules/hunt.html', context)
