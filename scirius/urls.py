@@ -33,5 +33,5 @@ urlpatterns = [
 
 if settings.STATIC_AUTHENTICATED:
     urlpatterns += [
-        url(r'^static/(?P<static_path>.*)$', static_redirect, name='static_redirect'),
+        re_path(r'^static/(?P<static_path>.*)$', static_redirect, name='static_redirect'),
     ]
