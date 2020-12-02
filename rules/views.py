@@ -33,6 +33,8 @@ from django.contrib import messages
 from elasticsearch.exceptions import ConnectionError as ESConnectionError
 import django_tables2 as tables
 
+from csp.decorators import csp
+
 from scirius.utils import scirius_render, scirius_listing
 
 from rules.es_data import ESData
