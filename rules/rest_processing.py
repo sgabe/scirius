@@ -24,7 +24,7 @@ from IPy import IP
 
 from django.db import models
 from rest_framework import serializers
-from rest_framework.decorators import list_route
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from rules.models import RuleProcessingFilter, RuleProcessingFilterDef, Threshold, UserAction, Rule
