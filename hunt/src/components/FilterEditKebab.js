@@ -98,78 +98,101 @@ class FilterEditKebab extends React.Component {
         this.setState({ filterSets: { showModal: true, shared: this.state.filterSets.shared, page: this.state.filterSets.page, name: event.target.value, description: this.state.filterSets.description } });
     }
 
-    handleDescriptionChange(event) {
-        this.setState({ filterSets: { showModal: true, shared: this.state.filterSets.shared, page: this.state.filterSets.page, name: this.state.filterSets.name, description: event.target.value } });
-    }
+        if (error.response.status === 403) {
+          const noRights = !this.state.user.perms.includes('rules.events_edit') && this.state.filterSets.shared;
+          if (noRights) {
+            errors = { permission: ['Insufficient permissions. "Shared" is not allowed.'] };
+          }
+        }
+        this.setState({ errors });
+      });
+  }
 
-    submitActionToFilterSet() {
-        const filters = (process.env.REACT_APP_HAS_TAG === '1') ? [...this.generateFilterSet(), this.generateAlertTag()] : this.generateFilterSet();
+  render() {
+    const noRights = this.state.user !== undefined && !this.state.user.perms.includes('rules.events_edit');
+    return (
+      <React.Fragment>
+        <FilterSetSave
+          title="Create new Filter Set From Action"
+          showModal={this.state.filterSets.showModal}
+          close={this.closeActionToFilterSet}
+          errors={this.state.errors}
+          handleDescriptionChange={this.handleDescriptionChange}
+          handleComboChange={this.handleComboChange}
+          handleFieldChange={this.handleFieldChange}
+          setSharedFilter={this.setSharedFilter}
+          submit={this.submitActionToFilterSet}
+          noRights={noRights}
+        />
 
-        axios.post(config.API_URL + config.HUNT_FILTER_SETS, { name: this.state.filterSets.name, page: this.state.filterSets.page, content: filters, share: this.state.filterSets.shared, description: this.state.filterSets.description })
-        .then(() => {
-            this.props.loadFilterSets();
-            this.closeActionToFilterSet();
-            this.setState({ errors: undefined });
-        })
-        .catch((error) => {
-            let errors = error.response.data;
-
-            if (error.response.status === 403) {
-                const noRights = this.state.user.is_active && !this.state.user.is_staff && !this.state.user.is_superuser && this.state.filterSets.shared;
-                if (noRights) {
-                    errors = { permission: ['Insufficient permissions. "Shared" is not allowed.'] };
-                }
-            }
-            this.setState({ errors });
-        });
-    }
-
-    render() {
-        const noRights = this.state.user !== undefined && this.state.user.is_active && !this.state.user.is_staff && !this.state.user.is_superuser;
-        return (
+        <DropdownKebab id="filterActions" pullRight>
+          {this.state.user !== undefined && this.state.user.perms.includes('rules.events_edit') && (
             <React.Fragment>
-
-                <FilterSetSave
-                    title={'Create new Filter Set From Action'}
-                    showModal={this.state.filterSets.showModal}
-                    close={this.closeActionToFilterSet}
-                    errors={this.state.errors}
-                    handleDescriptionChange={this.handleDescriptionChange}
-                    handleComboChange={this.handleComboChange}
-                    handleFieldChange={this.handleFieldChange}
-                    setSharedFilter={this.setSharedFilter}
-                    submit={this.submitActionToFilterSet}
-                    noRights={noRights}
-                />
-
-                <DropdownKebab id="filterActions" pullRight>
-                    {this.props.data.index !== 0 && <MenuItem onClick={() => { this.displayToggle('movetop'); }}>
-                        Send Action to top
-                    </MenuItem>}
-                    <MenuItem onClick={() => { this.displayToggle('move'); }}>
-                        Move Action
-                    </MenuItem>
-                    <MenuItem onClick={() => { this.displayToggle('movebottom'); }}>
-                        Send Action to bottom
-                    </MenuItem>
-                    <MenuItem divider />
-                    <MenuItem onClick={() => { this.displayToggle('delete'); }}>
-                        Delete Action
-                    </MenuItem>
-                    <MenuItem divider />
-                    <MenuItem onClick={() => { this.convertActionToFilters(); }}>
-                        Convert Action to Filters
-                    </MenuItem>
-                    <MenuItem onClick={() => { this.saveActionToFilterSet(); }}>
-                        Save Action as Filter set
-                    </MenuItem>
-                </DropdownKebab>
-                <ErrorHandler>
-                    <FilterToggleModal show={this.state.toggle.show} action={this.state.toggle.action} data={this.props.data} close={this.closeAction} last_index={this.props.last_index} needUpdate={this.props.needUpdate} />
-                </ErrorHandler>
+              {this.props.data.index !== 0 && (
+                <MenuItem
+                  onClick={() => {
+                    this.displayToggle('movetop');
+                  }}
+                >
+                  Send Action to top
+                </MenuItem>
+              )}
+              <MenuItem
+                onClick={() => {
+                  this.displayToggle('move');
+                }}
+              >
+                Move Action
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  this.displayToggle('movebottom');
+                }}
+              >
+                Send Action to bottom
+              </MenuItem>
+              <MenuItem divider />
+              <MenuItem
+                onClick={() => {
+                  this.displayToggle('delete');
+                }}
+              >
+                Delete Action
+              </MenuItem>
+              <MenuItem divider />
             </React.Fragment>
-        );
-    }
+          )}
+
+          <MenuItem
+            onClick={() => {
+              this.convertActionToFilters();
+            }}
+          >
+            Convert Action to Filters
+          </MenuItem>
+          {this.state.user !== undefined && this.state.user.perms.includes('rules.events_edit') && (
+            <MenuItem
+              onClick={() => {
+                this.saveActionToFilterSet();
+              }}
+            >
+              Save Action as Filter set
+            </MenuItem>
+          )}
+        </DropdownKebab>
+        <ErrorHandler>
+          <FilterToggleModal
+            show={this.state.toggle.show}
+            action={this.state.toggle.action}
+            data={this.props.data}
+            close={this.closeAction}
+            last_index={this.props.last_index}
+            needUpdate={this.props.needUpdate}
+          />
+        </ErrorHandler>
+      </React.Fragment>
+    );
+  }
 }
 FilterEditKebab.propTypes = {
     data: PropTypes.any,

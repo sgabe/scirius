@@ -28,8 +28,9 @@ from django.utils import timezone
 from django.http import HttpResponse, HttpResponseServerError, JsonResponse
 from django.db import IntegrityError
 from django.conf import settings
-from django.core.exceptions import SuspiciousOperation, ValidationError
+from django.core.exceptions import SuspiciousOperation, ValidationError, PermissionDenied
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from elasticsearch.exceptions import ConnectionError as ESConnectionError
 import django_tables2 as tables
 
@@ -91,6 +92,7 @@ def about(request):
     return scirius_render(request, 'rules/about.html', context)
 
 
+@permission_required('rules.ruleset_policy_view', raise_exception=True)
 def search(request):
     context = {}
     length = 0
@@ -144,6 +146,7 @@ def search(request):
     return scirius_render(request, 'rules/search.html', context)
 
 
+@permission_required('rules.source_view', raise_exception=True)
 def sources(request):
     from scirius.utils import get_middleware_module
     sources = get_middleware_module('common').get_sources().order_by('name')
@@ -156,7 +159,8 @@ def sources(request):
     return scirius_render(request, 'rules/sources.html', context)
 
 
-def source(request, source_id, error = None, update = False, activate = False, rulesets = None):
+@permission_required('rules.ruleset_policy_view', raise_exception=True)
+def source(request, source_id, error=None, update=False, activate=False, rulesets=None):
     source = get_object_or_404(Source, pk=source_id)
     cats = CategoryTable(Category.objects.filter(source = source).order_by('name'))
     tables.RequestConfig(request).configure(cats)
@@ -170,10 +174,20 @@ def source(request, source_id, error = None, update = False, activate = False, r
     return scirius_render(request, 'rules/source.html', context)
 
 
+@permission_required('rules.ruleset_policy_view', raise_exception=True)
 def categories(request):
-    return scirius_listing(request, Category, 'Categories')
+    assocfn = {
+        'Categories': {
+            'table': CategoryTable,
+            'manage_links': {},
+            'action_links': {}
+        }
+    }
+
+    return scirius_listing(request, Category, assocfn)
 
 
+@permission_required('rules.ruleset_policy_view', raise_exception=True)
 def category(request, cat_id):
     cat = get_object_or_404(Category, pk=cat_id)
     rules = RuleTable(Rule.objects.filter(category = cat, state = True).order_by('sid'))
@@ -229,9 +243,27 @@ def elasticsearch(request):
     }
     context = {'es2x': get_es_major_version() >= 2}
 
+    def check_perms(query):
+        PERM_CONF_VIEW = ('indices', 'rule_probe', 'field_stats', None)
+        PERM_EVENT_VIEW = ('rule_src', 'rule_dest', 'rule_source', 'rule_target')
+        PERM_CONF_AND_EVENT_VIEW = ('rules', 'rule')
+
+        if query in PERM_EVENT_VIEW:
+            if not request.user.has_perm('rules.events_view'):
+                raise PermissionDenied()
+
+        if query in PERM_CONF_VIEW:
+            if not request.user.has_perm('rules.configuration_view'):
+                raise PermissionDenied()
+
+        if query in PERM_CONF_AND_EVENT_VIEW:
+            if not request.user.has_perm('rules.configuration_view') and not request.user.has_perm('rules.events_view'):
+                raise PermissionDenied()
+
     if request.GET.__contains__('query'):
+        query = request.GET.get('query')
+        check_perms(query)
         try:
-            query = request.GET.get('query')
             if query == 'rules':
                 rules = ESRulesStats(request).get()
                 if rules is None:
@@ -278,6 +310,7 @@ def elasticsearch(request):
             es_logger.exception(e)
             return HttpResponseServerError()
     else:
+        check_perms(None)
         template = PROBE.common.get_es_template()
         return scirius_render(request, template, context)
 
@@ -300,7 +333,8 @@ def extract_rule_references(rule):
     return references
 
 
-def rule(request, rule_id, key = 'pk'):
+@permission_required('rules.ruleset_policy_view', raise_exception=True)
+def rule(request, rule_id, key='pk'):
     if request.is_ajax():
         rule = get_object_or_404(Rule, sid = rule_id)
         rule.highlight_content = SuriHTMLFormat(rule.content)
@@ -359,8 +393,15 @@ def rule(request, rule_id, key = 'pk'):
         rulesets_status.append(ruleset_info)
 
     comment_form = RuleCommentForm()
-    context = {'rule': rule, 'references': references, 'object_path': rule_path, 'rulesets': rulesets_status,
-               'rule_transformations': rule_transformations, 'comment_form': comment_form}
+    context = {
+        'rule': rule,
+        'history': rule.get_actions(request.user),
+        'references': references,
+        'object_path': rule_path,
+        'rulesets': rulesets_status,
+        'rule_transformations': rule_transformations,
+        'comment_form': comment_form
+    }
 
     thresholds = Threshold.objects.filter(rule = rule, threshold_type = 'threshold')
     if thresholds:
@@ -381,12 +422,9 @@ def rule(request, rule_id, key = 'pk'):
     return scirius_render(request, 'rules/rule.html', context)
 
 
+@permission_required('rules.ruleset_policy_edit', raise_exception=True)
 def edit_rule(request, rule_id):
     rule_object = get_object_or_404(Rule, sid=rule_id)
-
-    if not request.user.is_staff:
-        context = { 'rule': rule_object, 'error': 'Unsufficient permissions' }
-        return scirius_render(request, 'rules/rule.html', context)
 
     if request.method == 'POST':  # If the form has been submitted...
         form = RuleTransformForm(request.POST, instance=rule_object)
@@ -550,15 +588,13 @@ def edit_rule(request, rule_id):
     return scirius_render(request, 'rules/edit_rule.html', context)
 
 
+@permission_required('rules.ruleset_policy_view', raise_exception=True)
 def transform_category(request, cat_id):
     cat_object = get_object_or_404(Category, pk=cat_id)
-
-    if not request.user.is_staff:
-        context = { 'category': cat_object, 'error': 'Unsufficient permissions' }
-        return scirius_render(request, 'rules/category.html', context)
+    can_edit = request.user.has_perm('rules.ruleset_policy_edit')
 
     if request.method == 'POST':  # If the form has been submitted...
-        form = CategoryTransformForm(request.POST)
+        form = CategoryTransformForm(request.POST, can_edit=can_edit)
         if form.is_valid():  # All validation rules pass
             rulesets = form.cleaned_data['rulesets']
 
@@ -676,7 +712,7 @@ def transform_category(request, cat_id):
                     if 'rulesets' in initial:
                         del initial['rulesets']
 
-        form = CategoryTransformForm(initial=initial)
+        form = CategoryTransformForm(initial=initial, can_edit=can_edit)
 
     ruleset_transforms = []
     rulesets = Ruleset.objects.all()
@@ -697,10 +733,6 @@ def transform_category(request, cat_id):
 
 def switch_rule(request, rule_id, operation = 'disable'):
     rule_object = get_object_or_404(Rule, sid = rule_id)
-
-    if not request.user.is_staff:
-        context = {'rule': rule_object, 'operation': operation, 'error': 'Unsufficient permissions'}
-        return scirius_render(request, 'rules/disable_rule.html', context)
 
     if request.method == 'POST':  # If the form has been submitted...
         form = RulesetSuppressForm(request.POST)
@@ -731,28 +763,27 @@ def switch_rule(request, rule_id, operation = 'disable'):
     return scirius_render(request, 'rules/disable_rule.html', context)
 
 
+@permission_required('rules.ruleset_policy_edit', raise_exception=True)
 def disable_rule(request, rule_id):
     return switch_rule(request, rule_id)
 
 
+@permission_required('rules.ruleset_policy_edit', raise_exception=True)
 def enable_rule(request, rule_id):
     return switch_rule(request, rule_id, operation = 'enable')
 
 
-def test_rule(request, rule_id, ruleset_id, key = 'pk'):
-    rule_object = get_object_or_404(Rule, pk = rule_id)
-    ruleset = get_object_or_404(Ruleset, pk = ruleset_id)
+@permission_required('rules.ruleset_policy_view', raise_exception=True)
+def test_rule(request, rule_id, ruleset_id, key='pk'):
+    rule_object = get_object_or_404(Rule, pk=rule_id)
+    ruleset = get_object_or_404(Ruleset, pk=ruleset_id)
     ret = rule_object.test(ruleset)
     return JsonResponse(ret)
 
 
+@permission_required('rules.events_edit', raise_exception=True)
 def delete_alerts(request, rule_id):
     rule_object = get_object_or_404(Rule, sid = rule_id)
-
-    if not request.user.is_staff:
-        context = { 'object': rule, 'error': 'Unsufficient permissions' }
-        context['comment_form'] = CommentForm()
-        return scirius_render(request, 'rules/delete_alerts.html', context)
 
     if request.method == 'POST':  # If the form has been submitted...
         form = CommentForm(request.POST)
@@ -788,28 +819,25 @@ def delete_alerts(request, rule_id):
         return scirius_render(request, 'rules/delete_alerts.html', context)
 
 
+@permission_required('rules.ruleset_policy_edit', raise_exception=True)
 def comment_rule(request, rule_id):
     rule_object = get_object_or_404(Rule, sid=rule_id)
 
     if request.method == 'POST':  # If the form has been submitted...
-        if request.user.is_staff:
-            form = RuleCommentForm(request.POST)
-            if form.is_valid():
-                UserAction.create(
-                    action_type = 'comment_rule',
-                    comment = form.cleaned_data['comment'],
-                    user = request.user,
-                    rule = rule_object
-                )
+        form = RuleCommentForm(request.POST)
+        if form.is_valid():
+            UserAction.create(
+                action_type='comment_rule',
+                comment=form.cleaned_data['comment'],
+                user=request.user,
+                rule=rule_object
+            )
     return redirect(rule_object)
 
 
+@permission_required('rules.ruleset_policy_edit', raise_exception=True)
 def toggle_availability(request, rule_id):
     rule_object = get_object_or_404(Rule, sid = rule_id)
-
-    if not request.user.is_staff:
-        context = { 'object': rule, 'error': 'Unsufficient permissions' }
-        return scirius_render(request, 'rules/rule.html', context)
 
     if not request.method == 'POST':
         context = { 'object': rule, 'error': 'Invalid action' }
@@ -826,12 +854,9 @@ def toggle_availability(request, rule_id):
     return redirect(rule_object)
 
 
+@permission_required('rules.ruleset_policy_edit', raise_exception=True)
 def threshold_rule(request, rule_id):
     rule_object = get_object_or_404(Rule, sid = rule_id)
-
-    if not request.user.is_staff:
-        context = { 'object': rule, 'error': 'Unsufficient permissions' }
-        return scirius_render(request, 'rules/rule.html', context)
 
     if request.method == 'POST':  # If the form has been submitted...
         action_type = 'create_threshold'
@@ -928,12 +953,9 @@ def threshold_rule(request, rule_id):
     return scirius_render(request, 'rules/add_threshold.html', context)
 
 
-def disable_category(request, cat_id, operation = 'suppress'):
-    cat_object = get_object_or_404(Category, id = cat_id)
-
-    if not request.user.is_staff:
-        context = { 'category': cat_object, 'error': 'Unsufficient permissions', 'operation': operation }
-        return scirius_render(request, 'rules/disable_category.html', context)
+@permission_required('rules.ruleset_policy_edit', raise_exception=True)
+def disable_category(request, cat_id, operation='suppress'):
+    cat_object = get_object_or_404(Category, id=cat_id)
 
     if request.method == 'POST':  # If the form has been submitted...
         form = RulesetSuppressForm(request.POST)
@@ -951,15 +973,14 @@ def disable_category(request, cat_id, operation = 'suppress'):
     return scirius_render(request, 'rules/disable_category.html', context)
 
 
+@permission_required('rules.ruleset_policy_edit', raise_exception=True)
 def enable_category(request, cat_id):
     return disable_category(request, cat_id, operation='enable')
 
 
+@permission_required('rules.ruleset_update_push', raise_exception=True)
 def update_source(request, source_id):
     src = get_object_or_404(Source, pk = source_id)
-
-    if not request.user.is_staff:
-        return redirect(src)
 
     if request.method != 'POST':  # If the form has been submitted...
         if request.is_ajax():
@@ -1003,10 +1024,8 @@ def update_source(request, source_id):
     return redirect('changelog_source', source_id = source_id)
 
 
+@permission_required('rules.source_edit', raise_exception=True)
 def activate_source(request, source_id, ruleset_id):
-
-    if not request.user.is_staff:
-        return JsonResponse(False, safe = False)
 
     if request.method != 'POST':  # If the form has been submitted...
         if request.is_ajax():
@@ -1032,6 +1051,7 @@ def activate_source(request, source_id, ruleset_id):
     return JsonResponse(True, safe = False)
 
 
+@permission_required('rules.source_view', raise_exception=True)
 def test_source(request, source_id):
     source = get_object_or_404(Source, pk = source_id)
     sourceatversion = get_object_or_404(SourceAtVersion, source = source, version = 'HEAD')
@@ -1047,6 +1067,7 @@ def build_source_diff(request, diff):
         tables.RequestConfig(request).configure(diff[field])
 
 
+@permission_required('rules.source_view', raise_exception=True)
 def changelog_source(request, source_id):
     source = get_object_or_404(Source, pk = source_id)
     supdate = SourceUpdate.objects.filter(source = source).order_by('-created_date')
@@ -1060,17 +1081,15 @@ def changelog_source(request, source_id):
     return scirius_render(request, 'rules/source.html', { 'source': source, 'diff': diff, 'changelogs': changelogs, 'src_update': supdate[0] })
 
 
+@permission_required('rules.source_view', raise_exception=True)
 def diff_source(request, source_id):
     source = get_object_or_404(Source, pk=source_id)
     diff = source.diff()
     return scirius_render(request, 'rules/source.html', { 'source': source, 'diff': diff })
 
 
+@permission_required('rules.source_edit', raise_exception=True)
 def add_source(request):
-
-    if not request.user.is_staff:
-        return scirius_render(request, 'rules/add_source.html', { 'error': 'Unsufficient permissions' })
-
     if request.method == 'POST':  # If the form has been submitted...
         form = AddSourceForm(request.POST, request.FILES)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
@@ -1171,9 +1190,9 @@ def fetch_public_sources():
         sfile.write(resp.content)
 
 
+@permission_required('rules.source_edit', raise_exception=True)
 def update_public_sources(request):
-    if request.user.is_staff:
-        fetch_public_sources()
+    fetch_public_sources()
     return redirect('add_public_source')
 
 
@@ -1219,10 +1238,8 @@ def get_public_sources(force_fetch = True):
     return public_sources
 
 
+@permission_required('rules.source_edit', raise_exception=True)
 def add_public_source(request):
-    if not request.user.is_staff:
-        return scirius_render(request, 'rules/add_public_source.html', { 'error': 'Unsufficient permissions' })
-
     try:
         public_sources = get_public_sources()
     except Exception as e:
@@ -1296,11 +1313,9 @@ def add_public_source(request):
     )
 
 
+@permission_required('rules.source_edit', raise_exception=True)
 def edit_source(request, source_id):
     source = get_object_or_404(Source, pk = source_id)
-
-    if not request.user.is_staff:
-        return scirius_render(request, 'rules/add_source.html', { 'error': 'Unsufficient permissions' })
 
     if request.method == 'POST':  # If the form has been submitted...
         prev_uri = source.uri
@@ -1356,15 +1371,9 @@ def edit_source(request, source_id):
     )
 
 
+@permission_required('rules.source_edit', raise_exception=True)
 def delete_source(request, source_id):
     source = get_object_or_404(Source, pk = source_id)
-
-    if not request.user.is_staff:
-        return scirius_render(
-            request,
-            'rules/delete.html',
-            { 'object': source, 'error': 'Unsufficient permissions' }
-        )
 
     if request.method == 'POST':  # If the form has been submitted...
         form = CommentForm(request.POST)
@@ -1382,6 +1391,7 @@ def delete_source(request, source_id):
         return scirius_render(request, 'rules/delete.html', context)
 
 
+@permission_required('rules.source_edit', raise_exception=True)
 def sourceupdate(request, update_id):
     sourceupdate = get_object_or_404(SourceUpdate, pk = update_id)
     source = sourceupdate.source
@@ -1394,6 +1404,7 @@ def sourceupdate(request, update_id):
     )
 
 
+@permission_required('rules.source_view', raise_exception=True)
 def rulesets(request):
     rulesets = Ruleset.objects.all().order_by('name')
     for ruleset in rulesets:
@@ -1402,8 +1413,9 @@ def rulesets(request):
     return scirius_render(request, 'rules/rulesets.html', context)
 
 
-def ruleset(request, ruleset_id, mode = 'struct', error = None):
-    ruleset = get_object_or_404(Ruleset, pk = ruleset_id)
+@permission_required('rules.ruleset_policy_view', raise_exception=True)
+def ruleset(request, ruleset_id, mode='struct', error=None):
+    ruleset = get_object_or_404(Ruleset, pk=ruleset_id)
     if mode == 'struct':
         categories_list = {}
         sources = ruleset.sources.all()
@@ -1474,14 +1486,8 @@ def ruleset(request, ruleset_id, mode = 'struct', error = None):
     return scirius_render(request, 'rules/ruleset.html', context)
 
 
+@permission_required('rules.source_edit', raise_exception=True)
 def add_ruleset(request):
-    if not request.user.is_staff:
-        return scirius_render(
-            request,
-            'rules/add_ruleset.html',
-            { 'error': 'Unsufficient permissions' }
-        )
-
     context = {}
     if request.method == 'POST':  # If the form has been submitted...
         form = RulesetForm(request.POST)  # A form bound to the POST data
@@ -1538,12 +1544,9 @@ def add_ruleset(request):
     return scirius_render(request, 'rules/add_ruleset.html', context)
 
 
+@permission_required('rules.ruleset_update_push', raise_exception=True)
 def update_ruleset(request, ruleset_id):
-    rset = get_object_or_404(Ruleset, pk = ruleset_id)
-
-    if not request.user.is_staff:
-        return redirect(rset)
-
+    rset = get_object_or_404(Ruleset, pk=ruleset_id)
     if request.method != 'POST':  # If the form has been submitted...
         if request.is_ajax():
             data = {}
@@ -1566,6 +1569,7 @@ def update_ruleset(request, ruleset_id):
     return redirect('changelog_ruleset', ruleset_id = ruleset_id)
 
 
+@permission_required('rules.source_view', raise_exception=True)
 def changelog_ruleset(request, ruleset_id):
     ruleset = get_object_or_404(Ruleset, pk = ruleset_id)
     diff = ruleset.diff()
@@ -1582,20 +1586,19 @@ def changelog_ruleset(request, ruleset_id):
     )
 
 
+@permission_required('rules.source_view', raise_exception=True)
 def test_ruleset(request, ruleset_id):
     ruleset = get_object_or_404(Ruleset, pk = ruleset_id)
     return JsonResponse(ruleset.test())
 
 
 def edit_ruleset(request, ruleset_id):
-    ruleset = get_object_or_404(Ruleset, pk = ruleset_id)
+    user = request.user
+    if not user.has_perm('rules.ruleset_policy_edit') and not user.has_perm('rules.source_edit'):
+        raise PermissionDenied()
 
-    if not request.user.is_staff:
-        return scirius_render(
-            request,
-            'rules/edit_ruleset.html',
-            { 'ruleset': ruleset, 'error': 'Unsufficient permissions' }
-        )
+    can_edit = user.has_perm('rules.ruleset_policy_edit')
+    ruleset = get_object_or_404(Ruleset, pk=ruleset_id)
 
     # TODO: manage other types
     SUPPRESSED = Transformation.SUPPRESSED
@@ -1609,7 +1612,10 @@ def edit_ruleset(request, ruleset_id):
             return redirect(ruleset)
 
         if 'category' in request.POST:
-            category_selection = [ int(x) for x in request.POST.getlist('category_selection') ]
+            if not user.has_perm('rules.ruleset_policy_edit'):
+                raise PermissionDenied()
+
+            category_selection = [int(x) for x in request.POST.getlist('category_selection')]
             # clean ruleset
             for cat in ruleset.categories.all():
                 if cat.pk not in category_selection:
@@ -1622,13 +1628,19 @@ def edit_ruleset(request, ruleset_id):
                     category.enable(ruleset, user = request.user, comment = form.cleaned_data['comment'])
 
         elif 'rules' in request.POST:
+            if not user.has_perm('rules.ruleset_policy_edit'):
+                raise PermissionDenied()
+
             for rule in request.POST.getlist('rule_selection'):
                 rule_object = get_object_or_404(Rule, pk = rule)
                 if rule_object in ruleset.get_transformed_rules(key = SUPPRESSED, value = S_SUPPRESSED):
                     rule_object.enable(ruleset, user = request.user, comment = form.cleaned_data['comment'])
 
         elif 'sources' in request.POST:
-            source_selection = [ int(x) for x in request.POST.getlist('source_selection') ]
+            if not user.has_perm('rules.source_edit'):
+                raise PermissionDenied()
+
+            source_selection = [int(x) for x in request.POST.getlist('source_selection')]
             # clean ruleset
             for source_ in ruleset.sources.all():
                 if source_.pk not in source_selection:
@@ -1640,7 +1652,7 @@ def edit_ruleset(request, ruleset_id):
                 if source not in ruleset.sources.all():
                     source.enable(ruleset, user = request.user, comment = form.cleaned_data['comment'])
         else:
-            form = RulesetEditForm(request.POST, instance = ruleset)
+            form = RulesetEditForm(request.POST, instance=ruleset, can_edit=can_edit)
 
             if form.is_valid():
                 UserAction.create(
@@ -1684,6 +1696,15 @@ def edit_ruleset(request, ruleset_id):
 
         return redirect(ruleset)
     else:
+        mode = request.GET.get('mode', None)
+
+        if mode == 'sources':
+            if not user.has_perm('rules.source_edit'):
+                raise PermissionDenied()
+        elif mode in ('categories', 'rules'):
+            if not user.has_perm('rules.ruleset_policy_edit'):
+                raise PermissionDenied()
+
         cats_selection = []
         categories_list = {}
         sources = ruleset.sources.all()
@@ -1709,9 +1730,12 @@ def edit_ruleset(request, ruleset_id):
         }
 
         if 'mode' in request.GET:
-            context['mode'] = request.GET['mode']
+            context['mode'] = mode
             context['form'] = CommentForm()
             if context['mode'] == 'sources':
+                if not user.has_perm('rules.source_edit'):
+                    raise PermissionDenied()
+
                 from scirius.utils import get_middleware_module
                 all_sources = SourceAtVersion.objects.exclude(
                     source__datatype__in = get_middleware_module('common').custom_source_datatype(True)
@@ -1766,17 +1790,13 @@ def edit_ruleset(request, ruleset_id):
             # if len(trans_action) > 0:
             #     initial['target'] = trans_target[0].value
 
-            context['form'] = RulesetEditForm(instance = ruleset, initial = initial)
+            context['form'] = RulesetEditForm(instance=ruleset, initial=initial, can_edit=can_edit)
         return scirius_render(request, 'rules/edit_ruleset.html', context)
 
 
+@permission_required('rules.ruleset_policy_edit', raise_exception=True)
 def ruleset_add_supprule(request, ruleset_id):
-    ruleset = get_object_or_404(Ruleset, pk = ruleset_id)
-
-    if not request.user.is_staff:
-        context = { 'ruleset': ruleset, 'error': 'Unsufficient permissions' }
-        return scirius_render(request, 'rules/search_rule.html', context)
-
+    ruleset = get_object_or_404(Ruleset, pk=ruleset_id)
     if request.method == 'POST':  # If the form has been submitted...
         if 'search' in request.POST:
             # FIXME Protection on SQL injection ?
@@ -1800,12 +1820,9 @@ def ruleset_add_supprule(request, ruleset_id):
     return scirius_render(request, 'rules/search_rule.html', context)
 
 
+@permission_required('rules.source_edit', raise_exception=True)
 def delete_ruleset(request, ruleset_id):
     ruleset = get_object_or_404(Ruleset, pk = ruleset_id)
-
-    if not request.user.is_staff:
-        context = { 'object': ruleset, 'error': 'Unsufficient permissions', 'form': CommentForm() }
-        return scirius_render(request, 'rules/delete.html', context)
 
     if request.method == 'POST':  # If the form has been submitted...
         form = CommentForm(request.POST)
@@ -1823,13 +1840,9 @@ def delete_ruleset(request, ruleset_id):
         return scirius_render(request, 'rules/delete.html', context)
 
 
+@permission_required('rules.source_edit', raise_exception=True)
 def copy_ruleset(request, ruleset_id):
-    ruleset = get_object_or_404(Ruleset, pk = ruleset_id)
-
-    if not request.user.is_staff:
-        context = { 'object': ruleset, 'error': 'Unsufficient permissions' }
-        return scirius_render(request, 'rules/copy_ruleset.html', context)
-
+    ruleset = get_object_or_404(Ruleset, pk=ruleset_id)
     if request.method == 'POST':  # If the form has been submitted...
         form = RulesetCopyForm(request.POST)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
@@ -1847,13 +1860,11 @@ def copy_ruleset(request, ruleset_id):
     return scirius_render(request, 'rules/copy_ruleset.html', context)
 
 
+@permission_required('rules.configuration_view', raise_exception=True)
 def system_settings(request):
-    if not request.user.is_staff:
-        context = { 'error': 'Unsufficient permissions' }
-        return scirius_render(request, 'rules/system_settings.html', context)
-
     gsettings = get_system_settings()
-    main_form = SystemSettingsForm(instance = gsettings)
+    can_edit = request.user.has_perm('rules.configuration_edit')
+    main_form = SystemSettingsForm(instance=gsettings, can_edit=can_edit)
     kibana_form = KibanaDataForm()
 
     context = {
@@ -1937,6 +1948,7 @@ def system_settings(request):
             user = request.user,
         )
     context['global_settings'] = get_system_settings()
+    context['can_edit'] = can_edit
     return scirius_render(request, 'rules/system_settings.html', context)
 
 
@@ -1958,6 +1970,7 @@ def info(request):
     return JsonResponse(data, safe = False)
 
 
+@permission_required('rules.ruleset_policy_view', raise_exception=True)
 def threshold(request, threshold_id):
     threshold = get_object_or_404(Threshold, pk = threshold_id)
     threshold.rule.highlight_content = SuriHTMLFormat(threshold.rule.content)
@@ -1966,13 +1979,11 @@ def threshold(request, threshold_id):
     return scirius_render(request, 'rules/threshold.html', context)
 
 
+@permission_required('rules.ruleset_policy_edit', raise_exception=True)
 def edit_threshold(request, threshold_id):
     threshold = get_object_or_404(Threshold, pk = threshold_id)
     rule = threshold.rule
     ruleset = threshold.ruleset
-
-    if not request.user.is_staff:
-        return redirect(threshold)
 
     if request.method == 'POST':  # If the form has been submitted...
         form = EditThresholdForm(request.POST, instance=threshold)  # A form bound to the POST data
@@ -1996,14 +2007,11 @@ def edit_threshold(request, threshold_id):
         return scirius_render(request, 'rules/edit_threshold.html', context)
 
 
+@permission_required('rules.ruleset_policy_edit', raise_exception=True)
 def delete_threshold(request, threshold_id):
     threshold = get_object_or_404(Threshold, pk = threshold_id)
     ruleset = threshold.ruleset
     rule = threshold.rule
-
-    if not request.user.is_staff:
-        context = { 'object': threshold, 'error': 'Unsufficient permissions', 'form': CommentForm() }
-        return scirius_render(request, 'rules/delete.html', context)
 
     if request.method == 'POST':  # If the form has been submitted...
         form = CommentForm(request.POST)
@@ -2025,15 +2033,30 @@ def delete_threshold(request, threshold_id):
 
 
 def history(request):
-    history = UserAction.objects.all().order_by('-date')
+    actions_type = UserAction.get_allowed_actions_type(request)
+    history = UserAction.objects.filter(action_type__in=actions_type)
+    history |= UserAction.objects.filter(user=request.user)
+    history = history.order_by('-date')
+
     # useractions = HistoryTable(history)
     # tables.RequestConfig(request).configure(useractions)
 
-    context = {'history': history[:50]}
+    res = []
+    for item in history[:50]:
+        res.append({
+            'description': item.generate_description(request.user),
+            'comment': item.comment,
+            'title': item.get_title(),
+            'date': item.date,
+            'icons': item.get_icons()
+        })
+
+    context = {'history': res}
     return scirius_render(request, 'rules/history.html', context)
 
 
 @csp(DEFAULT_SRC=["'self'"], SCRIPT_SRC=["'unsafe-eval'"], STYLE_SRC=["'self'", "'unsafe-inline'"])
+@permission_required('rules.events_view', raise_exception=True)
 def hunt(request):
     context = {}
     return scirius_render(request, 'rules/hunt.html', context)

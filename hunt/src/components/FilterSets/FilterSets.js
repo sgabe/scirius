@@ -101,152 +101,156 @@ export default class FilterSets extends React.Component {
         this.props.reload();
     }
 
-    render() {
-        const globaL = 'global';
-        const privatE = 'private';
-        const statiC = 'static';
-        const rowsGlobal = this.props.globalSet ? this.props.globalSet.filter((item) => item.name.toLowerCase().includes(this.state.searchValue.toLowerCase())) : [];
-        const rowsPrivate = this.props.privateSet ? this.props.privateSet.filter((item) => item.name.toLowerCase().includes(this.state.searchValue.toLowerCase())) : [];
-        const rowsStatic = this.props.staticSet ? this.props.staticSet.filter((item) => item.name.toLowerCase().includes(this.state.searchValue.toLowerCase())) : [];
-        const noRights = this.state.user !== undefined && this.state.user.is_active && !this.state.user.is_staff && !this.state.user.is_superuser;
+    this.props.switchPage(row.page);
+    this.props.reload();
+  }
 
-        return (
-            <NotificationDrawer>
-                <NotificationDrawer.Title onCloseClick={() => this.props.close()} title={'Filter Sets'} expandable={false} />
-                <FormGroup controlId="text">
-                    <div className="input-group">
-                        <span className="input-group-addon"><i className="fa fa-search"></i></span>
-                        <FormControl
-                            type="text"
-                            disabled={false}
-                            value={this.state.searchValue}
-                            onChange={this.handleSearchValue}
-                        />
-                    </div>
-                </FormGroup>
+  render() {
+    const globaL = 'global';
+    const privatE = 'private';
+    const statiC = 'static';
+    const rowsGlobal = this.props.globalSet
+      ? this.props.globalSet.filter((item) => item.name.toLowerCase().includes(this.state.searchValue.toLowerCase()))
+      : [];
+    const rowsPrivate = this.props.privateSet
+      ? this.props.privateSet.filter((item) => item.name.toLowerCase().includes(this.state.searchValue.toLowerCase()))
+      : [];
+    const rowsStatic = this.props.staticSet
+      ? this.props.staticSet.filter((item) => item.name.toLowerCase().includes(this.state.searchValue.toLowerCase()))
+      : [];
+    const noRights = this.state.user !== undefined && !this.state.user.perms.includes('rules.events_edit');
 
-                <NotificationDrawer.Accordion>
-                    <NotificationDrawer.Panel expanded={this.state.expandedPanel === globaL}>
+    return (
+      <NotificationDrawer>
+        <NotificationDrawer.Title onCloseClick={() => this.props.close()} title="Filter Sets" expandable={false} />
+        <FormGroup controlId="text">
+          <div className="input-group">
+            <span className="input-group-addon">
+              <i className="fa fa-search"></i>
+            </span>
+            <FormControl type="text" disabled={false} value={this.state.searchValue} onChange={this.handleSearchValue} />
+          </div>
+        </FormGroup>
 
-                        <NotificationDrawer.PanelHeading onClick={() => this.togglePanel(globaL)}>
-                            <NotificationDrawer.PanelTitle>
-                                <a className={this.state.expandedPanel === globaL ? '' : 'collapsed'}>Global Filter Sets</a>
-                            </NotificationDrawer.PanelTitle>
-                            <NotificationDrawer.PanelCounter text={`${rowsGlobal ? rowsGlobal.length : 0} Filter Sets`} />
-                        </NotificationDrawer.PanelHeading>
+        <NotificationDrawer.Accordion>
+          <NotificationDrawer.Panel expanded={this.state.expandedPanel === globaL}>
+            <NotificationDrawer.PanelHeading onClick={() => this.togglePanel(globaL)}>
+              <NotificationDrawer.PanelTitle>
+                <a className={this.state.expandedPanel === globaL ? '' : 'collapsed'}>Global Filter Sets</a>
+              </NotificationDrawer.PanelTitle>
+              <NotificationDrawer.PanelCounter text={`${rowsGlobal ? rowsGlobal.length : 0} Filter Sets`} />
+            </NotificationDrawer.PanelHeading>
 
-                        <Collapse in={this.state.expandedPanel === globaL}>
-                            <NotificationDrawer.PanelCollapse id={globaL}>
-                                {rowsGlobal && <NotificationDrawer.PanelBody key="containsNotifications">
+            <Collapse in={this.state.expandedPanel === globaL}>
+              <NotificationDrawer.PanelCollapse id={globaL}>
+                {rowsGlobal && (
+                  <NotificationDrawer.PanelBody key="containsNotifications">
+                    {rowsGlobal.map((item) => (
+                      <span key={item.name} data-toggle="tooltip" title={item.description}>
+                        <Notification key={item.id} seen={false}>
+                          <NotificationDrawer.Dropdown id="Dropdown1">
+                            <MenuItem key="load" onClick={() => this.loadFilterSets(item)}>
+                              Load
+                            </MenuItem>
+                            {!noRights && (
+                              <MenuItem key="delete" onClick={() => this.props.deleteFilterSet('global', item)}>
+                                Delete
+                              </MenuItem>
+                            )}
+                          </NotificationDrawer.Dropdown>
+                          {this.getIcon(item)}
+                          <Notification.Content onClick={() => this.loadFilterSets(item)}>
+                            <Notification.Message>{item.name}</Notification.Message>
+                            <Notification.Info leftText={`${item.pageTitle} Page`} rightText="Shared" />
+                          </Notification.Content>
+                        </Notification>
+                      </span>
+                    ))}
+                    {this.props.loading && <Notification key="loading" type="loading" />}
+                  </NotificationDrawer.PanelBody>
+                )}
+                {!rowsGlobal && <NotificationDrawer.EmptyState title="" />}
+              </NotificationDrawer.PanelCollapse>
+            </Collapse>
+          </NotificationDrawer.Panel>
+          <NotificationDrawer.Panel expanded={this.state.expandedPanel === privatE}>
+            <NotificationDrawer.PanelHeading onClick={() => this.togglePanel(privatE)}>
+              <NotificationDrawer.PanelTitle>
+                <a className={this.state.expandedPanel === privatE ? '' : 'collapsed'}>Private Filter Sets</a>
+              </NotificationDrawer.PanelTitle>
+              <NotificationDrawer.PanelCounter text={`${rowsPrivate ? rowsPrivate.length : 0} Filter Sets`} />
+            </NotificationDrawer.PanelHeading>
 
-                                    {rowsGlobal.map((item) => (
-                                        <span key={item.name} data-toggle="tooltip" title={item.description}>
-                                            <Notification key={item.id} seen={false}>
-                                                <NotificationDrawer.Dropdown id="Dropdown1">
-                                                    <MenuItem key={'load'} onClick={() => this.loadFilterSets(item)}>Load</MenuItem>
-                                                    {!noRights && <MenuItem key={'delete'} onClick={() => this.props.deleteFilterSet('global', item)}>Delete</MenuItem>}
-                                                </NotificationDrawer.Dropdown>
-                                                {this.getIcon(item)}
-                                                <Notification.Content onClick={() => this.loadFilterSets(item)}>
-                                                    <Notification.Message>
-                                                        {item.name}
-                                                    </Notification.Message>
-                                                    <Notification.Info leftText={`${item.pageTitle} Page`} rightText={'Shared'} />
-                                                </Notification.Content>
-                                            </Notification>
-                                        </span>
-                                    ))}
-                                    {this.props.loading && <Notification key="loading" type="loading" />}
-                                </NotificationDrawer.PanelBody>
-                                }
-                                {!rowsGlobal && <NotificationDrawer.EmptyState title={''} />}
+            <Collapse in={this.state.expandedPanel === privatE}>
+              <NotificationDrawer.PanelCollapse id={privatE}>
+                {rowsPrivate && (
+                  <NotificationDrawer.PanelBody key="containsNotifications">
+                    {rowsPrivate.map((item) => (
+                      <span key={item.name} data-toggle="tooltip" title={item.description}>
+                        <Notification key={item.id} seen={false}>
+                          <NotificationDrawer.Dropdown id="Dropdown2">
+                            <MenuItem key="load" onClick={() => this.loadFilterSets(item)}>
+                              Load
+                            </MenuItem>
+                            <MenuItem key="delete" onClick={() => this.props.deleteFilterSet('private', item)}>
+                              Delete
+                            </MenuItem>
+                          </NotificationDrawer.Dropdown>
+                          {this.getIcon(item)}
+                          <Notification.Content onClick={() => this.loadFilterSets(item)}>
+                            <Notification.Message>{item.name}</Notification.Message>
+                            <Notification.Info leftText={`${item.pageTitle} Page`} rightText="Private" />
+                          </Notification.Content>
+                        </Notification>
+                      </span>
+                    ))}
+                    {this.props.loading && <Notification key="loading" type="loading" />}
+                  </NotificationDrawer.PanelBody>
+                )}
+                {!rowsPrivate && <NotificationDrawer.EmptyState title="" />}
+              </NotificationDrawer.PanelCollapse>
+            </Collapse>
+          </NotificationDrawer.Panel>
 
-                            </NotificationDrawer.PanelCollapse>
-                        </Collapse>
-                    </NotificationDrawer.Panel>
-                    <NotificationDrawer.Panel expanded={this.state.expandedPanel === privatE}>
+          <NotificationDrawer.Panel expanded={this.state.expandedPanel === statiC}>
+            <NotificationDrawer.PanelHeading onClick={() => this.togglePanel(statiC)}>
+              <NotificationDrawer.PanelTitle>
+                <a className={this.state.expandedPanel === statiC ? '' : 'collapsed'}>Stamus Predefined Filter Sets</a>
+              </NotificationDrawer.PanelTitle>
+              <NotificationDrawer.PanelCounter text={`${rowsStatic ? rowsStatic.length : 0} Filter Sets`} />
+            </NotificationDrawer.PanelHeading>
 
-                        <NotificationDrawer.PanelHeading onClick={() => this.togglePanel(privatE)}>
-                            <NotificationDrawer.PanelTitle>
-                                <a className={this.state.expandedPanel === privatE ? '' : 'collapsed'}>Private Filter Sets</a>
-                            </NotificationDrawer.PanelTitle>
-                            <NotificationDrawer.PanelCounter text={`${rowsPrivate ? rowsPrivate.length : 0} Filter Sets`} />
-                        </NotificationDrawer.PanelHeading>
-
-                        <Collapse in={this.state.expandedPanel === privatE}>
-                            <NotificationDrawer.PanelCollapse id={privatE}>
-                                {rowsPrivate && <NotificationDrawer.PanelBody key="containsNotifications">
-
-                                    {rowsPrivate.map((item) => (
-                                        <span key={item.name} data-toggle="tooltip" title={item.description}>
-                                            <Notification key={item.id} seen={false}>
-                                                <NotificationDrawer.Dropdown id="Dropdown2">
-                                                    <MenuItem key={'load'} onClick={() => this.loadFilterSets(item)}>Load</MenuItem>
-                                                    <MenuItem key={'delete'} onClick={() => this.props.deleteFilterSet('private', item)}>Delete</MenuItem>
-                                                </NotificationDrawer.Dropdown>
-                                                {this.getIcon(item)}
-                                                <Notification.Content onClick={() => this.loadFilterSets(item)}>
-                                                    <Notification.Message>
-                                                        {item.name}
-                                                    </Notification.Message>
-                                                    <Notification.Info leftText={`${item.pageTitle} Page`} rightText={'Private'} />
-                                                </Notification.Content>
-                                            </Notification>
-                                        </span>
-                                    ))}
-                                    {this.props.loading && <Notification key="loading" type="loading" />}
-
-                                </NotificationDrawer.PanelBody>
-                                }
-                                {!rowsPrivate && <NotificationDrawer.EmptyState title={''} />}
-
-                            </NotificationDrawer.PanelCollapse>
-                        </Collapse>
-                    </NotificationDrawer.Panel>
-
-                    <NotificationDrawer.Panel expanded={this.state.expandedPanel === statiC}>
-
-                        <NotificationDrawer.PanelHeading onClick={() => this.togglePanel(statiC)}>
-                            <NotificationDrawer.PanelTitle>
-                                <a className={this.state.expandedPanel === statiC ? '' : 'collapsed'}>Stamus Predefined Filter Sets</a>
-                            </NotificationDrawer.PanelTitle>
-                            <NotificationDrawer.PanelCounter text={`${rowsStatic ? rowsStatic.length : 0} Filter Sets`} />
-                        </NotificationDrawer.PanelHeading>
-
-                        <Collapse in={this.state.expandedPanel === statiC}>
-                            <NotificationDrawer.PanelCollapse id={statiC}>
-                                {rowsStatic && <NotificationDrawer.PanelBody key="containsNotifications">
-
-                                    {rowsStatic.map((item) => (
-                                        <span key={item.name} data-toggle="tooltip" title={item.description}>
-                                            <Notification key={item.id} seen={false}>
-                                                <NotificationDrawer.Dropdown id="Dropdown3">
-                                                    <MenuItem key={'load'} onClick={() => this.loadFilterSets(item)}>Load</MenuItem>
-                                                </NotificationDrawer.Dropdown>
-                                                {this.getIcon(item)}
-                                                <Notification.Content onClick={() => this.loadFilterSets(item)}>
-                                                    <Notification.Message>
-                                                        {item.name}
-                                                    </Notification.Message>
-                                                    <Notification.Info leftText={`${item.pageTitle} Page`} rightText={'Static'} />
-                                                </Notification.Content>
-                                            </Notification>
-                                        </span>
-                                    ))}
-                                    {this.props.loading && <Notification key="loading" type="loading" />}
-
-                                </NotificationDrawer.PanelBody>
-                                }
-                                {!rowsPrivate && <NotificationDrawer.EmptyState title={''} />}
-
-                            </NotificationDrawer.PanelCollapse>
-                        </Collapse>
-                    </NotificationDrawer.Panel>
-
-                </NotificationDrawer.Accordion>
-            </NotificationDrawer>
-        );
-    }
+            <Collapse in={this.state.expandedPanel === statiC}>
+              <NotificationDrawer.PanelCollapse id={statiC}>
+                {rowsStatic && (
+                  <NotificationDrawer.PanelBody key="containsNotifications">
+                    {rowsStatic.map((item) => (
+                      <span key={item.name} data-toggle="tooltip" title={item.description}>
+                        <Notification key={item.id} seen={false}>
+                          <NotificationDrawer.Dropdown id="Dropdown3">
+                            <MenuItem key="load" onClick={() => this.loadFilterSets(item)}>
+                              Load
+                            </MenuItem>
+                          </NotificationDrawer.Dropdown>
+                          {this.getIcon(item)}
+                          <Notification.Content onClick={() => this.loadFilterSets(item)}>
+                            <Notification.Message>{item.name}</Notification.Message>
+                            <Notification.Info leftText={`${item.pageTitle} Page`} rightText="Static" />
+                          </Notification.Content>
+                        </Notification>
+                      </span>
+                    ))}
+                    {this.props.loading && <Notification key="loading" type="loading" />}
+                  </NotificationDrawer.PanelBody>
+                )}
+                {!rowsPrivate && <NotificationDrawer.EmptyState title="" />}
+              </NotificationDrawer.PanelCollapse>
+            </Collapse>
+          </NotificationDrawer.Panel>
+        </NotificationDrawer.Accordion>
+      </NotificationDrawer>
+    );
+  }
 }
 
 FilterSets.propTypes = {

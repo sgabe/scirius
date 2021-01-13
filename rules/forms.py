@@ -53,11 +53,21 @@ class RulesetChoiceForm(CommentForm):
             self.fields.pop('rulesets')
 
 
-class SystemSettingsForm(forms.ModelForm, CommentForm):
-    use_http_proxy = forms.BooleanField(label = 'Use a proxy', required = False)
-    custom_elasticsearch = forms.BooleanField(label = 'Use a custom Elasticsearch server', required = False)
-    http_proxy = forms.CharField(max_length = 200, required = False, help_text = 'Proxy address of the form "http://username:password@hostname:port/"')
-    elasticsearch_url = forms.CharField(max_length = 200, empty_value='http://elasticsearch:9200/', required = False)
+class BaseEditForm:
+    def __init__(self, *args, **kwargs):
+        can_edit = kwargs.pop('can_edit', False)
+        super().__init__(*args, **kwargs)
+
+        if not can_edit:
+            for key in self.fields.keys():
+                self.fields[key].disabled = True
+
+
+class SystemSettingsForm(BaseEditForm, forms.ModelForm, CommentForm):
+    use_http_proxy = forms.BooleanField(label='Use a proxy', required=False)
+    custom_elasticsearch = forms.BooleanField(label='Use a custom Elasticsearch server', required=False)
+    http_proxy = forms.CharField(max_length=200, required=False, help_text='Proxy address of the form "http://username:password@hostname:port/"')
+    elasticsearch_url = forms.CharField(max_length=200, empty_value='http://elasticsearch:9200/', required=False)
 
     class Meta:
         model = SystemSettings
@@ -159,7 +169,7 @@ class RulesetForm(CommentForm):
         self.fields['target'].choices = Ruleset.get_transformation_choices(key = Transformation.TARGET)
 
 
-class RulesetEditForm(forms.ModelForm, CommentForm):
+class RulesetEditForm(BaseEditForm, forms.ModelForm, CommentForm):
     name = forms.CharField(max_length=100)
     rulesets_label = "Apply transformation(s) to the following ruleset(s)"
     action = forms.ChoiceField()
@@ -231,7 +241,7 @@ class RuleTransformForm(RulesetChoiceForm):
         self.fields['target'].choices = rule.get_transformation_choices(key = Transformation.TARGET)
 
 
-class CategoryTransformForm(RulesetChoiceForm):
+class CategoryTransformForm(BaseEditForm, RulesetChoiceForm):
     rulesets_label = "Apply transformation(s) to the following ruleset(s)"
     action = forms.ChoiceField()
     lateral = forms.ChoiceField()

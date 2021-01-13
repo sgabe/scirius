@@ -565,140 +565,204 @@ class HuntFilter extends React.Component {
         );
     }
 
-    setViewType(type) {
-        this.props.itemsListUpdate({
-            ...this.props.config,
-            view_type: type
-        })
+    axios
+      .post(config.API_URL + config.HUNT_FILTER_SETS, {
+        name: this.state.filterSetName,
+        page: this.props.page,
+        content: filters,
+        share: this.state.filterSets.shared,
+        description: this.state.filterSets.description,
+      })
+      .then(() => {
+        this.props.loadFilterSets();
+        this.closeHuntFilterSetsModal();
+        this.setState({ errors: undefined });
+      })
+      .catch((error) => {
+        let errors = error.response.data;
+
+        if (error.response.status === 403) {
+          const noRights = !this.state.user.perms.includes('rules.events_edit') && this.state.filterSets.shared;
+          if (noRights) {
+            errors = { permission: ['Insufficient permissions. "Shared" is not allowed.'] };
+          }
+        }
+        this.setState({ errors });
+      });
+  }
+
+  renderInputHuntFilterSetsModal() {
+    let { page } = this.props;
+    for (let idxPages = 0; idxPages < VerticalNavItems.length; idxPages += 1) {
+      const item = VerticalNavItems[idxPages];
+
+      if (item.def === page) {
+        page = item.title;
+        break;
+      }
     }
 
-    render() {
-        const { currentFilterType } = this.state;
-        const activeFilters = [];
-        const filters = this.props.filterType === sections.HISTORY ? this.props.historyFilters : this.props.filters;
-        filters.forEach((item) => {
-            if (item.query === undefined || this.props.queryType.indexOf(item.query) !== -1) {
-                activeFilters.push(item);
-            }
-        });
-        const menuFilters = [];
-        this.props.filterFields.forEach((item) => {
-            if (item.filterType !== 'hunt') {
-                menuFilters.push(item);
-            }
-        });
+    const noRights = this.state.user !== undefined && !this.state.user.perms.includes('rules.events_edit');
+    return (
+      <FilterSetSave
+        title="Create new Filter Set"
+        showModal={this.state.filterSets.showModal}
+        close={this.closeHuntFilterSetsModal}
+        errors={this.state.errors}
+        handleDescriptionChange={this.handleDescriptionChange}
+        handleComboChange={undefined}
+        handleFieldChange={this.handleFieldChange}
+        setSharedFilter={this.setSharedFilter}
+        submit={this.submitFilterSets}
+        page={page}
+        noRights={noRights}
+      />
+    );
+  }
 
-        return (
-            <Shortcuts
-                name="HUNT_FILTER"
-                handler={this.handleShortcuts}
-                isolate
-                targetNodeSelector="body"
-            >
-                <Toolbar>
-                    <div>
-                        <Filter>
-                            <Filter.TypeSelector
-                                filterTypes={menuFilters}
-                                currentFilterType={currentFilterType}
-                                onFilterTypeSelected={this.selectFilterType}
-                            />
-                            {this.renderInput()}
-                        </Filter>
-                        {this.props.sort_config && this.props.config && <HuntSort config={this.props.sort_config}
-                            itemsList={this.props.config}
-                            itemsListUpdate={this.props.itemsListUpdate}
-                            disabled={this.props.disable_sort ? this.props.disable_sort : false}
-                        />}
-                        {this.props.gotAlertTag && (process.env.REACT_APP_HAS_TAG === '1' || process.env.NODE_ENV === 'development') && <div className="form-group" style={{ paddingTop: '3px', height: '25px' }}>
-                            <ul className="list-inline">
-                                <li><Switch bsSize="small"
-                                    onColor="info"
-                                    value={this.props.alertTag.value.informational}
-                                    onChange={() => this.props.setTag('informational', !this.props.alertTag.value.informational)}
-                                /> Informational
-                                </li>
-                                <li><Switch bsSize="small"
-                                    onColor="warning"
-                                    value={this.props.alertTag.value.relevant}
-                                    onChange={() => this.props.setTag('relevant', !this.props.alertTag.value.relevant)}
-                                /> Relevant
-                                </li>
-                                <li><Switch bsSize="small"
-                                    onColor="primary"
-                                    value={this.props.alertTag.value.untagged}
-                                    onChange={() => this.props.setTag('untagged', !this.props.alertTag.value.untagged)}
-                                /> Untagged
-                                </li>
-                            </ul>
-                        </div>}
-                    </div>
+  setViewType(type) {
+    this.props.itemsListUpdate({
+      ...this.props.config,
+      view_type: type,
+    });
+  }
 
-                    <Toolbar.RightContent>
-                        {this.props.actionsButtons && this.props.actionsButtons()}
-                        {this.props.displayToggle && <Toolbar.ViewSelector>
-                            <Button
-                                title="List View"
-                                bsStyle="link"
-                                className={{ active: this.props.config.view_type === 'list' }}
-                                onClick={() => {
-                                    this.setViewType('list');
-                                }}
-                            >
-                                <Icon type="fa" name="th-list" />
-                            </Button>
-                            <Button
-                                title="Card View"
-                                bsStyle="link"
-                                className={{ active: this.props.config.view_type === 'card' }}
-                                onClick={() => {
-                                    this.setViewType('card');
-                                }}
-                            >
-                                <Icon type="fa" name="th" />
-                            </Button>
-                        </Toolbar.ViewSelector>}
-                    </Toolbar.RightContent>
+  render() {
+    const { currentFilterType } = this.state;
+    const activeFilters = [];
+    const filters = this.props.filterType === sections.HISTORY ? this.props.historyFilters : this.props.filters;
+    filters.forEach((item) => {
+      if (item.query === undefined || this.props.queryType.indexOf(item.query) !== -1) {
+        activeFilters.push(item);
+      }
+    });
+    const menuFilters = [];
+    this.props.filterFields.forEach((item) => {
+      if (item.filterType !== 'hunt') {
+        menuFilters.push(item);
+      }
+    });
 
-                    {activeFilters && activeFilters.length > 0 && (
-                        <Toolbar.Results>
-                            <Filter.ActiveLabel>{'Active Filters:'}</Filter.ActiveLabel>
-                            <FilterList filters={activeFilters} filterType={this.props.filterType} />
-                            <a
-                                data-toggle="tooltip"
-                                data-placement="top"
-                                title="Clear All Filters"
-                                id="clear"
-                                role="button"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    this.props.clearFilters(this.props.filterType);
-                                }}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                Clear
-                            </a>
-                            {this.props.page !== 'HISTORY' && <a
-                                data-toggle="tooltip"
-                                data-placement="top"
-                                title="Save Filter Set"
-                                id="saveall"
-                                role="button"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    this.loadHuntFilterSetsModal();
-                                }}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                |&nbsp;&nbsp;Save
-                            </a>}
-                        </Toolbar.Results>
-                    )}
-                </Toolbar>
-                {this.renderInputHuntFilterSetsModal()}
-            </Shortcuts>
-        );
-    }
+    return (
+      <Shortcuts name="HUNT_FILTER" handler={this.handleShortcuts} isolate targetNodeSelector="body">
+        <Toolbar>
+          <div>
+            <Filter>
+              <Filter.TypeSelector filterTypes={menuFilters} currentFilterType={currentFilterType} onFilterTypeSelected={this.selectFilterType} />
+              {this.renderInput()}
+            </Filter>
+            {this.props.sort_config && this.props.config && (
+              <HuntSort
+                config={this.props.sort_config}
+                itemsList={this.props.config}
+                itemsListUpdate={this.props.itemsListUpdate}
+                disabled={this.props.disable_sort ? this.props.disable_sort : false}
+              />
+            )}
+            {this.props.gotAlertTag && (process.env.REACT_APP_HAS_TAG === '1' || process.env.NODE_ENV === 'development') && (
+              <div className="form-group" style={{ paddingTop: '3px', height: '25px' }}>
+                <ul className="list-inline">
+                  <li>
+                    <Switch
+                      bsSize="small"
+                      onColor="info"
+                      value={this.props.alertTag.value.informational}
+                      onChange={() => this.props.setTag('informational', !this.props.alertTag.value.informational)}
+                    />
+                    Informational
+                  </li>
+                  <li>
+                    <Switch
+                      bsSize="small"
+                      onColor="warning"
+                      value={this.props.alertTag.value.relevant}
+                      onChange={() => this.props.setTag('relevant', !this.props.alertTag.value.relevant)}
+                    />
+                    Relevant
+                  </li>
+                  <li>
+                    <Switch
+                      bsSize="small"
+                      onColor="primary"
+                      value={this.props.alertTag.value.untagged}
+                      onChange={() => this.props.setTag('untagged', !this.props.alertTag.value.untagged)}
+                    />
+                    Untagged
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <Toolbar.RightContent>
+            {this.props.actionsButtons && this.props.actionsButtons()}
+            {this.props.displayToggle && (
+              <Toolbar.ViewSelector>
+                <Button
+                  title="List View"
+                  bsStyle="link"
+                  className={{ active: this.props.config.view_type === 'list' }}
+                  onClick={() => {
+                    this.setViewType('list');
+                  }}
+                >
+                  <Icon type="fa" name="th-list" />
+                </Button>
+                <Button
+                  title="Card View"
+                  bsStyle="link"
+                  className={{ active: this.props.config.view_type === 'card' }}
+                  onClick={() => {
+                    this.setViewType('card');
+                  }}
+                >
+                  <Icon type="fa" name="th" />
+                </Button>
+              </Toolbar.ViewSelector>
+            )}
+          </Toolbar.RightContent>
+
+          {activeFilters && activeFilters.length > 0 && (
+            <Toolbar.Results>
+              <Filter.ActiveLabel>Active Filters:</Filter.ActiveLabel>
+              <FilterList filters={activeFilters} filterType={this.props.filterType} />
+              <a
+                data-toggle="tooltip"
+                data-placement="top"
+                title="Clear All Filters"
+                id="clear"
+                role="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  this.props.clearFilters(this.props.filterType);
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                Clear
+              </a>
+              {this.props.page !== 'HISTORY' && (
+                <a
+                  data-toggle="tooltip"
+                  data-placement="top"
+                  title="Save Filter Set"
+                  id="saveall"
+                  role="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    this.loadHuntFilterSetsModal();
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  |&nbsp;&nbsp;Save
+                </a>
+              )}
+            </Toolbar.Results>
+          )}
+        </Toolbar>
+        {this.renderInputHuntFilterSetsModal()}
+      </Shortcuts>
+    );
+  }
 }
 
 HuntFilter.defaultProps = {
