@@ -28,6 +28,7 @@ import { Filter, FormControl, FormGroup, Toolbar, Button, Icon, Switch } from 'p
 import { Shortcuts } from 'react-shortcuts';
 import Select from 'react-select';
 import axios from 'axios';
+import { compose } from 'redux';
 import * as config from 'hunt_common/config/Api';
 import VerticalNavItems from 'hunt_common/components/VerticalNavItems';
 import { sections } from 'hunt_common/constants';
@@ -36,6 +37,7 @@ import FilterList from './components/FilterList/index';
 import FilterSetSave from './components/FilterSetSaveModal';
 import { makeSelectGlobalFilters, makeSelectAlertTag, makeSelectHistoryFilters, addFilter, clearFilters, setTag, enableOnly } from './containers/App/stores/global';
 import { loadFilterSets } from './components/FilterSets/store';
+import { withPermissions } from './containers/App/stores/withPermissions';
 
 // https://www.regextester.com/104038
 const IP_REGEXP = /((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$))/;
@@ -55,32 +57,30 @@ function isIpOrNetwork(ip) {
 }
 
 class HuntFilter extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            // eslint-disable-next-line react/no-unused-state
-            filterFields: this.props.filterFields,
-            currentFilterType: this.props.filterFields[0],
-            currentValue: '',
-            filterSets: { showModal: false, shared: false, description: '' },
-            filterSetName: '',
-            errors: undefined,
-            user: undefined
-        };
-        this.loadHuntFilterSetsModal = this.loadHuntFilterSetsModal.bind(this);
-        this.setSharedFilter = this.setSharedFilter.bind(this);
-        this.closeHuntFilterSetsModal = this.closeHuntFilterSetsModal.bind(this);
-        this.submitFilterSets = this.submitFilterSets.bind(this);
-        this.handleFieldChange = this.handleFieldChange.bind(this);
-        this.handleDescriptionChange = this.handleDescriptionChange.bind(this);
-        this.setViewType = this.setViewType.bind(this);
-    }
+  constructor(props) {
+    super(props);
+    this.state = {
+      // eslint-disable-next-line react/no-unused-state
+      filterFields: this.props.filterFields,
+      currentFilterType: this.props.filterFields[0],
+      currentValue: '',
+      filterSets: { showModal: false, shared: false, description: '' },
+      filterSetName: '',
+      errors: undefined,
+    };
+    this.loadHuntFilterSetsModal = this.loadHuntFilterSetsModal.bind(this);
+    this.setSharedFilter = this.setSharedFilter.bind(this);
+    this.closeHuntFilterSetsModal = this.closeHuntFilterSetsModal.bind(this);
+    this.submitFilterSets = this.submitFilterSets.bind(this);
+    this.handleFieldChange = this.handleFieldChange.bind(this);
+    this.handleDescriptionChange = this.handleDescriptionChange.bind(this);
+    this.setViewType = this.setViewType.bind(this);
+  }
 
-    componentDidMount() {
-        axios.get(`${config.API_URL}${config.USER_PATH}current_user/`)
-        .then((currentUser) => {
-            this.setState({ user: currentUser.data });
-        });
+  componentDidUpdate(prevProps) {
+    if (prevProps.filterFields !== this.props.filterFields && this.state.currentFilterType === undefined) {
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState({ currentFilterType: this.props.filterFields[0] });
     }
 
     componentDidUpdate(prevProps) {
@@ -582,7 +582,7 @@ class HuntFilter extends React.Component {
         let errors = error.response.data;
 
         if (error.response.status === 403) {
-          const noRights = !this.state.user.perms.includes('rules.events_edit') && this.state.filterSets.shared;
+          const noRights = this.props.user.isActive && !this.props.user.permissions.includes('rules.events_edit') && this.state.filterSets.shared;
           if (noRights) {
             errors = { permission: ['Insufficient permissions. "Shared" is not allowed.'] };
           }
@@ -602,7 +602,7 @@ class HuntFilter extends React.Component {
       }
     }
 
-    const noRights = this.state.user !== undefined && !this.state.user.perms.includes('rules.events_edit');
+    const noRights = this.props.user.isActive && !this.props.user.permissions.includes('rules.events_edit');
     return (
       <FilterSetSave
         title="Create new Filter Set"
@@ -794,9 +794,21 @@ HuntFilter.propTypes = {
             untagged: PropTypes.bool,
         })
     }),
-    loadFilterSets: PropTypes.func,
-    filters: PropTypes.array,
-    historyFilters: PropTypes.array,
+  }),
+  loadFilterSets: PropTypes.func,
+  filters: PropTypes.array,
+  historyFilters: PropTypes.array,
+  user: PropTypes.shape({
+    pk: PropTypes.any,
+    timezone: PropTypes.any,
+    username: PropTypes.any,
+    firstName: PropTypes.any,
+    lastName: PropTypes.any,
+    isActive: PropTypes.any,
+    email: PropTypes.any,
+    dateJoined: PropTypes.any,
+    permissions: PropTypes.any,
+  }),
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -813,4 +825,5 @@ const mapDispatchToProps = {
     loadFilterSets,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(HuntFilter);
+const withConnect = connect(mapStateToProps, mapDispatchToProps);
+export default compose(withConnect, withPermissions)(HuntFilter);

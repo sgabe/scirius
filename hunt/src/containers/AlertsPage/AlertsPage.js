@@ -59,41 +59,45 @@ export class AlertsPage extends React.Component {
         this.createAction = createAction.bind(this);
         this.closeAction = closeAction.bind(this);
     }
-
-    componentDidMount() {
-        this.fetchData();
-        if (this.state.rulesets.length === 0) {
-            axios.get(config.API_URL + config.RULESET_PATH).then((res) => {
-                this.setState({ rulesets: res.data.results });
-            });
+    const huntFilters = store.get('huntFilters');
+    axios.get(config.API_URL + config.HUNT_FILTER_PATH).then((res) => {
+      const fdata = [];
+      const keys = Object.keys(res.data);
+      const values = Object.values(res.data);
+      for (let i = 0; i < keys.length; i += 1) {
+        /* Only ES filter are allowed for Alert page */
+        if (['filter'].indexOf(values[i].queryType) !== -1) {
+          if (values[i].filterType !== 'hunt') {
+            fdata.push(values[i]);
+          }
         }
-        const huntFilters = store.get('huntFilters');
-        axios.get(config.API_URL + config.HUNT_FILTER_PATH).then(
-            (res) => {
-                const fdata = [];
-                const keys = Object.keys(res.data);
-                const values = Object.values(res.data);
-                for (let i = 0; i < keys.length; i += 1) {
-                    /* Only ES filter are allowed for Alert page */
-                    if (['filter'].indexOf(values[i].queryType) !== -1) {
-                        if (values[i].filterType !== 'hunt') {
-                            fdata.push(values[i]);
-                        }
-                    }
-                }
-                const currentCheckSum = md5(JSON.stringify(fdata));
-                if ((typeof huntFilters === 'undefined' || typeof huntFilters.alertslist === 'undefined') || huntFilters.alertslist.checkSum !== currentCheckSum) {
-                    store.set('huntFilters', {
-                        ...huntFilters,
-                        alertslist: {
-                            checkSum: currentCheckSum,
-                            data: fdata
-                        }
-                    });
-                    this.setState({ rulesFilters: fdata });
-                }
-            }
-        );
+      }
+      const currentCheckSum = md5(JSON.stringify(fdata));
+      if (
+        typeof huntFilters === 'undefined' ||
+        typeof huntFilters.alertslist === 'undefined' ||
+        huntFilters.alertslist.checkSum !== currentCheckSum
+      ) {
+        store.set('huntFilters', {
+          ...huntFilters,
+          alertslist: {
+            checkSum: currentCheckSum,
+            data: fdata,
+          },
+        });
+        this.setState({ rulesFilters: fdata });
+      }
+    });
+    if (this.props.user.permissions.includes('rules.ruleset_policy_edit')) {
+      this.loadActions();
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    const filtersChanged = JSON.stringify(prevProps.filtersWithAlert) !== JSON.stringify(this.props.filtersWithAlert);
+    if (JSON.stringify(prevProps.filterParams) !== JSON.stringify(this.props.filterParams) || filtersChanged) {
+      this.fetchData();
+      if (filtersChanged && this.props.user.permissions.includes('rules.ruleset_policy_edit')) {
         this.loadActions();
     }
 
@@ -180,12 +184,23 @@ export class AlertsPage extends React.Component {
 }
 
 AlertsPage.propTypes = {
-    rules_list: PropTypes.any,
-    filters: PropTypes.any,
-    filtersWithAlert: PropTypes.any,
-    systemSettings: PropTypes.any,
-    updateListState: PropTypes.any,
-    page: PropTypes.any,
-    addFilter: PropTypes.func,
-    filterParams: PropTypes.object.isRequired
+  rules_list: PropTypes.any,
+  filters: PropTypes.any,
+  filtersWithAlert: PropTypes.any,
+  systemSettings: PropTypes.any,
+  updateListState: PropTypes.any,
+  page: PropTypes.any,
+  addFilter: PropTypes.func,
+  filterParams: PropTypes.object.isRequired,
+  user: PropTypes.shape({
+    pk: PropTypes.any,
+    timezone: PropTypes.any,
+    username: PropTypes.any,
+    firstName: PropTypes.any,
+    lastName: PropTypes.any,
+    isActive: PropTypes.any,
+    email: PropTypes.any,
+    dateJoined: PropTypes.any,
+    permissions: PropTypes.any,
+  }),
 };

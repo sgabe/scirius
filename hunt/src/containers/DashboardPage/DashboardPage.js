@@ -183,22 +183,8 @@ export class HuntDashboard extends React.Component {
             this.adjustPanelsHeight();
         }
 
-        if (typeof this.props.systemSettings !== 'undefined') {
-            this.qFilter = this.generateQFilter();
-            this.storedMicroLayout = store.get('dashboardMicroLayout');
-            this.storedMacroLayout = store.get('dashboardMacroLayout');
-            // Initial booting of panels were moved here instead of componentDidMount, because of the undefined systemSettings in componentDidMount
-            if (this.panelsBooted === 'no') {
-                this.bootPanels();
-            } else if (!this.filters.length) {
-                this.filters = JSON.stringify(this.props.filters);
-            } else if (this.panelsBooted !== 'booting' && (this.filters !== JSON.stringify(this.props.filters) || JSON.stringify(prevProps.filtersWithAlert) !== JSON.stringify(this.props.filtersWithAlert) || JSON.stringify(prevProps.filterParams) !== JSON.stringify(this.props.filterParams))) {
-                this.filters = JSON.stringify(this.props.filters);
-                this.resetPanelHeights();
-                this.bootPanels();
-                this.loadActions(this.props.filters);
-            }
-        }
+    if (this.props.filters.length && this.props.user.permissions.includes('rules.ruleset_policy_edit')) {
+      this.loadActions(this.props.filters);
     }
 
     getBlockFromLS = (panel, block, breakPoint) => {
@@ -225,18 +211,42 @@ export class HuntDashboard extends React.Component {
         return qfilter;
     }
 
-    /* default panel properties should be extended with the stored equivalent into the local storage */
-    extendDefaultPanels = () => {
-        const storedMacroLayout = store.get('dashboardMacroLayout');
-        return Object.assign({}, ...Object.keys(dashboard.sections).map((k) => {
-            const storedPanel = find(storedMacroLayout, { i: k });
-            if (typeof storedPanel === 'undefined') {
-                return {
-                    [k]: {
-                        ...dashboard.sections[k]
-                    }
-                }
-            }
+    if (typeof this.props.systemSettings !== 'undefined') {
+      this.qFilter = this.generateQFilter();
+      this.storedMicroLayout = store.get('dashboardMicroLayout');
+      this.storedMacroLayout = store.get('dashboardMacroLayout');
+      // Initial booting of panels were moved here instead of componentDidMount, because of the undefined systemSettings in componentDidMount
+      if (this.panelsBooted === 'no') {
+        this.bootPanels();
+      } else if (!this.filters.length) {
+        this.filters = JSON.stringify(this.props.filters);
+      } else if (
+        this.panelsBooted !== 'booting' &&
+        (this.filters !== JSON.stringify(this.props.filters) ||
+          JSON.stringify(prevProps.filtersWithAlert) !== JSON.stringify(this.props.filtersWithAlert) ||
+          JSON.stringify(prevProps.filterParams) !== JSON.stringify(this.props.filterParams))
+      ) {
+        this.filters = JSON.stringify(this.props.filters);
+        this.resetPanelHeights();
+        this.bootPanels();
+        if (this.props.user.permissions.includes('rules.ruleset_policy_edit')) {
+          this.loadActions(this.props.filters);
+        }
+      }
+    }
+  }
+
+  getBlockFromLS = (panel, block, breakPoint) => {
+    let result = {};
+    if (
+      typeof this.storedMicroLayout !== 'undefined' &&
+      typeof this.storedMicroLayout[panel] !== 'undefined' &&
+      typeof this.storedMicroLayout[panel][breakPoint] !== 'undefined'
+    ) {
+      result = find(this.storedMicroLayout[panel][breakPoint], { i: block });
+    }
+    return result;
+  };
 
             return {
                 [k]: {
@@ -814,13 +824,24 @@ export class HuntDashboard extends React.Component {
 }
 
 HuntDashboard.propTypes = {
-    systemSettings: PropTypes.any,
-    filters: PropTypes.any,
-    children: PropTypes.any,
-    item: PropTypes.any,
-    rules_list: PropTypes.any,
-    updateListState: PropTypes.any,
-    page: PropTypes.any,
-    filtersWithAlert: PropTypes.array,
-    filterParams: PropTypes.object.isRequired
-}
+  systemSettings: PropTypes.any,
+  filters: PropTypes.any,
+  children: PropTypes.any,
+  item: PropTypes.any,
+  rules_list: PropTypes.any,
+  updateListState: PropTypes.any,
+  page: PropTypes.any,
+  filtersWithAlert: PropTypes.array,
+  filterParams: PropTypes.object.isRequired,
+  user: PropTypes.shape({
+    pk: PropTypes.any,
+    timezone: PropTypes.any,
+    username: PropTypes.any,
+    firstName: PropTypes.any,
+    lastName: PropTypes.any,
+    isActive: PropTypes.any,
+    email: PropTypes.any,
+    dateJoined: PropTypes.any,
+    permissions: PropTypes.any,
+  }),
+};

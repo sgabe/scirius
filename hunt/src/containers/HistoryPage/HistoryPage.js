@@ -29,7 +29,7 @@ import HuntFilter from '../../HuntFilter';
 import HistoryItem from '../../components/HistoryItem';
 import HuntPaginationRow from '../../HuntPaginationRow';
 import ErrorHandler from '../../components/Error';
-import { buildFilter, buildListUrlParams, loadActions } from '../../helpers/common';
+import { buildFilter, buildListUrlParams } from '../../helpers/common';
 
 const HistorySortFields = [
     {
@@ -48,38 +48,48 @@ const HistorySortFields = [
 
 
 export default class HistoryPage extends React.Component {
-    constructor(props) {
-        super(props);
-        const HistoryFilterFields = [
-            {
-                id: 'username',
-                title: 'User',
-                placeholder: 'Filter by User',
-                filterType: 'text',
-                queryType: 'all'
-            }, {
-                id: 'comment',
-                title: 'Comment',
-                placeholder: 'Filter by Comment',
-                filterType: 'text',
-                queryType: 'all'
-            }, {
-                id: 'action_type',
-                title: 'Action Type',
-                placeholder: 'Filter by Action Type',
-                filterType: 'select',
-                filterValues: [],
-                queryType: 'all'
-            }
-        ];
-        this.state = { data: [], count: 0, filterFields: HistoryFilterFields };
-        this.fetchData = this.fetchData.bind(this);
-        this.buildFilter = buildFilter;
-        this.buildListUrlParams = buildListUrlParams.bind(this);
-        this.loadActions = loadActions.bind(this);
-        this.updateHistoryListState = this.updateHistoryListState.bind(this);
+  constructor(props) {
+    super(props);
+    const HistoryFilterFields = [
+      {
+        id: 'username',
+        title: 'User',
+        placeholder: 'Filter by User',
+        filterType: 'text',
+        queryType: 'all',
+      },
+      {
+        id: 'comment',
+        title: 'Comment',
+        placeholder: 'Filter by Comment',
+        filterType: 'text',
+        queryType: 'all',
+      },
+      {
+        id: 'action_type',
+        title: 'Action Type',
+        placeholder: 'Filter by Action Type',
+        filterType: 'select',
+        filterValues: [],
+        queryType: 'all',
+      },
+    ];
+    this.state = { data: [], count: 0, filterFields: HistoryFilterFields };
+    this.fetchData = this.fetchData.bind(this);
+    this.buildFilter = buildFilter;
+    this.buildListUrlParams = buildListUrlParams.bind(this);
+    this.updateHistoryListState = this.updateHistoryListState.bind(this);
 
-        this.props.getActionTypes();
+    this.props.getActionTypes();
+  }
+
+  componentDidMount() {
+    this.fetchData();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (JSON.stringify(prevProps.filters) !== JSON.stringify(this.props.filters)) {
+      this.fetchData();
     }
 
     componentDidMount() {
@@ -164,11 +174,22 @@ export default class HistoryPage extends React.Component {
 }
 
 HistoryPage.propTypes = {
-    rules_list: PropTypes.any,
-    filters: PropTypes.any,
-    switchPage: PropTypes.any,
-    updateListState: PropTypes.any,
-    getActionTypes: PropTypes.func,
-    actionTypesList: PropTypes.array,
-    page: PropTypes.any,
+  rules_list: PropTypes.any,
+  filters: PropTypes.any,
+  switchPage: PropTypes.any,
+  updateListState: PropTypes.any,
+  getActionTypes: PropTypes.func,
+  actionTypesList: PropTypes.array,
+  page: PropTypes.any,
+  user: PropTypes.shape({
+    pk: PropTypes.any,
+    timezone: PropTypes.any,
+    username: PropTypes.any,
+    firstName: PropTypes.any,
+    lastName: PropTypes.any,
+    isActive: PropTypes.any,
+    email: PropTypes.any,
+    dateJoined: PropTypes.any,
+    permissions: PropTypes.any,
+  }),
 };

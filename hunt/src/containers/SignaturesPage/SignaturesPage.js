@@ -283,29 +283,32 @@ export class SignaturesPage extends React.Component {
             }
             this.setState({ net_error: e, loading: false });
         });
+        this.setState({ rulesFilters: fdata });
+      }
+    });
+    if (this.props.user.permissions.includes('rules.ruleset_policy_edit')) {
+      this.loadActions();
     }
+  }
 
-    processRulesData(RuleRes, SrcRes) {
-        const sourcesArray = SrcRes.data.results;
-        const sources = {};
-        this.setState({ net_error: undefined });
-        for (let i = 0; i < sourcesArray.length; i += 1) {
-            const src = sourcesArray[i];
-            sources[src.pk] = src;
-        }
+  componentDidUpdate(prevProps) {
+    const filtersChanged = JSON.stringify(prevProps.filtersWithAlert) !== JSON.stringify(this.props.filtersWithAlert);
+    if (JSON.stringify(prevProps.filterParams) !== JSON.stringify(this.props.filterParams) || filtersChanged) {
+      const sid = this.findSID(this.props.filtersWithAlert);
+      if (sid !== undefined) {
+        // eslint-disable-next-line react/no-did-update-set-state
         this.setState({
             count: RuleRes.data.count,
             rules: RuleRes.data.results,
             sources,
             loading: false,
         });
-        if (RuleRes.data.results.length > 0) {
-            if (!RuleRes.data.results[0].timeline_data) {
-                this.fetchHitsStats(RuleRes.data.results);
-            } else {
-                this.buildHitsStats(RuleRes.data.results);
-            }
-        }
+      } else {
+        this.fetchData();
+      }
+      if (filtersChanged && this.props.user.permissions.includes('rules.ruleset_policy_edit')) {
+        this.loadActions(this.props.filtersWithAlert);
+      }
     }
 
     fetchHitsStats(rules) {
@@ -389,11 +392,22 @@ export class SignaturesPage extends React.Component {
 }
 
 SignaturesPage.propTypes = {
-    systemSettings: PropTypes.any,
-    filters: PropTypes.any,
-    filtersWithAlert: PropTypes.any,
-    updateListState: PropTypes.any, // should be removed when redux is implemented
-    rules_list: PropTypes.any, // should be removed when redux is implemented
-    page: PropTypes.any,
-    filterParams: PropTypes.object.isRequired,
-}
+  systemSettings: PropTypes.any,
+  filters: PropTypes.any,
+  filtersWithAlert: PropTypes.any,
+  updateListState: PropTypes.any, // should be removed when redux is implemented
+  rules_list: PropTypes.any, // should be removed when redux is implemented
+  page: PropTypes.any,
+  filterParams: PropTypes.object.isRequired,
+  user: PropTypes.shape({
+    pk: PropTypes.any,
+    timezone: PropTypes.any,
+    username: PropTypes.any,
+    firstName: PropTypes.any,
+    lastName: PropTypes.any,
+    isActive: PropTypes.any,
+    email: PropTypes.any,
+    dateJoined: PropTypes.any,
+    permissions: PropTypes.any,
+  }),
+};

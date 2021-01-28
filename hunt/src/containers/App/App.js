@@ -210,6 +210,8 @@ export default class App extends Component {
         this.setState({ rules_list: rulesListState }, fetchDataCallback);
         storage.setItem('rules_list', JSON.stringify(rulesListState));
     }
+    this.props.getUserDetails();
+  }
 
     updateAlertListState(alertsListState, fetchDataCallback) {
         this.setState({ alerts_list: alertsListState }, fetchDataCallback);
@@ -265,86 +267,157 @@ export default class App extends Component {
             }
         });
     }
+  }
 
-    adjustDashboardWidth = () => {
-        setTimeout(() => {
-            EmitEvent('resize');
-            EmitEvent('resize');
-        }, 150);
-    };
+  updateRuleListState(rulesListState, fetchDataCallback) {
+    this.setState({ rules_list: rulesListState }, fetchDataCallback);
+    storage.setItem('rules_list', JSON.stringify(rulesListState));
+  }
 
-    render() {
-        return (
-            <div className="layout-pf layout-pf-fixed faux-layout">
-                <VerticalNav sessionKey="storybookItemsAsJsx" showBadges onCollapse={this.adjustDashboardWidth} onExpand={this.adjustDashboardWidth}>
-                    <VerticalNav.Masthead>
-                        <VerticalNav.Brand>
-                            <img src={sciriusLogo} height={32} width={116} style={{ marginTop: 7, marginBottom: -7, marginLeft: 20, display: 'block', float: 'left' }} alt="logo" />
-                            <div style={{ fontSize: '20px', float: 'left', paddingLeft: '40px', paddingTop: '11px', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'" }}>
-                                {process.env.REACT_APP_HAS_TAG === '1' ? <React.Fragment>Scirius Enriched Hunting</React.Fragment> : <React.Fragment>Suricata Threat Hunting</React.Fragment>}
-                            </div>
-                        </VerticalNav.Brand>
+  updateAlertListState(alertsListState, fetchDataCallback) {
+    this.setState({ alerts_list: alertsListState }, fetchDataCallback);
+    storage.setItem('alerts_list', JSON.stringify(alertsListState));
+  }
 
-                        <VerticalNav.IconBar>
-                            <ErrorHandler>
-                                <UserNavInfo
-                                    systemSettings={this.state.systemSettings}
-                                    ChangeRefreshInterval={this.changeRefreshInterval}
-                                    interval={this.state.interval}
-                                    switchPage={this.switchPage}
-                                    needReload={this.needReload}
-                                    duration={this.props.duration}
-                                />
-                            </ErrorHandler>
-                        </VerticalNav.IconBar>
+  updateFilterListState(filtersListState, fetchDataCallback) {
+    this.setState({ filters_list: filtersListState }, fetchDataCallback);
+    storage.setItem('filters_list', JSON.stringify(filtersListState));
+  }
 
-                    </VerticalNav.Masthead>
-                    {VerticalNavItems.map((v) => <VerticalNavItem
-                        title={v.title}
-                        iconClass={v.iconClass}
-                        key={Math.random()}
-                        onClick={() => this.switchPage(v.def, undefined)}
-                        active={this.state.display.page === v.def}
-                    />)}
-                </VerticalNav>
-                <div className="container-fluid container-pf-nav-pf-vertical nav-pf-persistent-secondary">
-                    <div className="row row-cards-pf">
-                        <div className="col-xs-12 col-sm-12 col-md-12 no-col-gutter-right" id="app-content">
-                            {/* {displayedPage} */}
-                            <ErrorHandler>
-                                <DisplayPage
-                                    page={this.state.display.page}
-                                    systemSettings={this.state.systemSettings}
-                                    rules_list={this.state.rules_list}
-                                    switchPage={this.switchPage}
-                                    updateRuleListState={this.updateRuleListState}
-                                    item={this.state.display.item}
-                                    needReload={this.needReload}
-                                    history_list={this.state.history}
-                                    historyFilters={this.state.historyFilters}
-                                    updateHistoryListState={this.updateHistoryListState}
-                                    updateHistoryFilterState={this.updateHistoryFilterState}
-                                    alerts_list={this.state.alerts_list}
-                                    updateAlertListState={this.updateAlertListState}
-                                    filters_list={this.state.filters_list}
-                                    updateFilterListState={this.updateFilterListState}
-                                    updateFiltersFilterState={this.updateFiltersFilterState}
-                                    updateHostListState={this.updateHostListState}
-                                    hosts_list={this.state.hosts_list}
-                                />
-                            </ErrorHandler>
-                        </div>
-                    </div>
-                </div>
+  updateHistoryFilterState(filters, fetchDataCallback) {
+    this.setState({ historyFilters: filters }, fetchDataCallback);
+    storage.setItem('history_filters', JSON.stringify(filters));
+  }
 
-                <Modal show={!this.state.hasConnectivity}>
-                    <Modal.Header>
-                        <Modal.Title>Scirius is down</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <div className="modal-body text-danger">{this.state.connectionProblem}</div>
-                    </Modal.Body>
-                </Modal>
+  updateHistoryListState(historyState, fetchDataCallback) {
+    this.setState({ history: historyState }, fetchDataCallback);
+    storage.setItem('history', JSON.stringify(historyState));
+  }
+
+  getSciriusStatus = () => {
+    axios({
+      method: 'get',
+      url: '/rules/info',
+      timeout: 15000,
+    })
+      .then((data) => {
+        if (!data) {
+          if (this.state.hasConnectivity) {
+            this.setState({
+              hasConnectivity: false,
+            });
+          }
+        } else {
+          if (data.data.status === 'green' && !this.state.hasConnectivity) {
+            this.setState({
+              hasConnectivity: true,
+            });
+          }
+          if (data.data.status !== 'green' && this.state.hasConnectivity) {
+            this.setState({
+              hasConnectivity: false,
+              connectionProblem: 'Scirius does not feel comfortable',
+            });
+          }
+        }
+      })
+      .catch(() => {
+        if (this.state.hasConnectivity) {
+          this.setState({
+            hasConnectivity: false,
+            connectionProblem: 'No connection with scirius. This pop-up will disappear if connection is restored.',
+          });
+        }
+      });
+  };
+
+  adjustDashboardWidth = () => {
+    setTimeout(() => {
+      EmitEvent('resize');
+      EmitEvent('resize');
+    }, 150);
+  };
+
+  render() {
+    return (
+      <div className="layout-pf layout-pf-fixed faux-layout">
+        <VerticalNav sessionKey="storybookItemsAsJsx" showBadges onCollapse={this.adjustDashboardWidth} onExpand={this.adjustDashboardWidth}>
+          <VerticalNav.Masthead>
+            <VerticalNav.Brand>
+              <img
+                src={sciriusLogo}
+                height={32}
+                width={116}
+                style={{ marginTop: 7, marginBottom: -7, marginLeft: 20, display: 'block', float: 'left' }}
+                alt="logo"
+              />
+              <div
+                style={{
+                  fontSize: '20px',
+                  float: 'left',
+                  paddingLeft: '40px',
+                  paddingTop: '11px',
+                  fontFamily:
+                    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+                }}
+              >
+                {process.env.REACT_APP_HAS_TAG === '1' ? (
+                  <React.Fragment>Scirius Enriched Hunting</React.Fragment>
+                ) : (
+                  <React.Fragment>Suricata Threat Hunting</React.Fragment>
+                )}
+              </div>
+            </VerticalNav.Brand>
+
+            <VerticalNav.IconBar>
+              <ErrorHandler>
+                <UserNavInfo
+                  systemSettings={this.state.systemSettings}
+                  ChangeRefreshInterval={this.changeRefreshInterval}
+                  interval={this.state.interval}
+                  switchPage={this.switchPage}
+                  needReload={this.needReload}
+                  duration={this.props.duration}
+                />
+              </ErrorHandler>
+            </VerticalNav.IconBar>
+          </VerticalNav.Masthead>
+          {VerticalNavItems.filter((v) => !v.permission || this.props.user.permissions.includes(v.permission)).map((v) => (
+            <VerticalNavItem
+              title={v.title}
+              iconClass={v.iconClass}
+              key={Math.random()}
+              onClick={() => this.switchPage(v.def, undefined)}
+              active={this.state.display.page === v.def}
+            />
+          ))}
+        </VerticalNav>
+        <div className="container-fluid container-pf-nav-pf-vertical nav-pf-persistent-secondary">
+          <div className="row row-cards-pf">
+            <div className="col-xs-12 col-sm-12 col-md-12 no-col-gutter-right" id="app-content">
+              {/* {displayedPage} */}
+              <ErrorHandler>
+                <DisplayPage
+                  page={this.state.display.page}
+                  systemSettings={this.state.systemSettings}
+                  rules_list={this.state.rules_list}
+                  switchPage={this.switchPage}
+                  updateRuleListState={this.updateRuleListState}
+                  item={this.state.display.item}
+                  needReload={this.needReload}
+                  history_list={this.state.history}
+                  historyFilters={this.state.historyFilters}
+                  updateHistoryListState={this.updateHistoryListState}
+                  updateHistoryFilterState={this.updateHistoryFilterState}
+                  alerts_list={this.state.alerts_list}
+                  updateAlertListState={this.updateAlertListState}
+                  filters_list={this.state.filters_list}
+                  updateFilterListState={this.updateFilterListState}
+                  updateFiltersFilterState={this.updateFiltersFilterState}
+                  updateHostListState={this.updateHostListState}
+                  hosts_list={this.state.hosts_list}
+                />
+              </ErrorHandler>
             </div>
         );
     }
@@ -355,6 +428,18 @@ App.childContextTypes = {
 };
 
 App.propTypes = {
-    reload: PropTypes.func.isRequired,
-    duration: PropTypes.any,
-}
+  reload: PropTypes.func.isRequired,
+  duration: PropTypes.any,
+  user: PropTypes.shape({
+    pk: PropTypes.any,
+    timezone: PropTypes.any,
+    username: PropTypes.any,
+    firstName: PropTypes.any,
+    lastName: PropTypes.any,
+    isActive: PropTypes.any,
+    email: PropTypes.any,
+    dateJoined: PropTypes.any,
+    permissions: PropTypes.any,
+  }),
+  getUserDetails: PropTypes.func.isRequired,
+};

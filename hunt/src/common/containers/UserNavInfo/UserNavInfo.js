@@ -4,11 +4,13 @@ import axios from 'axios';
 import { PAGE_STATE } from 'hunt_common/constants';
 import { Dropdown, Icon, MenuItem, ApplicationLauncher, AboutModal, Modal, Form, Button } from 'patternfly-react';
 import * as config from 'hunt_common/config/Api';
+import { compose } from 'redux';
 import FilterSets from '../../../components/FilterSets';
 import OutsideAlerter from '../../../components/OutsideAlerter';
 import sciriusLogo from '../../../img/stamus_logo.png';
 import ErrorHandler from '../../../components/Error';
 import TimeSpanItem from '../../../components/TimeSpanItem';
+import { withPermissions } from '../../../containers/App/stores/withPermissions';
 
 const REFRESH_INTERVAL = {
     '': 'Off',
@@ -22,28 +24,54 @@ const REFRESH_INTERVAL = {
     3600: '1h'
 };
 
-export default class UserNavInfo extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            showModal: false,
-            showUpdateModal: false,
-            showNotifications: false,
-            user: undefined,
-            isShown: false,
-            context: undefined
-        };
-        this.AboutClick = this.AboutClick.bind(this);
-        this.closeModal = this.closeModal.bind(this);
-        this.toggleNotifications = this.toggleNotifications.bind(this);
-        this.toggleiSshown = this.toggleiSshown.bind(this);
-        this.isShownFalse = this.isShownFalse.bind(this);
-        this.showUpdateThreatDetection = this.showUpdateThreatDetection.bind(this);
-        this.closeShowUpdate = this.closeShowUpdate.bind(this);
-        this.submitUpdate = this.submitUpdate.bind(this);
+class UserNavInfo extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      showModal: false,
+      showUpdateModal: false,
+      showNotifications: false,
+      isShown: false,
+      context: undefined,
+    };
+    this.AboutClick = this.AboutClick.bind(this);
+    this.closeModal = this.closeModal.bind(this);
+    this.toggleNotifications = this.toggleNotifications.bind(this);
+    this.toggleiSshown = this.toggleiSshown.bind(this);
+    this.isShownFalse = this.isShownFalse.bind(this);
+    this.showUpdateThreatDetection = this.showUpdateThreatDetection.bind(this);
+    this.closeShowUpdate = this.closeShowUpdate.bind(this);
+    this.submitUpdate = this.submitUpdate.bind(this);
 
-        this.toggleHuntFilterSetsModal = this.toggleHuntFilterSetsModal.bind(this);
-        this.closeHuntFilterSetsModal = this.closeHuntFilterSetsModal.bind(this);
+    this.toggleHuntFilterSetsModal = this.toggleHuntFilterSetsModal.bind(this);
+    this.closeHuntFilterSetsModal = this.closeHuntFilterSetsModal.bind(this);
+  }
+
+  componentDidMount() {
+    axios.get(`${config.API_URL}${config.SCIRIUS_CONTEXT}`).then((context) => {
+      this.setState({ context: context.data });
+    });
+  }
+
+  AboutClick() {
+    this.setState({ showModal: true });
+  }
+
+  closeModal() {
+    this.setState({ showModal: false });
+  }
+
+  toggleNotifications() {
+    this.setState({ showNotifications: !this.state.showNotifications });
+  }
+
+  toggleiSshown() {
+    this.setState({ isShown: !this.state.isShown });
+  }
+
+  isShownFalse() {
+    if (this.state.isShown) {
+      this.setState({ isShown: false });
     }
 
     componentDidMount() {
@@ -65,70 +93,164 @@ export default class UserNavInfo extends Component {
     closeModal() {
         this.setState({ showModal: false });
     }
+  }
 
-    toggleNotifications() {
-        this.setState({ showNotifications: !this.state.showNotifications });
-    }
+  toggleHuntFilterSetsModal() {
+    this.setState((prevState) => ({
+      showNotifications: !prevState.showNotifications,
+    }));
+  }
 
-    toggleiSshown() {
-        this.setState({ isShown: !this.state.isShown });
-    }
+  render() {
+    const user = this.props.user.username.length === 0 ? ' ...' : this.props.user.username;
+    const { title, version } = this.state.context !== undefined ? this.state.context : { title: '', version: '' };
 
-    isShownFalse() {
-        if (this.state.isShown) {
-            this.setState({ isShown: false });
-        }
-    }
+    return (
+      <React.Fragment>
+        <li>
+          <div
+            tabIndex={0}
+            data-toggle="tooltip"
+            title="Update threat detection"
+            onClick={this.showUpdateThreatDetection}
+            role="button"
+            className="nav-item-iconic"
+          >
+            <Icon type="fa" name="upload" />
+          </div>
+        </li>
 
-    showUpdateThreatDetection() {
-        this.setState({ showUpdateModal: !this.state.showUpdateModal });
-    }
+        <li>
+          <div
+            tabIndex={0}
+            data-toggle="tooltip"
+            title="History"
+            onClick={() => this.props.switchPage(PAGE_STATE.history, undefined)}
+            role="button"
+            className="nav-item-iconic"
+            style={{ paddingTop: '23px' }}
+          >
+            <i className="glyphicon glyphicon-list" aria-hidden="true" />
+            <span> History</span>
+          </div>
+        </li>
 
-    closeShowUpdate() {
-        this.setState({ showUpdateModal: false });
-    }
+        <li>
+          <div
+            tabIndex={0}
+            data-toggle="tooltip"
+            title="Filter Sets"
+            onClick={(e) => {
+              e.preventDefault();
+              this.toggleHuntFilterSetsModal();
+            }}
+            role="button"
+            className="nav-item-iconic"
+            style={{ paddingTop: '23px', cursor: 'pointer' }}
+          >
+            <i className="glyphicon glyphicon-filter" aria-hidden="true" />
+            <span> Filter Sets</span>
+          </div>
+        </li>
 
-    submitUpdate() {
-        let url = config.UPDATE_PUSH_RULESET_PATH;
-        if (process.env.REACT_APP_HAS_TAG === '1') {
-            url = 'rest/appliances/appliance/update_push_all/';
-        }
-        axios.post(config.API_URL + url, {});
-        this.setState({ showUpdateModal: false });
-    }
+        {parseInt(this.props.duration, 10) > 0 && (
+          <Dropdown componentClass="li" id="timeinterval">
+            <Dropdown.Toggle useAnchor className="nav-item-iconic">
+              <Icon type="fa" name="clock-o" /> Refresh Interval {REFRESH_INTERVAL[this.props.interval]}
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              {Object.keys(REFRESH_INTERVAL).map(
+                (interval) => (
+                  <MenuItem key={interval} onClick={() => this.props.ChangeRefreshInterval(interval)}>
+                    {REFRESH_INTERVAL[interval]}
+                  </MenuItem>
+                ),
+                this,
+              )}
+            </Dropdown.Menu>
+          </Dropdown>
+        )}
 
-    closeHuntFilterSetsModal() {
-        if (this.state.showNotifications) {
-            this.setState({ showNotifications: false });
-        }
-    }
+        <li>
+          <a tabIndex={0} id="refreshtime" role="button" className="nav-item-iconic" onClick={this.props.needReload}>
+            <Icon type="fa" name="refresh" />
+          </a>
+        </li>
 
-    toggleHuntFilterSetsModal() {
-        this.setState((prevState) => ({
-            showNotifications: !prevState.showNotifications
-        }));
-    }
+        {this.props.children}
+        <TimeSpanItem />
+        {this.state.showNotifications && (
+          <ErrorHandler>
+            <FilterSets switchPage={this.props.switchPage} close={this.closeHuntFilterSetsModal} reload={this.props.needReload} />
+          </ErrorHandler>
+        )}
 
-    render() {
-        let user = ' ...';
-        if (this.state.user !== undefined) {
-            user = this.state.user.username;
-        }
-        const { title, version } = (this.state.context !== undefined) ? this.state.context : { title: '', version: '' };
+        <ErrorHandler>
+          <OutsideAlerter hide={this.isShownFalse}>
+            <ApplicationLauncher grid open={this.state.isShown} toggleLauncher={this.toggleiSshown}>
+              <li className="applauncher-pf-item" role="presentation">
+                <a
+                  className="applauncher-pf-link"
+                  href="/rules/hunt"
+                  role="menuitem"
+                  data-toggle="tooltip"
+                  title="Threat Hunting"
+                  style={{ cursor: 'pointer' }}
+                >
+                  <img src="/static/rules/Stamus_SEH_icon.png" height="40" width="40" alt="Hunt" />
+                  <span className="applauncher-pf-link-title">Hunting</span>
+                </a>
+              </li>
 
-        return (
-            <React.Fragment>
-                <li>
-                    <div tabIndex={0} data-toggle="tooltip" title="Update threat detection" onClick={this.showUpdateThreatDetection} role="button" className="nav-item-iconic">
-                        <Icon type="fa" name="upload" />
-                    </div>
-                </li>
+              <li className="applauncher-pf-item" role="presentation">
+                <a
+                  className="applauncher-pf-link"
+                  href="/rules"
+                  role="menuitem"
+                  data-toggle="tooltip"
+                  title="Appliances Management"
+                  style={{ cursor: 'pointer' }}
+                >
+                  <img src="/static/rules/Stamus_SPM_icon.png" height="40" width="40" alt="Admin" />
+                  <span className="applauncher-pf-link-title">Management</span>
+                </a>
+              </li>
 
-                <li>
-                    <div tabIndex={0} data-toggle="tooltip" title="History" onClick={() => this.props.switchPage(PAGE_STATE.history, undefined)} role="button" className="nav-item-iconic" style={{ paddingTop: '23px' }}>
-                        <i className="glyphicon glyphicon-list" aria-hidden="true" />
-                        <span> History</span>
-                    </div>
+              {process.env.REACT_APP_HAS_TAG === '1' &&
+                this.props.systemSettings &&
+                this.props.systemSettings.license &&
+                this.props.systemSettings.license.nta && (
+                  <li className="applauncher-pf-item" role="presentation">
+                    <a
+                      className="applauncher-pf-link"
+                      href="/appliances/str"
+                      role="menuitem"
+                      data-toggle="tooltip"
+                      title="Threat Radar"
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <img src="/static/rules/Stamus_STR_icon.png" height="40" width="40" alt="STR" />
+                      <span className="applauncher-pf-link-title">Threat Radar</span>
+                    </a>
+                  </li>
+                )}
+
+              {this.props.systemSettings && this.props.systemSettings.kibana && (
+                <li className="applauncher-pf-item" role="presentation">
+                  <a
+                    className="applauncher-pf-link"
+                    href={this.props.systemSettings.kibana_url}
+                    role="menuitem"
+                    data-toggle="tooltip"
+                    title="Kibana dashboards for ES"
+                    style={{ color: 'inherit' }}
+                    target="_blank"
+                  >
+                    <i style={{ fontSize: '2.5em', paddingTop: '5px' }} className="glyphicon glyphicon-stats" aria-hidden="true"></i>
+                    <span className="applauncher-pf-link-title" style={{ paddingTop: '5px' }}>
+                      {'Dashboards'}
+                    </span>
+                  </a>
                 </li>
 
                 <li>
@@ -297,11 +419,24 @@ export default class UserNavInfo extends Component {
     }
 }
 UserNavInfo.propTypes = {
-    children: PropTypes.any,
-    interval: PropTypes.any,
-    systemSettings: PropTypes.any,
-    needReload: PropTypes.any,
-    ChangeRefreshInterval: PropTypes.any,
-    switchPage: PropTypes.any,
-    duration: PropTypes.any,
+  children: PropTypes.any,
+  interval: PropTypes.any,
+  systemSettings: PropTypes.any,
+  needReload: PropTypes.any,
+  ChangeRefreshInterval: PropTypes.any,
+  switchPage: PropTypes.any,
+  duration: PropTypes.any,
+  user: PropTypes.shape({
+    pk: PropTypes.any,
+    timezone: PropTypes.any,
+    username: PropTypes.any,
+    firstName: PropTypes.any,
+    lastName: PropTypes.any,
+    isActive: PropTypes.any,
+    email: PropTypes.any,
+    dateJoined: PropTypes.any,
+    permissions: PropTypes.any,
+  }),
 };
+
+export default compose(withPermissions)(UserNavInfo);
