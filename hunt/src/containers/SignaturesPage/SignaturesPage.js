@@ -266,7 +266,21 @@ export class SignaturesPage extends React.Component {
 
             this.cache[hash] = { RuleRes, SrcRes };
             this.processRulesData(RuleRes, SrcRes);
-        })).catch((e) => {
+        }))
+        .catch((e) => {
+            // handle the case when non-existent page is requested
+            if (e.response.status === 404 && this.props.rules_list.pagination.page !== 1) {
+                const sigsListState = {
+                    ...this.props.rules_list,
+                pagination: {
+                    ...this.props.rules_list.pagination,
+                    page: 1,
+                },
+                };
+
+                this.updateSignatureListState(sigsListState);
+                return;
+            }
             this.setState({ net_error: e, loading: false });
         });
     }
