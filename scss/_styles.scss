@@ -201,4 +201,12 @@ body {
      margin-left: 5px;
      color: black;
   }
+  .dropdown-toggle::after {
+    display: none;
+  }
+  .modal-header > button[data-dismiss="modal"] {
+    position: absolute;
+    top: 0;
+    right: 15px;
+  }
 }
