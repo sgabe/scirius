@@ -10,3 +10,4 @@ import "../scss/_styles.scss";
 import "../rules/static/js/bootstrap.min.js";
 import "../rules/static/js/scirius.js";
 import "../node_modules/patternfly/dist/js/patternfly.js";
+import "../node_modules/patternfly-bootstrap-treeview/dist/bootstrap-treeview.js";
