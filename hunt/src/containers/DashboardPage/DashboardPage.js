@@ -29,7 +29,7 @@ import store from 'store';
 import md5 from 'md5';
 import map from 'lodash/map';
 import find from 'lodash/find';
-import { Badge, ListGroup, ListGroupItem } from 'react-bootstrap';
+import { OverlayTrigger, Tooltip, Badge, ListGroup, ListGroupItem } from 'react-bootstrap';
 import * as config from 'hunt_common/config/Api';
 import { dashboard } from 'hunt_common/config/Dashboard';
 import { buildQFilter } from 'hunt_common/buildQFilter';
@@ -435,6 +435,69 @@ export class HuntDashboard extends React.Component {
             this.setState({ hoveredItem: null });
         }
     }
+  };
+
+  createElement = (block) => {
+    const filterParams = buildFilterParams(this.props.filterParams);
+    const url = `${config.API_URL}${config.ES_BASE_PATH}field_stats/?field=${block.i}&${filterParams}&page_size=30${this.qFilter}`;
+    return (
+      <div key={block.i} style={{ background: 'white' }}>
+        {this.props.children}
+        <h3 className={`hunt-stat-title ${this.state.editMode ? 'dashboard-editable-mode' : ''}`} data-toggle="tooltip" title={block.title}>
+          {block.title}
+        </h3>
+        {block.data !== null && block.data.length === 5 && (
+          <div className="dropdown-kebab-pf open btn-group">
+            <OverlayTrigger trigger={['hover', 'hover']} placement="top" overlay={<Tooltip id="tooltip-top">Load more results</Tooltip>}>
+              <button role="button" type="button" className="btn btn-link" onClick={() => this.loadMore(block, url)}>
+                <span className="fa fa-ellipsis-v" />
+              </button>
+            </OverlayTrigger>
+          </div>
+        )}
+        <div className="hunt-stat-body">
+          <ListGroup>
+            {block.data === null && <Spinner loading />}
+            {block.data !== null &&
+              block.data.map((item) => {
+                const itemPath = `${block.title}-${block.i}-${item.key}`;
+                let classes = 'dashboard-list-item';
+                let clickHandler = null;
+                classes += this.state.copiedItem === itemPath ? ' copied' : '';
+
+                if (this.state.copyMode && this.state.hoveredItem === itemPath) {
+                  // Only set clickHandler during copy mode to let click events reach the magnifiers in EventValue
+                  // otherwise hover and click on magnifiers breaks on Firefox
+                  clickHandler = (event) => this.itemCopyModeOnClick(event, itemPath, item.key);
+                  classes += ' copy-mode';
+                }
+
+                return (
+                  <ListGroupItem
+                    key={item.key}
+                    onClick={clickHandler}
+                    onMouseMove={(event) => this.onMouseMove(event, itemPath)}
+                    onMouseLeave={(event) => this.onMouseLeave(event, itemPath)}
+                    className={classes}
+                  >
+                    <ErrorHandler>
+                      <EventValue
+                        field={block.i}
+                        value={item.key}
+                        format={block.format}
+                        magnifiers={(!this.state.copyMode || this.state.hoveredItem !== itemPath) && item.key !== 'Unknown'}
+                        right_info={<Badge>{item.doc_count}</Badge>}
+                        hasCopyShortcut
+                      />
+                    </ErrorHandler>
+                  </ListGroupItem>
+                );
+              })}
+          </ListGroup>
+        </div>
+      </div>
+    );
+  };
 
     createElement = (block) => {
         const filterParams = buildFilterParams(this.props.filterParams);
@@ -827,7 +890,6 @@ HuntDashboard.propTypes = {
   systemSettings: PropTypes.any,
   filters: PropTypes.any,
   children: PropTypes.any,
-  item: PropTypes.any,
   rules_list: PropTypes.any,
   updateListState: PropTypes.any,
   page: PropTypes.any,

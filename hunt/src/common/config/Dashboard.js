@@ -2,14 +2,635 @@ export const dashboard = {
     panel: {
         defaultHeadHeight: 67,
     },
-    block: {
-        defaultDimensions: {
-            minW: 3,
-            minH: 7,
-            x: 0,
-            y: 0,
-            w: 3,
-            h: 7,
+    defaultItemHeight: 33,
+    defaultHeadHeight: 50,
+  },
+  sections: {
+    metadata: {
+      title: 'Metadata',
+      items: [
+        {
+          i: 'alert.metadata.affected_product',
+          title: 'Affected product',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 9,
+              h: 7,
+              x: 15,
+              y: 0,
+            },
+            md: {
+              w: 9,
+              h: 7,
+              x: 15,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'alert.metadata.attack_target',
+          title: 'Attack target',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 7,
+              y: 0,
+            },
+            md: {
+              w: 8,
+              h: 7,
+              x: 7,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 22,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'alert.metadata.malware_family',
+          title: 'Malware family',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 24,
+              y: 0,
+            },
+            md: {
+              w: 7,
+              h: 7,
+              x: 0,
+              y: 18,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 18,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 15,
+            },
+          },
+        },
+        {
+          i: 'alert.metadata.signature_severity',
+          title: 'Signature severity',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 7,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            md: {
+              w: 7,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 22,
+            },
+          },
+        },
+      ],
+      dimensions: {
+        w: 1,
+        h: 170,
+        x: 0,
+        y: 426,
+      },
+    },
+    basic: {
+      title: 'Basic Information',
+      items: [
+        {
+          i: 'alert.signature',
+          title: 'Signatures',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 11,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            md: {
+              w: 7,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            sm: {
+              w: 6,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'alert.category',
+          title: 'Categories',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 9,
+              h: 7,
+              x: 11,
+              y: 0,
+            },
+            md: {
+              w: 7,
+              h: 7,
+              x: 7,
+              y: 0,
+            },
+            sm: {
+              w: 5,
+              h: 7,
+              x: 6,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'alert.severity',
+          title: 'Severities',
+          data: null,
+          format: (value) => {
+            switch (value) {
+              case 1:
+                return 'Severe';
+              case 2:
+                return 'Suspicious';
+              case 3:
+                return 'Contextual';
+              default:
+                return value;
+            }
+          },
+          dimensions: {
+            lg: {
+              w: 5,
+              h: 7,
+              x: 20,
+              y: 0,
+            },
+            md: {
+              w: 4,
+              h: 7,
+              x: 14,
+              y: 0,
+            },
+            sm: {
+              w: 3,
+              h: 7,
+              x: 0,
+              y: 22,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 22,
+            },
+          },
+        },
+        {
+          i: 'host',
+          title: 'Probes',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 7,
+              h: 7,
+              x: 25,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 18,
+              y: 0,
+            },
+            sm: {
+              w: 5,
+              h: 7,
+              x: 11,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 22,
+            },
+          },
+        },
+      ],
+      dimensions: {
+        w: 1,
+        h: 170,
+        x: 0,
+        y: 0,
+      },
+    },
+    organizational: {
+      title: 'Organizational Information',
+      items: [
+        {
+          i: 'alert.source.ip',
+          title: 'Sources',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'alert.target.ip',
+          title: 'Targets',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 6,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'alert.lateral',
+          title: 'Lateral',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 18,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 14,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 14,
+            },
+          },
+        },
+        {
+          i: 'alert.source.net_info_agg',
+          title: 'Sources Network',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 16,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 12,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 7,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 8,
+            },
+          },
+        },
+        {
+          i: 'alert.target.net_info_agg',
+          title: 'Targets Network',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 24,
+              y: 0,
+            },
+            md: {
+              w: 7,
+              h: 7,
+              x: 0,
+              y: 7,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 7,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 8,
+            },
+          },
+        },
+        {
+          i: 'fqdn.src',
+          title: 'FQDN Source',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 6,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'fqdn.dest',
+          title: 'FQDN Destination',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 16,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 12,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 7,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 8,
+            },
+          },
+        },
+        {
+          i: 'geoip.provider.autonomous_system_number',
+          title: 'AS Number',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 24,
+              y: 0,
+            },
+            md: {
+              w: 7,
+              h: 7,
+              x: 0,
+              y: 7,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 7,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 8,
+            },
+          },
+        },
+        {
+          i: 'geoip.provider.autonomous_system_organization',
+          title: 'AS Organization',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 18,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 14,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 14,
+            },
+          },
+        },
+        {
+          i: 'geoip.country_name',
+          title: 'Country Name',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 6,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'geoip.city_name',
+          title: 'City Name',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 16,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 12,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 7,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 8,
+            },
+          },
         },
         defaultItemHeight: 33,
         defaultHeadHeight: 50,

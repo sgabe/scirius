@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Icon } from 'patternfly-react';
+import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import EventIPInfo from '../../components/EventIPInfo';
 
 const EventValueInfo = (props) => {
@@ -14,10 +15,26 @@ const EventValueInfo = (props) => {
         }
         return <a key="onyphe_link" href={`https://www.onyphe.io/search/?query=${props.value}`} target="_blank"> <Icon type="fa" name="info-circle" /></a>;
     }
-    if (['src_port', 'dest_port', 'host_id.services.port'].indexOf(props.field) > -1) {
-        return <a key="dshield_link" href={`https://www.dshield.org/port.html?port=${props.value}`} target="_blank"> <Icon type="fa" name="info-circle" /></a>;
-    }
-    return null;
+    return (
+      <OverlayTrigger key="onyphe_link" trigger={['hover', 'hover']} placement="top" overlay={<Tooltip id="tooltip-top">external info</Tooltip>}>
+        <a href={`https://www.onyphe.io/search/?query=${props.value}`} target="_blank">
+          {' '}
+          <Icon type="fa" name="info-circle" />
+        </a>
+      </OverlayTrigger>
+    );
+  }
+  if (['src_port', 'dest_port', 'host_id.services.port'].indexOf(props.field) > -1) {
+    return (
+      <OverlayTrigger key="dshield_link" trigger={['hover', 'hover']} placement="top" overlay={<Tooltip id="tooltip-top">external info</Tooltip>}>
+        <a href={`https://www.dshield.org/port.html?port=${props.value}`} target="_blank">
+          {' '}
+          <Icon type="fa" name="info-circle" />
+        </a>
+      </OverlayTrigger>
+    );
+  }
+  return null;
 };
 
 EventValueInfo.propTypes = {
