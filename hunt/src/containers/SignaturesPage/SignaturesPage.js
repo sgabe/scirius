@@ -272,10 +272,10 @@ export class SignaturesPage extends React.Component {
             if (e.response.status === 404 && this.props.rules_list.pagination.page !== 1) {
                 const sigsListState = {
                     ...this.props.rules_list,
-                pagination: {
-                    ...this.props.rules_list.pagination,
-                    page: 1,
-                },
+                    pagination: {
+                        ...this.props.rules_list.pagination,
+                        page: 1,
+                    },
                 };
 
                 this.updateSignatureListState(sigsListState);
