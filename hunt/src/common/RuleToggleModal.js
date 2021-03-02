@@ -98,19 +98,23 @@ export default class RuleToggleModal extends React.Component {
                     }
                 }
 
-                let errors;
-                if (notfound) {
-                    errors = { filters: ['No filters available'] };
-                }
-                this.setState({ supported_filters: suppFilters, noaction: notfound, errors });
-            }).catch((error) => {
-                if (error.response.status === 403) {
-                    this.setState({ errors: { permission: ['Insufficient permissions'] }, noaction: true });
-                }
-            });
-        } else {
-            this.setState({ errors: { filters: ['No filters available'] }, noaction: true });
-        }
+          let errors;
+          if (notfound) {
+            if (!res.data.supported_fields) {
+              errors = { filters: ['No filters available'] };
+            } else {
+              errors = { filters: [`Supported filters are "${res.data.supported_fields}"`] };
+            }
+          }
+          this.setState({ supported_filters: suppFilters, noaction: notfound, errors });
+        })
+        .catch((error) => {
+          if (error.response.status === 403) {
+            this.setState({ errors: { permission: ['Insufficient permissions'] }, noaction: true });
+          }
+        });
+    } else {
+      this.setState({ errors: { filters: ['No filters available'] }, noaction: true });
     }
 
     close() {
