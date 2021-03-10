@@ -53,10 +53,56 @@ export class HuntDashboard extends React.Component {
     constructor(props) {
         super(props);
 
-        let onlyHits = storage.getItem('rules_list.only_hits');
-        if (!onlyHits) {
-            onlyHits = false;
-        }
+    this.panelAutoresize = false;
+    this.panelState = {};
+    this.panelsLoaded = 0;
+    this.panelsBooted = 'no';
+    this.panelsAdjusted = false;
+    this.breakPointChanged = false;
+    this.storedMicroLayout = [];
+    this.storedMacroLayout = [];
+    this.qFilter = '';
+    this.filters = '';
+
+    const huntFilters = store.get('huntFilters');
+    const rulesFilters = typeof huntFilters !== 'undefined' && typeof huntFilters.dashboard !== 'undefined' ? huntFilters.dashboard.data : [];
+    let chartTarget = store.get('chartTarget') === true;
+
+    if (!chartTarget && !this.props.user.permissions.includes('rules.configuration_view')) {
+      chartTarget = true;
+    }
+
+    this.state = {
+      load: Object.keys(dashboard.sections),
+      // load: ['basic'],
+      breakPoint: 'lg',
+      dashboard: this.extendDefaultPanels(),
+      rules: [],
+      sources: [],
+      rulesets: [],
+      rules_count: 0,
+      loading: true,
+      view: 'rules_list',
+      onlyHits,
+      action: { view: false, type: 'suppress' },
+      net_error: undefined,
+      rulesFilters,
+      supported_actions: [],
+      moreModal: null,
+      moreResults: [],
+      editMode: false,
+      chartTarget,
+      copyMode: false,
+      hoveredItem: null,
+      copiedItem: '',
+    };
+    this.actionsButtons = actionsButtons.bind(this);
+    this.createAction = createAction.bind(this);
+    this.closeAction = closeAction.bind(this);
+    this.loadActions = loadActions.bind(this);
+    this.updateRuleListState = props.updateListState.bind(this);
+    this.fetchData = () => {};
+  }
 
         this.panelAutoresize = false;
         this.panelState = {};
