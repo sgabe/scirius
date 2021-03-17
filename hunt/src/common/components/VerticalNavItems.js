@@ -5,7 +5,13 @@ const VerticalNavItems = [{
     iconClass: 'fa fa-tachometer',
     def: PAGE_STATE.dashboards,
     className: null,
-}, {
+  },
+  {
+    title: 'Alerts',
+    iconClass: 'fa fa-bell',
+    def: PAGE_STATE.alerts_list,
+  },
+  {
     title: 'Signatures',
     iconClass: 'pficon pficon-security',
     def: PAGE_STATE.rules_list,
@@ -13,10 +19,6 @@ const VerticalNavItems = [{
     permission: 'rules.ruleset_policy_view',
   },
   {
-    title: 'Alerts',
-    iconClass: 'fa fa-bell',
-    def: PAGE_STATE.alerts_list,
-}, {
     title: 'Policy',
     iconClass: 'glyphicon glyphicon-filter',
     def: PAGE_STATE.filters_list,
