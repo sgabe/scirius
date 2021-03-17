@@ -6,6 +6,7 @@ import axios from 'axios';
 import { createStructuredSelector } from 'reselect';
 import * as config from 'hunt_common/config/Api';
 import { sections } from 'hunt_common/constants';
+import { dashboard } from 'hunt_common/config/Dashboard';
 import { compose } from 'redux';
 import FilterToggleModal from '../FilterToggleModal';
 import ErrorHandler from './Error';
@@ -58,12 +59,24 @@ class FilterEditKebab extends React.Component {
       : this.props.alertTag;
   };
 
-    componentDidMount() {
-        axios.get(`${config.API_URL}${config.USER_PATH}current_user/`)
-        .then((currentUser) => {
-            this.setState({ user: currentUser.data });
-        });
-    }
+  generateFilterSet = () => {
+    const filters = [];
+    for (let idx = 0; idx < this.props.data.filter_defs.length; idx += 1) {
+      const val = Number(this.props.data.filter_defs[idx].value)
+        ? Number(this.props.data.filter_defs[idx].value)
+        : this.props.data.filter_defs[idx].value;
+      const { format } = dashboard.sections.basic.items.find((o) => o.i === this.props.data.filter_defs[idx].key) || {};
+      const label = `${this.props.data.filter_defs[idx].key}: ${
+        format ? format(this.props.data.filter_defs[idx].value) : this.props.data.filter_defs[idx].value
+      }`;
+      const filter = {
+        id: this.props.data.filter_defs[idx].key,
+        key: this.props.data.filter_defs[idx].key,
+        label,
+        value: val,
+        negated: this.props.data.filter_defs[idx].operator !== 'equal',
+        fullString: this.props.data.filter_defs[idx].full_string,
+      };
 
     setSharedFilter(e) {
         this.setState({ filterSets: { showModal: true, shared: e.target.checked, page: this.state.filterSets.page, name: this.state.filterSets.name, description: this.state.filterSets.description } });

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import { ListViewItem, ListViewInfoItem, ListViewIcon, Row, Col, Spinner } from 'patternfly-react';
 import * as config from 'hunt_common/config/Api';
+import { dashboard } from 'hunt_common/config/Dashboard';
 import { buildFilterParams } from 'hunt_common/buildFilterParams';
 import axios from 'axios';
 import ReactJson from 'react-json-view';
@@ -218,6 +219,51 @@ export default class AlertItem extends React.Component {
         if (data.dns && data.dns.query) {
             [dnsQuery] = data.dns.query;
         }
+        heading={ipParams}
+        additionalInfo={addInfo}
+        onExpand={() => this.fetchData(data.flow_id)}
+        onExpandClose={() => this.setState({ showTabs: false })}
+      >
+        <Tabs id="alert-tabs">
+          <Tab eventKey="alert" title="Synthetic view">
+            <Row>
+              <Col sm={4}>
+                <div className="card-pf">
+                  <div className="card-pf-heading">
+                    <h5 className="card-title">Signature</h5>
+                  </div>
+                  <div className="card-pf-body">
+                    <dl className="dl-horizontal">
+                      <ErrorHandler>
+                        <EventField field_name="Signature" field="alert.signature" value={data.alert.signature} addFilter={this.addFilter} />
+                      </ErrorHandler>
+                      <ErrorHandler>
+                        <EventField field_name="SID" field="alert.signature_id" value={data.alert.signature_id} addFilter={this.addFilter} />
+                      </ErrorHandler>
+                      <ErrorHandler>
+                        <EventField field_name="Category" field="alert.category" value={data.alert.category} addFilter={this.addFilter} />
+                      </ErrorHandler>
+                      <ErrorHandler>
+                        <EventField
+                          field_name="Severity"
+                          field="alert.severity"
+                          value={data.alert.severity}
+                          addFilter={this.addFilter}
+                          format={(dashboard.sections.basic.items.find((o) => o.i === 'alert.severity') || {}).format}
+                        />
+                      </ErrorHandler>
+                      <ErrorHandler>
+                        <EventField field_name="Revision" field="alert.rev" value={data.alert.rev} addFilter={this.addFilter} />
+                      </ErrorHandler>
+                      {data.alert.tag && (
+                        <ErrorHandler>
+                          <EventField field_name="Tagged" field="alert.tag" value={data.alert.tag} addFilter={this.addFilter} />
+                        </ErrorHandler>
+                      )}
+                    </dl>
+                  </div>
+                </div>
+              </Col>
 
         return (
             <ListViewItem
