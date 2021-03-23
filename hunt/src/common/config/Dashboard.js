@@ -632,8 +632,13 @@ export const dashboard = {
             },
           },
         },
-        defaultItemHeight: 33,
-        defaultHeadHeight: 50,
+      ],
+      dimensions: {
+        w: 1,
+        h: 370,
+        x: 0,
+        y: 356,
+      },
     },
     sections: {
         metadata: {
@@ -1667,6 +1672,793 @@ export const dashboard = {
             dimensions: {
                 w: 1, h: 170, x: 0, y: 2619
             },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 19,
+            },
+          },
+        },
+      ],
+      dimensions: {
+        w: 1,
+        h: 270,
+        x: 0,
+        y: 782,
+      },
+    },
+    http: {
+      title: 'HTTP information',
+      items: [
+        {
+          i: 'http.hostname',
+          title: 'Hostname',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 9,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            sm: {
+              w: 6,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'http.url',
+          title: 'URL',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 9,
+              h: 7,
+              x: 9,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 6,
+              y: 0,
+            },
+            sm: {
+              w: 6,
+              h: 7,
+              x: 6,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'http.http_user_agent',
+          title: 'Useragent',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 9,
+              h: 7,
+              x: 23,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 12,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 51,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 22,
+            },
+          },
+        },
+        {
+          i: 'http.status',
+          title: 'Status',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 5,
+              h: 7,
+              x: 18,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 18,
+              y: 0,
+            },
+            sm: {
+              w: 4,
+              h: 7,
+              x: 12,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 22,
+            },
+          },
+        },
+        {
+          i: 'http.http_refer',
+          title: 'Referer',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 9,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            md: {
+              w: 6,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            sm: {
+              w: 6,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+          },
+        },
+      ],
+      dimensions: {
+        w: 1,
+        h: 470,
+        x: 0,
+        y: 1138,
+      },
+    },
+    dns: {
+      title: 'DNS information',
+      items: [
+        {
+          i: 'dns.query.rrname',
+          title: 'Name',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 9,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            md: {
+              w: 12,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'dns.query.rrtype',
+          title: 'Type',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 9,
+              h: 7,
+              x: 9,
+              y: 0,
+            },
+            md: {
+              w: 12,
+              h: 7,
+              x: 12,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 0,
+            },
+          },
+        },
+      ],
+      dimensions: {
+        w: 1,
+        h: 170,
+        x: 0,
+        y: 1494,
+      },
+    },
+    tls: {
+      title: 'TLS information',
+      items: [
+        {
+          i: 'tls.sni',
+          title: 'Server Name Indication',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 10,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            md: {
+              w: 7,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'tls.subject',
+          title: 'Subject DN',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 11,
+              h: 7,
+              x: 10,
+              y: 0,
+            },
+            md: {
+              w: 8,
+              h: 7,
+              x: 7,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'tls.issuerdn',
+          title: 'Issuer DN',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 11,
+              h: 7,
+              x: 21,
+              y: 0,
+            },
+            md: {
+              w: 9,
+              h: 7,
+              x: 15,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 22,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 22,
+            },
+          },
+        },
+        {
+          i: 'tls.fingerprint',
+          title: 'Fingerprint',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 10,
+              h: 7,
+              x: 0,
+              y: 22,
+            },
+            md: {
+              w: 12,
+              h: 7,
+              x: 0,
+              y: 22,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 22,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 22,
+            },
+          },
+        },
+        {
+          i: 'tls.ja3.hash',
+          title: 'JA3 Hash',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 11,
+              h: 7,
+              x: 10,
+              y: 22,
+            },
+            md: {
+              w: 12,
+              h: 7,
+              x: 12,
+              y: 4,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 44,
+            },
+            xs: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 44,
+            },
+          },
+        },
+        {
+          i: 'tls.ja3.agent',
+          title: 'JA3 User-Agent',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 11,
+              h: 7,
+              x: 21,
+              y: 6,
+            },
+            md: {
+              w: 12,
+              h: 7,
+              x: 0,
+              y: 8,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 8,
+            },
+            xs: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 44,
+            },
+          },
+        },
+        {
+          i: 'tls.ja3s.hash',
+          title: 'JA3S Hash',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 10,
+              h: 7,
+              x: 0,
+              y: 22,
+            },
+            md: {
+              w: 12,
+              h: 7,
+              x: 0,
+              y: 22,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 22,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 22,
+            },
+          },
+        },
+      ],
+      dimensions: {
+        w: 1,
+        h: 370,
+        x: 0,
+        y: 1720,
+      },
+    },
+    smtp: {
+      title: 'SMTP information',
+      items: [
+        {
+          i: 'smtp.mail_from',
+          title: 'Mail From',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 11,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            md: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            sm: {
+              w: 6,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            xs: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'smtp.rcpt_to',
+          title: 'RCPT To',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 10,
+              h: 7,
+              x: 11,
+              y: 0,
+            },
+            md: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            sm: {
+              w: 5,
+              h: 7,
+              x: 6,
+              y: 0,
+            },
+            xs: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 9,
+            },
+          },
+        },
+        {
+          i: 'smtp.helo',
+          title: 'Helo',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 11,
+              h: 7,
+              x: 21,
+              y: 0,
+            },
+            md: {
+              w: 8,
+              h: 7,
+              x: 16,
+              y: 0,
+            },
+            sm: {
+              w: 5,
+              h: 7,
+              x: 11,
+              y: 0,
+            },
+            xs: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 18,
+            },
+          },
+        },
+      ],
+      dimensions: {
+        w: 1,
+        h: 170,
+        x: 0,
+        y: 2362,
+      },
+    },
+    smb: {
+      title: 'SMB information',
+      items: [
+        {
+          i: 'smb.command',
+          title: 'Command',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            md: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            xs: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'smb.status',
+          title: 'Status',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            md: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            xs: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 1,
+            },
+          },
+        },
+        {
+          i: 'smb.filename',
+          title: 'Filename',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 16,
+              y: 0,
+            },
+            md: {
+              w: 8,
+              h: 7,
+              x: 16,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 1,
+            },
+            xs: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 2,
+            },
+          },
+        },
+        {
+          i: 'smb.share',
+          title: 'Share',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 8,
+              h: 7,
+              x: 24,
+              y: 0,
+            },
+            md: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 1,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 1,
+            },
+            xs: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 3,
+            },
+          },
+        },
+      ],
+      dimensions: {
+        w: 1,
+        h: 170,
+        x: 0,
+        y: 2549,
+      },
+    },
+    ssh: {
+      title: 'SSH information',
+      items: [
+        {
+          i: 'ssh.client.software_version',
+          title: 'Client Software',
+          position: 1,
+          data: null,
+          dimensions: {
+            lg: {
+              w: 14,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            md: {
+              w: 12,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 0,
+              y: 0,
+            },
+          },
+        },
+        {
+          i: 'ssh.server.software_version',
+          title: 'Server Software',
+          data: null,
+          dimensions: {
+            lg: {
+              w: 18,
+              h: 7,
+              x: 14,
+              y: 0,
+            },
+            md: {
+              w: 12,
+              h: 7,
+              x: 12,
+              y: 0,
+            },
+            sm: {
+              w: 8,
+              h: 7,
+              x: 8,
+              y: 0,
+            },
+            xs: {
+              w: 4,
+              h: 7,
+              x: 4,
+              y: 0,
+            },
+          },
         },
     },
 };
