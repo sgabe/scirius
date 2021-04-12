@@ -283,6 +283,7 @@ export const makSelectUserData = () =>
       email = '',
       date_joined: dateJoined = '',
       perms: permissions = [],
+      no_tenant: noTenant = false,
     } = data;
     return {
       pk,
@@ -294,6 +295,7 @@ export const makSelectUserData = () =>
       email,
       dateJoined,
       permissions,
+      noTenant,
     };
   });
 export const makSelectUserRequest = () => createSelector(selectGlobal, (globalState) => globalState.getIn(['user']).toJS().request);
