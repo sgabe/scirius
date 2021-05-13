@@ -168,13 +168,13 @@ export const reducer = (state = initialState, action) => {
             if (!validateFilter(action.filterUpdated)) { return state }
             const globalFilters = state.getIn(['filters', action.filterType]).toJS();
             const idx = indexOfFilter(action.filter, globalFilters);
-
             /* eslint-disable-next-line */
             const updatedGlobalFilters = globalFilters.map((filter, i) => (i === idx) ? {
-                ...filter,
-                ...action.filterUpdated
-            } : filter);
-
+                    ...filter,
+                    ...action.filterUpdated,
+                  }
+                : filter,
+            );
             updateStorage(action.filterType, updatedGlobalFilters);
             return state.setIn(['filters', action.filterType], fromJS(updatedGlobalFilters));
         }
@@ -269,7 +269,7 @@ export const makeSelectGlobalFilters = (includeAlertTag = false) => createSelect
 });
 export const makeSelectHistoryFilters = () => createSelector(selectGlobal, (globalState) => globalState.getIn(['filters', sections.HISTORY]).toJS());
 export const makeSelectAlertTag = () => createSelector(selectGlobal, (globalState) => globalState.getIn(['filters', sections.ALERT]).toJS());
-export const makSelectUserData = () =>
+export const makeSelectUserData = () =>
   createSelector(selectGlobal, (globalState) => {
     const userDetails = globalState.getIn([sections.USER]).toJS();
     const { data = {} } = userDetails;
@@ -298,4 +298,4 @@ export const makSelectUserData = () =>
       noTenant,
     };
   });
-export const makSelectUserRequest = () => createSelector(selectGlobal, (globalState) => globalState.getIn(['user']).toJS().request);
+export const makeSelectUserRequest = () => createSelector(selectGlobal, (globalState) => globalState.getIn(['user']).toJS().request);
