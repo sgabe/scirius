@@ -284,6 +284,7 @@ export const makeSelectUserData = () =>
       date_joined: dateJoined = '',
       perms: permissions = [],
       no_tenant: noTenant = false,
+      all_tenant: allTenant = false,
     } = data;
     return {
       pk,
@@ -296,6 +297,7 @@ export const makeSelectUserData = () =>
       dateJoined,
       permissions,
       noTenant,
+      allTenant,
     };
   });
 export const makeSelectUserRequest = () => createSelector(selectGlobal, (globalState) => globalState.getIn(['user']).toJS().request);
