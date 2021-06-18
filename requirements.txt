@@ -2,7 +2,7 @@ daemon
 Django==2.2.24
 django-bootstrap3==11.0.0
 django-revproxy
-django-tables2<1.17
+django-tables2<2.5
 django-dbbackup<4.0
 django-webpack-loader==0.7
 django-csp
