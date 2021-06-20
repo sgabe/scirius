@@ -9,7 +9,7 @@ nodejs:
       - rules/static/webpack-stats.prod.json
   before_script:
     - npm install -g npm 
-    - npm install -g webpack@3.12
+    - npm install -g webpack
     - npm install node-sass
     - npm install node-gyp
   script:
