@@ -1,0 +1,60 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  target-branch: upgrade
+  ignore:
+  - dependency-name: django
+    versions:
+    - ">= 3.a, < 4"
+  - dependency-name: djangorestframework
+    versions:
+    - ">= 3.11.a, < 3.12"
+  - dependency-name: markdown
+    versions:
+    - ">= 3.a, < 4"
+  - dependency-name: django-bootstrap3
+    versions:
+    - 14.2.0
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  target-branch: upgrade
+  ignore:
+  - dependency-name: "@babel/preset-env"
+    versions:
+    - 7.12.11
+    - 7.12.13
+    - 7.12.16
+    - 7.12.17
+    - 7.13.0
+    - 7.13.10
+    - 7.13.12
+    - 7.13.5
+    - 7.13.8
+    - 7.13.9
+- package-ecosystem: npm
+  directory: "/hunt"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  target-branch: upgrade
+  ignore:
+  - dependency-name: react-grid-layout
+    versions:
+    - 1.2.0
+    - 1.2.2
+    - 1.2.3
+  - dependency-name: react-dev-utils
+    versions:
+    - 11.0.1
+    - 11.0.2
+    - 11.0.3
